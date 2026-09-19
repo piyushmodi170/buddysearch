@@ -11,8 +11,7 @@ const sanitizePhone = (phone?: string): string => {
   return digits.length >= 10 ? digits.slice(-10) : digits;
 };
 
-// Never let the password hash leave the service layer.
-const publicUser = (user: any) => {
+export const publicUser = (user: any) => {
   if (!user) return user;
   const { passwordHash, ...safe } = user;
   return safe;
@@ -65,7 +64,11 @@ export const googleAuthService = async (idToken: string) => {
         avatar: claims.picture,
         role: 'CLIENT',
         verified: true,
-        membershipPlan: 'BASIC'
+        membershipPlan: 'BASIC',
+        membershipExpiry: null,
+        onboardingCompleted: false,
+        availableForRequests: false,
+        profileCompletion: 10,
       }
     });
   } else if (googleId && !user.googleId) {
@@ -110,6 +113,11 @@ export const signup = async (data: any) => {
       phone: phone || undefined,
       passwordHash: hashedPassword,
       role: data.role || 'CLIENT',
+      membershipPlan: 'BASIC',
+      membershipExpiry: null,
+      onboardingCompleted: false,
+      availableForRequests: false,
+      profileCompletion: 10,
     }
   });
 
@@ -187,7 +195,12 @@ export const verifyOTPService = async (phoneInput: string, code: string) => {
         phone,
         email: `${phone}@buddysearch.in`,
         name: 'User' + Math.floor(Math.random()*10000),
-        role: 'CLIENT'
+        role: 'CLIENT',
+        membershipPlan: 'BASIC',
+        membershipExpiry: null,
+        onboardingCompleted: false,
+        availableForRequests: false,
+        profileCompletion: 10,
       }
     });
   }

@@ -65,7 +65,8 @@ export default function LoginPage() {
         throw new Error('Invalid response');
       }
       toast.success('Signed in successfully!');
-      router.push('/dashboard');
+      const needsOnboarding = data.user && !data.user.onboardingCompleted && !data.user.isAdmin;
+      router.push(needsOnboarding ? '/onboarding' : '/dashboard');
     } catch (error: any) {
       const details = error.response?.data?.errors?.[0]?.message;
       toast.error(details || error.response?.data?.message || 'Unable to sign in. Please check your credentials.');

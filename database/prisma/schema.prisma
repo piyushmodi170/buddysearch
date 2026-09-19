@@ -63,6 +63,7 @@ model User {
   city                 String?
   state                String?
   pincode              String?
+  gender               String?
   bio                  String?
   avatar               String?
   instagram            String?
@@ -75,6 +76,7 @@ model User {
   aadhaarUrl           String?
   membershipPlan       MembershipTier   @default(BASIC)
   membershipExpiry     DateTime?
+  onboardingCompleted  Boolean          @default(false)
   isOnline             Boolean          @default(false)
   lastSeen             DateTime?
   profileCompletion    Int              @default(20)

@@ -71,6 +71,21 @@ export const updateProfileSchema = z.object({
   lng: z.number().optional(),
   role: z.enum(['CLIENT', 'BUDDY', 'BOTH']).optional(),
   availableForRequests: z.boolean().optional(),
+  gender: z.string().optional(),
+});
+
+export const completeOnboardingSchema = z.object({
+  gender: z.enum(['male', 'female', 'other']),
+  state: z.string().min(2, 'Select your state'),
+  city: z.string().min(2, 'Enter your city'),
+  pincode: z.string().regex(/^\d{6}$/, 'Enter a valid 6-digit pincode'),
+  bio: z.string().max(500).optional().or(z.literal('')),
+  availableForRequests: z.boolean().optional(),
+  instagram: z.string().optional().or(z.literal('')),
+  facebook: z.string().optional().or(z.literal('')),
+  linkedin: z.string().optional().or(z.literal('')),
+  twitter: z.string().optional().or(z.literal('')),
+  interestIds: z.array(z.string()).max(4, 'You can select up to 4 services only'),
 });
 
 export const createRequestSchema = z.object({

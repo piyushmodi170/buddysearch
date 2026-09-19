@@ -106,7 +106,7 @@ async function main() {
   // Seed Admin User
   const passwordHash = await bcrypt.hash('admin123', 10);
   const adminUser = await prisma.user.upsert({
-    where: { phone: '9999999999' },
+    where: { email: 'piyush.modi@gmail.com' },
     update: {
       email: 'piyush.modi@gmail.com',
       passwordHash,
@@ -116,6 +116,8 @@ async function main() {
       membershipPlan: 'STAR',
       verified: true,
       profileCompletion: 100,
+      onboardingCompleted: true,
+      availableForRequests: true,
     },
     create: {
       name: 'Admin',
@@ -128,6 +130,8 @@ async function main() {
       membershipPlan: 'STAR',
       verified: true,
       profileCompletion: 100,
+      onboardingCompleted: true,
+      availableForRequests: true,
     },
   });
   console.log(`Seeded admin user (id: ${adminUser.id}).`);

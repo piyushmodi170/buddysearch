@@ -153,7 +153,9 @@ export default function MembershipPage() {
         <h3 className="text-primary font-bold tracking-widest text-sm mb-3">UPGRADE YOUR EXPERIENCE</h3>
         <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Choose Your Plan</h1>
         <p className="text-gray-500 font-medium">
-          Current plan: <span className="text-gray-900 font-bold">{currentPlan}</span> · Expires {expiryDate}
+          {currentPlan === 'BASIC' && !user?.membershipExpiry
+            ? 'You are on the free account. Pay to activate a membership plan.'
+            : <>Current plan: <span className="text-gray-900 font-bold">{currentPlan}</span> · Expires {expiryDate}</>}
         </p>
       </div>
 
@@ -161,7 +163,7 @@ export default function MembershipPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {plans.map((plan) => {
           const Icon = PLAN_ICONS[plan.name] || Shield;
-          const isCurrent = plan.name === currentPlan;
+          const isCurrent = plan.name === currentPlan && (plan.name !== 'BASIC' || Boolean(user?.membershipExpiry));
           const colorClass = PLAN_COLORS[plan.name] || 'bg-gray-50 text-gray-500';
 
           return (

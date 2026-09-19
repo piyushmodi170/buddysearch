@@ -53,9 +53,9 @@ export default function ProfilePage() {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [stateName, setStateName] = useState(user?.state || 'Maharashtra');
-  const [city, setCity] = useState(user?.city || 'Mumbai');
-  const [pincode, setPincode] = useState(user?.pincode || '400001');
+  const [stateName, setStateName] = useState(user?.state || '');
+  const [city, setCity] = useState(user?.city || '');
+  const [pincode, setPincode] = useState(user?.pincode || '');
   
   const [instagram, setInstagram] = useState(user?.instagram || '');
   const [facebook, setFacebook] = useState(user?.facebook || '');
@@ -63,9 +63,9 @@ export default function ProfilePage() {
   const [twitter, setTwitter] = useState(user?.twitter || '');
 
   // Buddy Profile
-  const [bio, setBio] = useState(user?.bio || 'Love exploring new cafes and watching sci-fi movies.');
-  const [isAvailable, setIsAvailable] = useState(user?.availableForRequests ?? true);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(['Movies', 'Fitness', 'Food', 'Travel']);
+  const [bio, setBio] = useState(user?.bio || '');
+  const [isAvailable, setIsAvailable] = useState(user?.availableForRequests ?? false);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   // File Upload State
   const [avatarPreview, setAvatarPreview] = useState<string>(user?.avatar || '');
@@ -198,10 +198,10 @@ export default function ProfilePage() {
     if (selectedInterests.includes(interestName)) {
       setSelectedInterests(selectedInterests.filter(i => i !== interestName));
     } else {
-      if (selectedInterests.length < 5) {
+      if (selectedInterests.length < 4) {
         setSelectedInterests([...selectedInterests, interestName]);
       } else {
-        toast.error('You can select up to 5 interests');
+        toast.error('You can select up to 4 services');
       }
     }
   };

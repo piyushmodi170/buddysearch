@@ -19,6 +19,9 @@ export interface User {
   twitter?: string;
   membership?: string;
   membershipPlan?: string;
+  membershipExpiry?: string | Date | null;
+  onboardingCompleted?: boolean;
+  gender?: string;
   membershipExpiry?: string | Date;
   isAdmin?: boolean;
   verified?: boolean;

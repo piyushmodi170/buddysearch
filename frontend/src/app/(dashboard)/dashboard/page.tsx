@@ -13,7 +13,14 @@ import toast from 'react-hot-toast';
 
 export default function DashboardOverview() {
   const { user, updateUser } = useAuthStore();
-  const currentUser = user || { name: 'Piyush Modi', role: 'BOTH' as const, avatar: '', profileCompletion: 90, membershipPlan: 'PREMIUM' };
+  const currentUser = user || { name: '', role: 'CLIENT' as const, avatar: '', profileCompletion: 0, membershipPlan: 'BASIC' };
+  const isFreePlan = (currentUser.membershipPlan || 'BASIC') === 'BASIC' && !user?.membershipExpiry;
+  const planLabel = isFreePlan ? 'Free' : (currentUser.membershipPlan || 'BASIC');
+  const planExpiry = isFreePlan
+    ? 'No paid plan yet'
+    : user?.membershipExpiry
+      ? `Expires ${new Date(user.membershipExpiry).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`
+      : 'Lifetime access';
 
   const [pushEnabled, setPushEnabled] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -107,9 +114,9 @@ export default function DashboardOverview() {
         <Card className="shadow-sm border border-gray-200">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-gray-900">Profile Completion</h3>
-            <span className="text-xl font-bold text-emerald-600">{currentUser.profileCompletion || 90}%</span>
+            <span className="text-xl font-bold text-emerald-600">{currentUser.profileCompletion || 0}%</span>
           </div>
-          <ProgressBar value={currentUser.profileCompletion || 90} className="mb-4" />
+          <ProgressBar value={currentUser.profileCompletion || 0} className="mb-4" />
           <div className="space-y-3">
             <Link href="/profile">
               <div className="flex items-center justify-between p-3 bg-red-50 hover:bg-red-100/70 rounded-lg border border-red-100 transition-colors cursor-pointer group">
@@ -128,13 +135,13 @@ export default function DashboardOverview() {
           <div className="flex items-center gap-2 mb-3">
             <Star className="text-amber-400 fill-amber-400" size={20} />
             <h3 className="font-bold text-lg tracking-wide uppercase">
-              {currentUser.membershipPlan || 'PREMIUM'}
+              {planLabel}
             </h3>
           </div>
-          <p className="text-xs text-gray-300 mb-4">Expires 8 December 2026</p>
+          <p className="text-xs text-gray-300 mb-4">{planExpiry}</p>
           <Link href="/membership">
             <Button className="w-full bg-white text-gray-900 hover:bg-gray-100 font-semibold text-xs">
-              Manage Plan
+              {isFreePlan ? 'Choose a Plan' : 'Manage Plan'}
             </Button>
           </Link>
         </Card>

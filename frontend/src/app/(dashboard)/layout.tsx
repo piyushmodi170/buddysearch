@@ -9,7 +9,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Loader2 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
 
@@ -22,10 +22,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (!hydrated) return;
-    if (!useAuthStore.getState().isAuthenticated) {
+    const auth = useAuthStore.getState();
+    if (!auth.isAuthenticated) {
       router.replace('/login');
+      return;
     }
-  }, [hydrated, isAuthenticated, router]);
+    if (!auth.user?.onboardingCompleted && !auth.user?.isAdmin) {
+      router.replace('/onboarding');
+    }
+  }, [hydrated, isAuthenticated, user, router]);
 
   if (!hydrated) {
     return (
@@ -42,6 +47,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
         <p className="text-sm font-medium text-gray-600 mb-2">Redirecting to login...</p>
         <a href="/login" className="text-xs text-primary underline">Click here if not redirected automatically</a>
+      </div>
+    );
+  }
+
+  if (!user?.onboardingCompleted && !user?.isAdmin) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
+        <p className="text-sm font-medium text-gray-600 mb-2">Finish your profile to continue...</p>
+        <a href="/onboarding" className="text-xs text-primary underline">Open onboarding</a>
       </div>
     );
   }

@@ -1,6 +1,7 @@
 import { prisma } from '../config/db.js';
 import { uploadFile } from '../config/s3.js';
 import fs from 'fs';
+import { publicUser } from './auth.service.js';
 
 export const calculateProfileCompletion = (user: any, interestsCount: number): number => {
   let score = 0;
@@ -27,7 +28,7 @@ export const getProfile = async (userId: string) => {
     ? user.receivedReviews.reduce((sum, r) => sum + r.rating, 0) / user.receivedReviews.length
     : 0;
 
-  return { ...user, avgRating, reviewCount: user.receivedReviews.length };
+  return { ...publicUser(user), avgRating, reviewCount: user.receivedReviews.length };
 };
 
 export const updateProfile = async (userId: string, data: any) => {
@@ -40,7 +41,8 @@ export const updateProfile = async (userId: string, data: any) => {
   });
 
   const completion = calculateProfileCompletion(updated, current.interests.length);
-  return prisma.user.update({ where: { id: userId }, data: { profileCompletion: completion } });
+  const withScore = await prisma.user.update({ where: { id: userId }, data: { profileCompletion: completion } });
+  return publicUser(withScore);
 };
 
 export const uploadAvatarService = async (userId: string, file: Express.Multer.File) => {
@@ -53,15 +55,60 @@ export const uploadAadhaarService = async (userId: string, file: Express.Multer.
   return updateProfile(userId, { aadhaarUrl: url, aadhaarVerified: false });
 };
 
+export const resolveInterestIds = async (idsOrSlugs: string[]) => {
+  const catalog = await prisma.interest.findMany();
+  const resolved = idsOrSlugs
+    .map((value) => catalog.find((item) => item.id === value || item.slug === value || item.label === value)?.id)
+    .filter((id): id is string => Boolean(id));
+  return Array.from(new Set(resolved));
+};
+
+export const listInterests = async () => {
+  return prisma.interest.findMany({ orderBy: { label: 'asc' } });
+};
+
+export const completeOnboarding = async (userId: string, data: any) => {
+  const current = await prisma.user.findUnique({ where: { id: userId } });
+  if (!current) throw new Error('User not found');
+
+  const interestIds = await resolveInterestIds(data.interestIds || []);
+  const isBuddy = current.role === 'BUDDY' || current.role === 'BOTH';
+  if (isBuddy && interestIds.length === 0) {
+    throw new Error('Select at least one service you offer');
+  }
+  if (isBuddy && !(data.bio || '').trim()) {
+    throw new Error('Please write a short bio');
+  }
+
+  await updateInterestsService(userId, interestIds);
+
+  return updateProfile(userId, {
+    gender: data.gender,
+    state: data.state,
+    city: data.city,
+    pincode: data.pincode,
+    bio: (data.bio || '').trim() || null,
+    instagram: data.instagram || null,
+    facebook: data.facebook || null,
+    linkedin: data.linkedin || null,
+    twitter: data.twitter || null,
+    availableForRequests: isBuddy ? Boolean(data.availableForRequests) : false,
+    onboardingCompleted: true,
+  });
+};
+
 export const updateInterestsService = async (userId: string, interestIds: string[]) => {
+  const resolved = await resolveInterestIds(interestIds);
   await prisma.userInterest.deleteMany({ where: { userId } });
-  
-  const creates = interestIds.map(id => ({ userId, interestId: id }));
-  await prisma.userInterest.createMany({ data: creates });
-  
+
+  const creates = resolved.map((interestId) => ({ userId, interestId }));
+  if (creates.length) {
+    await prisma.userInterest.createMany({ data: creates });
+  }
+
   const current = await prisma.user.findUnique({ where: { id: userId } });
   if (current) {
-    const completion = calculateProfileCompletion(current, interestIds.length);
+    const completion = calculateProfileCompletion(current, resolved.length);
     await prisma.user.update({ where: { id: userId }, data: { profileCompletion: completion } });
   }
 };
