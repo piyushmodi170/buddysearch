@@ -39,25 +39,27 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    identifier: '',
+    email: '',
     password: '',
     role: 'CLIENT' as 'CLIENT' | 'BUDDY' | 'BOTH',
   });
 
   const handleManualSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.identifier || !formData.password) {
+    if (!formData.name || !formData.email || !formData.password) {
       toast.error('Please fill all required fields');
+      return;
+    }
+    if (!formData.email.includes('@')) {
+      toast.error('Please use a valid email address');
       return;
     }
 
     setLoading(true);
     try {
-      const isEmail = formData.identifier.includes('@');
       const payload = {
         name: formData.name,
-        email: isEmail ? formData.identifier : `${formData.identifier}@buddysearch.in`,
-        phone: !isEmail ? formData.identifier : undefined,
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
         role: formData.role
       };
@@ -96,7 +98,7 @@ export default function SignupPage() {
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Create your account</h1>
-          <p className="text-gray-500 mb-6">Sign up with Google or fill in your details manually.</p>
+          <p className="text-gray-500 mb-6">Create an account with your email and password.</p>
 
           {/* Google Signup Button */}
           <Button
@@ -133,13 +135,13 @@ export default function SignupPage() {
             />
 
             <Input
-              label="Email ID or Phone Number"
-              type="text"
+              label="Email"
+              type="email"
               required
-              placeholder="e.g. piyush.modi@gmail.com or 9999999999"
+              placeholder="e.g. you@example.com"
               icon={<Mail size={18} />}
-              value={formData.identifier}
-              onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
 
             <Input

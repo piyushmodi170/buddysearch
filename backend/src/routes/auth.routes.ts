@@ -29,7 +29,7 @@ router.post('/signup', validate(signupSchema), async (req, res, next) => {
 
 router.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
-    const data = await authService.login(req.body.phone, req.body.password);
+    const data = await authService.login(req.body.email, req.body.password);
     res.json({ success: true, data });
   } catch (error: any) {
     res.status(401).json({ success: false, message: error.message });

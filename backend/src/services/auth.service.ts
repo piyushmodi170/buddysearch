@@ -77,7 +77,7 @@ export const googleAuthService = async (idToken: string) => {
   user = await promoteConfiguredAdmin(user);
   if (!user) throw new Error('Unable to create or load Google account');
 
-  const payload = { id: user.id, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
+  const payload = { id: user.id, email: user.email, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
   return {
     user: publicUser(user),
     token: generateToken(payload),
@@ -86,42 +86,24 @@ export const googleAuthService = async (idToken: string) => {
 };
 
 export const signup = async (data: any) => {
-  const phone = sanitizePhone(data.phone);
-  const email = (data.email || `${phone || Date.now()}@buddysearch.in`).toLowerCase().trim();
+  const email = String(data.email || '').toLowerCase().trim();
+  if (!email || !email.includes('@')) throw new Error('A valid email is required');
 
-  let user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { email },
-        ...(phone ? [{ phone }] : [])
-      ]
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) throw new Error('An account with this email already exists');
+
+  const hashedPassword = await bcrypt.hash(data.password, 10);
+  let user = await prisma.user.create({
+    data: {
+      name: data.name,
+      email,
+      passwordHash: hashedPassword,
+      role: data.role || 'CLIENT',
     }
   });
-  
-  if (user) {
-    const hashedPassword = data.password ? await bcrypt.hash(data.password, 10) : user.passwordHash;
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        name: data.name || user.name,
-        passwordHash: hashedPassword,
-        role: data.role || user.role,
-      }
-    });
-  } else {
-    const hashedPassword = data.password ? await bcrypt.hash(data.password, 10) : undefined;
-    user = await prisma.user.create({
-      data: {
-        name: data.name,
-        email,
-        phone: phone || undefined,
-        passwordHash: hashedPassword,
-        role: data.role || 'CLIENT',
-      }
-    });
-  }
 
-  const payload = { id: user.id, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
+  user = await promoteConfiguredAdmin(user);
+  const payload = { id: user.id, email: user.email, role: user.role, isAdmin: user.isAdmin };
   return {
     user: publicUser(user),
     token: generateToken(payload),
@@ -130,21 +112,12 @@ export const signup = async (data: any) => {
 };
 
 export const login = async (identifierInput: string, pass: string) => {
-  const input = (identifierInput || '').trim();
+  const input = (identifierInput || '').trim().toLowerCase();
   if (!input || !pass) throw new Error('Invalid credentials');
+  if (!input.includes('@')) throw new Error('Please sign in with your email address');
 
-  const isEmail = input.includes('@');
-  const phone = sanitizePhone(input);
-  const cleanEmail = isEmail ? input.toLowerCase() : phone + '@buddysearch.in';
-
-  const user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { email: cleanEmail },
-        ...(isEmail ? [{ email: input.toLowerCase() }] : []),
-        ...(phone ? [{ phone }] : [])
-      ]
-    }
+  const user = await prisma.user.findUnique({
+    where: { email: input }
   });
 
   // One generic message covers both "no such account" and "wrong password",
@@ -156,7 +129,7 @@ export const login = async (identifierInput: string, pass: string) => {
 
   const adminUser = await promoteConfiguredAdmin(user);
   const authenticatedUser = adminUser;
-  const payload = { id: authenticatedUser.id, phone: authenticatedUser.phone || '', role: authenticatedUser.role, isAdmin: authenticatedUser.isAdmin };
+  const payload = { id: authenticatedUser.id, email: authenticatedUser.email, role: authenticatedUser.role, isAdmin: authenticatedUser.isAdmin };
   return {
     user: publicUser(authenticatedUser),
     token: generateToken(payload),
@@ -199,7 +172,7 @@ export const verifyOTPService = async (phoneInput: string, code: string) => {
     });
   }
 
-  const payload = { id: user.id, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
+  const payload = { id: user.id, email: user.email, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
   return {
     user: publicUser(user),
     token: generateToken(payload),
@@ -214,7 +187,7 @@ export const refreshTokenService = async (token: string) => {
   const user = await prisma.user.findUnique({ where: { id: decoded.id } });
   if (!user) throw new Error('User not found');
 
-  const payload = { id: user.id, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
+  const payload = { id: user.id, email: user.email, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
   return {
     token: generateToken(payload),
     refreshToken: generateRefreshToken(payload)

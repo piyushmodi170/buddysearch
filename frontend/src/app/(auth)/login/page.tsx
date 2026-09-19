@@ -39,21 +39,25 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    identifier: '',
+    email: '',
     password: '',
   });
 
   const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.identifier || !formData.password) {
-      toast.error('Please enter your Email/ID and Password');
+    if (!formData.email || !formData.password) {
+      toast.error('Please enter your email and password');
+      return;
+    }
+    if (!formData.email.includes('@')) {
+      toast.error('Please sign in with your email address');
       return;
     }
 
     setLoading(true);
     try {
       const res = await api.post('/api/auth/login', {
-        phone: formData.identifier,
+        email: formData.email.trim().toLowerCase(),
         password: formData.password
       });
       const data = res.data.data || res.data;
@@ -88,7 +92,7 @@ export default function LoginPage() {
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
-          <p className="text-gray-500 mb-6">Sign in with your Google account or fill in your ID & password.</p>
+          <p className="text-gray-500 mb-6">Sign in with your email and password.</p>
 
           {/* Google Sign In Button */}
           <Button
@@ -108,20 +112,20 @@ export default function LoginPage() {
               <div className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-gray-400 font-medium">Or Sign In with ID & Password</span>
+              <span className="bg-white px-3 text-gray-400 font-medium">Or sign in with email</span>
             </div>
           </div>
 
           {/* Manual Input Form (ID & Password) */}
           <form onSubmit={handleManualLogin} className="space-y-4">
             <Input
-              label="Email ID or Phone Number"
-              type="text"
+              label="Email"
+              type="email"
               required
-              placeholder="e.g. piyush.modi@gmail.com or 9999999999"
+              placeholder="e.g. you@example.com"
               icon={<Mail size={18} />}
-              value={formData.identifier}
-              onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
 
             <div className="relative">
