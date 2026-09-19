@@ -21,33 +21,8 @@ interface RequestItem {
   dateTime?: string | Date;
 }
 
-const INITIAL_REQUESTS: RequestItem[] = [
-  { 
-    id: 'req-1', 
-    title: 'Not Your Average Nightout Buddy', 
-    category: 'Nightout Buddy', 
-    description: 'Not here for boring plans. I explore Mumbai nights with energy — streets, sea, and good vibes. If you want something fun and different, let\'s go.',
-    budget: 499,
-    status: 'OPEN', 
-    location: 'Andheri West, Mumbai', 
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), 
-    dateTime: new Date(Date.now() + 86400000).toISOString() 
-  },
-  { 
-    id: 'req-2', 
-    title: 'Photography companion for weekend photowalk', 
-    category: 'Photography', 
-    description: 'Looking for a street photography buddy to explore Bandra fort and local markets this weekend.',
-    budget: 0,
-    status: 'CLOSED', 
-    location: 'Bandra, Mumbai', 
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), 
-    dateTime: new Date(Date.now() - 86400000).toISOString() 
-  },
-];
-
 export default function MyRequestsPage() {
-  const [requests, setRequests] = useState<RequestItem[]>(INITIAL_REQUESTS);
+  const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
   // Edit State Tracking
@@ -70,11 +45,10 @@ export default function MyRequestsPage() {
     setLoading(true);
     try {
       const res = await api.get('/api/requests');
-      if (res.data?.data?.data && Array.isArray(res.data.data.data) && res.data.data.data.length > 0) {
-        setRequests(res.data.data.data);
-      }
+      const list = res.data?.data?.data;
+      setRequests(Array.isArray(list) ? list : []);
     } catch (err) {
-      console.warn('Using initial requests fallback');
+      setRequests([]);
     } finally {
       setLoading(false);
     }
@@ -119,10 +93,7 @@ export default function MyRequestsPage() {
       toast.success('Request updated successfully!');
       setEditingId(null);
     } catch (err: any) {
-      // Local state fallback update
-      setRequests(prev => prev.map(item => item.id === id ? { ...item, ...updatedData } : item));
-      toast.success('Request updated!');
-      setEditingId(null);
+      toast.error(err?.response?.data?.message || 'Could not update request');
     } finally {
       setIsSaving(false);
     }
@@ -138,8 +109,7 @@ export default function MyRequestsPage() {
       setRequests(prev => prev.filter(item => item.id !== id));
       toast.success('Request deleted');
     } catch (err) {
-      setRequests(prev => prev.filter(item => item.id !== id));
-      toast.success('Request removed');
+      toast.error('Could not delete request');
     } finally {
       setDeletingId(null);
     }

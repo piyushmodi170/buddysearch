@@ -102,6 +102,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 initializeSocket(io);
+app.set('io', io);
 
 // A rejected promise in an async event handler (a socket callback, a stray
 // background write) would otherwise terminate the process and take every HTTP

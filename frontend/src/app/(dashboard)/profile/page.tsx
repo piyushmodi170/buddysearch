@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
+import { getGreeting, getInitials, isPaidMembership, planDisplayLabel } from '@/lib/utils';
 import { 
   Camera, 
   CheckCircle2, 
@@ -53,9 +54,9 @@ export default function ProfilePage() {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [stateName, setStateName] = useState(user?.state || 'Maharashtra');
-  const [city, setCity] = useState(user?.city || 'Mumbai');
-  const [pincode, setPincode] = useState(user?.pincode || '400001');
+  const [stateName, setStateName] = useState(user?.state || '');
+  const [city, setCity] = useState(user?.city || '');
+  const [pincode, setPincode] = useState(user?.pincode || '');
   
   const [instagram, setInstagram] = useState(user?.instagram || '');
   const [facebook, setFacebook] = useState(user?.facebook || '');
@@ -63,9 +64,9 @@ export default function ProfilePage() {
   const [twitter, setTwitter] = useState(user?.twitter || '');
 
   // Buddy Profile
-  const [bio, setBio] = useState(user?.bio || 'Love exploring new cafes and watching sci-fi movies.');
+  const [bio, setBio] = useState(user?.bio || '');
   const [isAvailable, setIsAvailable] = useState(user?.availableForRequests ?? true);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(['Movies', 'Fitness', 'Food', 'Travel']);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   // File Upload State
   const [avatarPreview, setAvatarPreview] = useState<string>(user?.avatar || '');
@@ -82,6 +83,32 @@ export default function ProfilePage() {
 
   const photoInputRef = useRef<HTMLInputElement>(null);
   const aadhaarInputRef = useRef<HTMLInputElement>(null);
+  const [stats, setStats] = useState({ requests: 0, open: 0, notifications: 0, messages: 0 });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [reqRes, notifRes, chatRes] = await Promise.all([
+          api.get('/api/requests', { params: { limit: 50 } }).catch(() => null),
+          api.get('/api/notifications/unread-count').catch(() => null),
+          api.get('/api/chats').catch(() => null),
+        ]);
+        if (cancelled) return;
+        const requests = Array.isArray(reqRes?.data?.data?.data) ? reqRes.data.data.data : [];
+        const chats = Array.isArray(chatRes?.data?.data) ? chatRes.data.data : [];
+        setStats({
+          requests: requests.length,
+          open: requests.filter((item: any) => item.status === 'OPEN').length,
+          notifications: notifRes?.data?.data?.count || 0,
+          messages: chats.reduce((sum: number, chat: any) => sum + (chat.unreadCount || 0), 0),
+        });
+      } catch {
+        if (!cancelled) setStats({ requests: 0, open: 0, notifications: 0, messages: 0 });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Sync state with user store when loaded
   useEffect(() => {
@@ -254,7 +281,8 @@ export default function ProfilePage() {
     }
   };
 
-  const completionPercentage = user?.profileCompletion || 90;
+  const completionPercentage = user?.profileCompletion || 0;
+  const paid = isPaidMembership(user);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl mx-auto pb-12">
@@ -298,10 +326,16 @@ export default function ProfilePage() {
                 className="relative w-28 h-28 rounded-full bg-gradient-to-tr from-primary to-primary-dark border-4 border-white shadow-md overflow-hidden mb-3 group cursor-pointer"
               >
                 <img 
-                  src={avatarPreview || user?.avatar || "https://i.pravatar.cc/150?img=12"} 
+                  src={avatarPreview || user?.avatar || ''} 
                   alt="Avatar"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
+                {!avatarPreview && !user?.avatar && (
+                  <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold">
+                    {getInitials(name || user?.name || '')}
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white">
                   <Camera size={24} />
                   <span className="text-[10px] font-semibold mt-1">Upload</span>
@@ -636,11 +670,11 @@ export default function ProfilePage() {
             <div>
               <p className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">WELCOME BACK</p>
               <h2 className="text-lg font-black text-gray-900">
-                GOOD MORNING {user?.name ? user.name.split(' ')[0] : 'PIYUSH'}!
+                {getGreeting()} {user?.name ? user.name.split(' ')[0].toUpperCase() : ''}
               </h2>
             </div>
             <span className="text-[11px] font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full border border-primary/20">
-              + BUDDY & CLIENT
+              {user?.role === 'BOTH' ? 'BUDDY & CLIENT' : user?.role || 'MEMBER'}
             </span>
           </div>
         </Card>
@@ -649,19 +683,19 @@ export default function ProfilePage() {
         <div className="grid grid-cols-2 gap-3">
           <Card className="p-3 border border-gray-200 shadow-sm hover:border-primary/40 transition-colors">
             <span className="text-xs text-gray-500 font-medium block">My Requests</span>
-            <span className="text-2xl font-bold text-gray-900">1</span>
+            <span className="text-2xl font-bold text-gray-900">{stats.requests}</span>
           </Card>
           <Card className="p-3 border border-gray-200 shadow-sm hover:border-primary/40 transition-colors">
             <span className="text-xs text-gray-500 font-medium block">Open Now</span>
-            <span className="text-2xl font-bold text-emerald-600">1</span>
+            <span className="text-2xl font-bold text-emerald-600">{stats.open}</span>
           </Card>
           <Card className="p-3 border border-gray-200 shadow-sm hover:border-primary/40 transition-colors">
             <span className="text-xs text-gray-500 font-medium block">Unread Alerts</span>
-            <span className="text-2xl font-bold text-amber-600">7</span>
+            <span className="text-2xl font-bold text-amber-600">{stats.notifications}</span>
           </Card>
           <Card className="p-3 border border-gray-200 shadow-sm hover:border-primary/40 transition-colors">
             <span className="text-xs text-gray-500 font-medium block">Unread Msgs</span>
-            <span className="text-2xl font-bold text-gray-400">—</span>
+            <span className="text-2xl font-bold text-gray-400">{stats.messages || '—'}</span>
           </Card>
         </div>
 
@@ -670,14 +704,22 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <CreditCard size={18} />
-              <span className="font-bold text-sm">Basic Buddy</span>
+              <span className="font-bold text-sm">{paid ? `${planDisplayLabel(user)} Buddy` : 'Free account'}</span>
             </div>
-            <span className="text-[10px] bg-black/20 px-2 py-0.5 rounded-full font-medium">Active</span>
+            {paid && (
+              <span className="text-[10px] bg-black/20 px-2 py-0.5 rounded-full font-medium">Active</span>
+            )}
           </div>
-          <p className="text-xs text-amber-100 mb-3">Expires: 8 Dec 2026</p>
-          <Button variant="outline" size="sm" className="w-full bg-white/10 hover:bg-white/20 text-white border-white/30 text-xs">
-            Upgrade Membership Plan
-          </Button>
+          <p className="text-xs text-amber-100 mb-3">
+            {paid && user?.membershipExpiry
+              ? `Expires: ${new Date(user.membershipExpiry).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+              : 'No paid plan'}
+          </p>
+          <a href="/membership">
+            <Button variant="outline" size="sm" className="w-full bg-white/10 hover:bg-white/20 text-white border-white/30 text-xs">
+              {paid ? 'Manage Membership Plan' : 'Upgrade Membership Plan'}
+            </Button>
+          </a>
         </Card>
 
         {/* Quick Actions List */}
@@ -685,10 +727,10 @@ export default function ProfilePage() {
           <h3 className="font-bold text-xs text-gray-400 uppercase tracking-wider px-3 pt-2 mb-2">Quick Actions</h3>
           <div className="flex flex-col divide-y divide-gray-100">
             {[
-              { label: 'Browse Buddies', href: '/discover' },
+              { label: 'Browse Buddies', href: '/find' },
               { label: 'Post Request', href: '/posts' },
               { label: 'My Requests', href: '/requests' },
-              { label: 'Browse Feed', href: '/feed' },
+              { label: 'Hire Feed', href: '/hire' },
               { label: 'Open Chats', href: '/messages' }
             ].map((action, i) => (
               <a 

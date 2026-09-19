@@ -33,7 +33,7 @@ export const getOrCreateChat = async (user1Id: string, user2Id: string) => {
 };
 
 export const getUserChats = async (userId: string) => {
-  return prisma.chat.findMany({
+  const chats = await prisma.chat.findMany({
     where: {
       OR: [{ user1Id: userId }, { user2Id: userId }]
     },
@@ -44,6 +44,13 @@ export const getUserChats = async (userId: string) => {
     },
     orderBy: { lastMessageAt: 'desc' }
   });
+
+  return Promise.all(chats.map(async (chat) => {
+    const unreadCount = await prisma.message.count({
+      where: { chatId: chat.id, senderId: { not: userId }, seen: false }
+    });
+    return { ...chat, unreadCount };
+  }));
 };
 
 export const getChatMessages = async (chatId: string, userId: string, page: number, limit: number) => {

@@ -4,24 +4,18 @@ import {
   Search, 
   MapPin, 
   Star, 
-  Sparkles, 
   MessageCircle, 
-  Flame, 
   CheckCircle2, 
   ChevronDown, 
   X, 
-  Filter, 
   Loader2, 
-  Heart, 
-  ShieldCheck, 
-  UserCheck, 
-  Globe,
-  SlidersHorizontal
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface Buddy {
   id: string;
@@ -43,253 +37,36 @@ interface Buddy {
   createdAt?: string;
 }
 
-// Full Rich Dataset of Buddies across India
-const MASTER_BUDDIES: Buddy[] = [
-  { 
-    id: 'b-1', 
-    name: 'Priyanka Gaikwad', 
-    role: 'Client & Buddy', 
-    city: 'Mumbai', 
-    state: 'Maharashtra',
-    location: 'Mumbai, Maharashtra', 
-    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600', 
-    verified: true, 
-    online: true, 
-    isStar: true,
-    interests: ['Movies', 'Fitness', 'Travel', 'Photography'],
-    bio: 'Love exploring new cafes, watching sci-fi movies and weekend photowalks across Mumbai.',
-    rating: 4.9,
-    reviewCount: 18,
-    availableForRequests: true,
-    createdAt: '2026-09-01'
-  },
-  { 
-    id: 'b-2', 
-    name: 'Ishwari Jadhav', 
-    role: 'Client & Buddy', 
-    city: 'Pune', 
-    state: 'Maharashtra',
-    location: 'Pune, Maharashtra', 
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600', 
-    verified: true, 
-    online: true, 
-    isStar: true,
-    interests: ['Food', 'Cafes', 'Music', 'Shopping'],
-    bio: 'Food lover and cafe hopper in Pune. Always up for good coffee and long conversations.',
-    rating: 4.8,
-    reviewCount: 14,
-    availableForRequests: true,
-    createdAt: '2026-09-05'
-  },
-  { 
-    id: 'b-3', 
-    name: 'Sahil Jadhav', 
-    role: 'Client & Buddy', 
-    city: 'Mumbai', 
-    state: 'Maharashtra',
-    location: 'Mumbai, Maharashtra', 
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600', 
-    verified: true, 
-    online: true, 
-    isStar: true,
-    interests: ['Fitness', 'Outdoor', 'Tech', 'Gaming'],
-    bio: 'Fitness enthusiast and techie. Looking for gym partners and gaming buddies in Mumbai.',
-    rating: 4.7,
-    reviewCount: 12,
-    availableForRequests: true,
-    createdAt: '2026-09-10'
-  },
-  { 
-    id: 'b-4', 
-    name: 'Zee', 
-    role: 'Client & Buddy', 
-    city: 'Mumbai', 
-    state: 'Maharashtra',
-    location: 'Mumbai, Maharashtra', 
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600', 
-    verified: true, 
-    online: true, 
-    isStar: true,
-    interests: ['Nightlife', 'Clubbing', 'Music', 'Events'],
-    bio: 'Nightlife enthusiast. Explore Mumbai sea face, rooftop lounges and music festivals.',
-    rating: 4.9,
-    reviewCount: 22,
-    availableForRequests: true,
-    createdAt: '2026-08-20'
-  },
-  { 
-    id: 'b-5', 
-    name: 'Aniruddha', 
-    role: 'Client & Buddy', 
-    city: 'Navi Mumbai', 
-    state: 'Maharashtra',
-    location: 'Navi Mumbai, Maharashtra', 
-    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600', 
-    verified: true, 
-    online: true, 
-    isStar: true,
-    interests: ['Travel', 'Roadtrips', 'Photography'],
-    bio: 'Passionate traveller and photographer. Exploring scenic spots and weekend getaways.',
-    rating: 4.6,
-    reviewCount: 9,
-    availableForRequests: true,
-    createdAt: '2026-09-12'
-  },
-  { 
-    id: 'b-6', 
-    name: 'Bharati Mahale', 
-    role: 'Buddy', 
-    city: 'Nashik', 
-    state: 'Maharashtra',
-    location: 'Nashik, Maharashtra', 
-    image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=600', 
-    verified: false, 
-    online: true, 
-    interests: ['Art', 'Reading', 'Nature'],
-    bio: 'Art and book lover. Enjoy peaceful nature walks and cultural discussions.',
-    rating: 4.5,
-    reviewCount: 6,
-    availableForRequests: true,
-    createdAt: '2026-09-15'
-  },
-  { 
-    id: 'b-7', 
-    name: 'Vaibhav Jadhav', 
-    role: 'Buddy', 
-    city: 'Baramati', 
-    state: 'Maharashtra',
-    location: 'Baramati, Maharashtra', 
-    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600',
-    online: true, 
-    interests: ['Sports', 'Cricket', 'Gaming'],
-    bio: 'Sports freak and casual gamer.',
-    rating: 4.3,
-    reviewCount: 4,
-    availableForRequests: true,
-    createdAt: '2026-09-16'
-  },
-  { 
-    id: 'b-8', 
-    name: 'Vishakha Sojwal', 
-    role: 'Buddy', 
-    city: 'Mumbai', 
-    state: 'Maharashtra',
-    location: 'Mumbai, Maharashtra', 
-    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600', 
-    verified: true, 
-    online: true, 
-    interests: ['Shopping', 'Fashion', 'Events'],
-    bio: 'Fashion enthusiast and shopping buddy. Love discovering local fashion flea markets.',
-    rating: 4.9,
-    reviewCount: 15,
-    availableForRequests: true,
-    createdAt: '2026-09-14'
-  },
-  { 
-    id: 'b-9', 
-    name: 'Sulakshna Nivate', 
-    role: 'Buddy', 
-    city: 'Mumbai', 
-    state: 'Maharashtra',
-    location: 'Mumbai, Maharashtra', 
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600',
-    online: true, 
-    interests: ['Cooking', 'Food', 'Movies'],
-    bio: 'Home chef and movie buff.',
-    rating: 4.4,
-    reviewCount: 5,
-    availableForRequests: true,
-    createdAt: '2026-09-16'
-  },
-
-  { 
-    id: 'b-10', 
-    name: 'Harshini', 
-    role: 'Buddy', 
-    city: 'Coimbatore', 
-    state: 'Tamil Nadu',
-    location: 'Coimbatore, Tamil Nadu', 
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600', 
-    online: true, 
-    interests: ['Music', 'Dance', 'Travel'],
-    bio: 'Classical music lover and nature explorer.',
-    rating: 4.7,
-    reviewCount: 11,
-    availableForRequests: true,
-    createdAt: '2026-09-15'
-  },
-  { 
-    id: 'b-11', 
-    name: 'Nandini Singha', 
-    role: 'Buddy', 
-    city: 'Guwahati', 
-    state: 'Assam',
-    location: 'Guwahati, Assam', 
-    image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600', 
-    online: true, 
-    interests: ['Photography', 'Travel', 'Crafts'],
-    bio: 'Capturing landscapes and exploring Northeast India.',
-    rating: 4.8,
-    reviewCount: 16,
-    availableForRequests: true,
-    createdAt: '2026-09-13'
-  },
-  { 
-    id: 'b-12', 
-    name: 'Suman Das', 
-    role: 'Buddy', 
-    city: 'Kolkata', 
-    state: 'West Bengal',
-    location: 'Kolkata, West Bengal', 
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=600', 
-    online: true, 
-    interests: ['Food', 'Cafes', 'Reading'],
-    bio: 'Kolkata street food tour guide and book lover.',
-    rating: 4.6,
-    reviewCount: 8,
-    availableForRequests: true,
-    createdAt: '2026-09-02'
-  },
-  { 
-    id: 'b-13', 
-    name: 'Daisy Kalita', 
-    role: 'Buddy', 
-    city: 'Guwahati', 
-    state: 'Assam',
-    location: 'Guwahati, Assam', 
-    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600', 
-    verified: true, 
-    online: true, 
-    interests: ['Fashion', 'Events', 'Music'],
-    bio: 'Event organiser and style blogger.',
-    rating: 4.9,
-    reviewCount: 20,
-    availableForRequests: true,
-    createdAt: '2026-08-28'
-  },
-  { 
-    id: 'b-14', 
-    name: 'Pubali Saikia', 
-    role: 'Buddy', 
-    city: 'Assam', 
-    state: 'Assam',
-    location: 'Assam, India', 
-    image: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&q=80&w=600', 
-    verified: true, 
-    online: true, 
-    interests: ['Travel', 'Culture', 'Food'],
-    bio: 'Exploring traditional crafts and tea gardens.',
-    rating: 4.8,
-    reviewCount: 13,
-    availableForRequests: true,
-    createdAt: '2026-09-08'
-  }
-];
+function mapBuddy(user: any): Buddy {
+  const interests = (user.interests || [])
+    .map((item: any) => item.interest?.label || item.interest?.slug || item)
+    .filter((value: any) => typeof value === 'string');
+  return {
+    id: user.id,
+    name: user.name || 'Buddy',
+    role: user.role === 'BOTH' ? 'Client & Buddy' : user.role === 'BUDDY' ? 'Buddy' : (user.role || 'Member'),
+    city: user.city || '',
+    state: user.state,
+    location: [user.city, user.state].filter(Boolean).join(', ') || 'India',
+    image: user.avatar || user.image,
+    initials: (user.name || 'B').slice(0, 2).toUpperCase(),
+    verified: Boolean(user.aadhaarVerified || user.verified),
+    online: Boolean(user.isOnline || user.online),
+    isStar: user.membershipPlan === 'STAR' || user.membershipPlan === 'PREMIUM',
+    interests,
+    bio: user.bio,
+    rating: user.avgRating || user.rating,
+    reviewCount: user.reviewCount,
+    availableForRequests: user.availableForRequests,
+    createdAt: user.createdAt,
+  };
+}
 
 const LOCATIONS_LIST = ['All Locations', 'Mumbai', 'Pune', 'Navi Mumbai', 'Bangalore', 'Delhi', 'Hyderabad', 'Kolkata', 'Guwahati', 'Coimbatore', 'Baramati', 'Nashik'];
 const INTERESTS_LIST = ['All Interests', 'Movies', 'Fitness', 'Travel', 'Photography', 'Food', 'Events', 'Gaming', 'Art', 'Nightlife', 'Shopping', 'Tech', 'Music'];
 
 export default function FindPage() {
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<string>('for-you');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('All Locations');
@@ -306,9 +83,10 @@ export default function FindPage() {
   const [apiBuddies, setApiBuddies] = useState<Buddy[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const nearCity = user?.city || '';
   const filterTabs = [
     { id: 'for-you', label: 'For You' },
-    { id: 'near-you', label: 'Near You - Mumbai' },
+    { id: 'near-you', label: nearCity ? `Near You - ${nearCity}` : 'Near You' },
     { id: 'new-joiners', label: 'New Joiners' },
     { id: 'trending', label: 'Trending' },
     { id: 'all-india', label: 'All India' },
@@ -322,19 +100,20 @@ export default function FindPage() {
   const fetchBuddiesFromApi = async () => {
     setLoading(true);
     try {
-      const cityFilter = selectedLocation !== 'All Locations' ? selectedLocation : (activeTab === 'near-you' ? 'Mumbai' : undefined);
-      const res = await api.get('/api/user/discover', {
+      const cityFilter = selectedLocation !== 'All Locations'
+        ? selectedLocation
+        : (activeTab === 'near-you' ? nearCity || undefined : undefined);
+      const tab = activeTab === 'new-joiners' ? 'new' : activeTab;
+      const res = await api.get('/api/users/discover', {
         params: {
-          tab: activeTab,
+          tab,
           search: searchQuery || undefined,
           city: cityFilter
         }
       });
-      if (res.data?.data?.data && Array.isArray(res.data.data.data) && res.data.data.data.length > 0) {
-        setApiBuddies(res.data.data.data);
-      }
+      setApiBuddies((res.data?.data?.data || []).map(mapBuddy));
     } catch (err) {
-      console.warn('API discover note, using rich local dataset fallback');
+      setApiBuddies([]);
     } finally {
       setLoading(false);
     }
@@ -342,7 +121,7 @@ export default function FindPage() {
 
   // Master Filtered Dataset Calculation
   const filteredBuddies = useMemo(() => {
-    let dataset = MASTER_BUDDIES;
+    let dataset = apiBuddies;
 
     // Filter by Search Input
     if (searchQuery.trim()) {
@@ -369,38 +148,22 @@ export default function FindPage() {
     // Filter by Active Tab
     switch (activeTab) {
       case 'near-you':
-        return dataset.filter(b => b.city === 'Mumbai' || b.location.includes('Mumbai') || b.city === 'Pune' || b.city === 'Navi Mumbai');
+        if (!nearCity) return dataset;
+        return dataset.filter(b =>
+          b.city.toLowerCase() === nearCity.toLowerCase() ||
+          b.location.toLowerCase().includes(nearCity.toLowerCase())
+        );
       case 'new-joiners':
-        return [...dataset].sort((a, b) => new Date(b.createdAt || '2026-09-01').getTime() - new Date(a.createdAt || '2026-09-01').getTime());
+        return [...dataset].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       case 'trending':
-        return [...dataset].sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5));
+        return [...dataset].sort((a, b) => (b.rating || 0) - (a.rating || 0));
       case 'all-india':
         return dataset;
       case 'for-you':
       default:
         return dataset;
     }
-  }, [activeTab, searchQuery, selectedLocation, selectedInterest]);
-
-  // Spotlight Buddies (Stars / High Ratings)
-  const spotlightBuddies = useMemo(() => {
-    return filteredBuddies.filter(b => b.isStar || (b.rating && b.rating >= 4.7)).slice(0, 5);
-  }, [filteredBuddies]);
-
-  // Near You Buddies
-  const nearYouBuddies = useMemo(() => {
-    return filteredBuddies.filter(b => b.city === 'Mumbai' || b.location.includes('Mumbai') || b.city === 'Pune' || b.city === 'Nashik').slice(0, 5);
-  }, [filteredBuddies]);
-
-  // Recently Joined Buddies
-  const recentlyJoinedBuddies = useMemo(() => {
-    return filteredBuddies.slice(5, 10);
-  }, [filteredBuddies]);
-
-  // Most Active Buddies
-  const mostActiveBuddies = useMemo(() => {
-    return filteredBuddies.slice(7, 12);
-  }, [filteredBuddies]);
+  }, [apiBuddies, activeTab, searchQuery, selectedLocation, selectedInterest, nearCity]);
 
   // Render Individual Buddy Card
   const renderBuddyCard = (buddy: Buddy) => (
@@ -616,7 +379,11 @@ export default function FindPage() {
       </div>
 
       {/* RENDER DYNAMIC SECTIONS */}
-      {filteredBuddies.length === 0 ? (
+      {loading ? (
+        <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 text-gray-400 text-sm flex items-center justify-center gap-2">
+          <Loader2 size={18} className="animate-spin" /> Loading people…
+        </div>
+      ) : filteredBuddies.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
           <Globe size={48} className="text-gray-300 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-gray-900 mb-1">No buddies found</h3>
@@ -634,71 +401,21 @@ export default function FindPage() {
         </div>
       ) : (
         <>
-          {/* SECTION 1: Spotlight — Star buddies */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
+          {filteredBuddies.some((buddy) => buddy.isStar) && (
+            <section className="space-y-4">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Star className="text-amber-500 fill-amber-500" size={18} />
+                <Star size={18} className="text-amber-500 fill-amber-400" />
                 Spotlight — Star buddies
               </h2>
-              <span className="text-xs font-bold text-red-500 hover:underline cursor-pointer">
-                View All ({spotlightBuddies.length}) &gt;
-              </span>
-            </div>
-
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {filteredBuddies.filter((buddy) => buddy.isStar).map(renderBuddyCard)}
+              </div>
+            </section>
+          )}
+          <section className="space-y-4">
+            <h2 className="text-lg font-bold text-gray-900">People on BuddySearch</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {(spotlightBuddies.length > 0 ? spotlightBuddies : filteredBuddies.slice(0, 5)).map(renderBuddyCard)}
-            </div>
-          </section>
-
-          {/* SECTION 2: Near you */}
-          <section className="space-y-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <MapPin className="text-red-500" size={18} />
-                Near you {selectedLocation !== 'All Locations' ? `- ${selectedLocation}` : ''}
-              </h2>
-              <span className="text-xs font-bold text-red-500 hover:underline cursor-pointer">
-                View All &gt;
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {(nearYouBuddies.length > 0 ? nearYouBuddies : filteredBuddies.slice(0, 5)).map(renderBuddyCard)}
-            </div>
-          </section>
-
-          {/* SECTION 3: Recently Joined */}
-          <section className="space-y-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Sparkles className="text-amber-500" size={18} />
-                Recently Joined
-              </h2>
-              <span className="text-xs font-bold text-red-500 hover:underline cursor-pointer">
-                View All &gt;
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {(recentlyJoinedBuddies.length > 0 ? recentlyJoinedBuddies : filteredBuddies.slice(0, 5)).map(renderBuddyCard)}
-            </div>
-          </section>
-
-          {/* SECTION 4: Most Active */}
-          <section className="space-y-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Flame className="text-red-500 fill-red-500" size={18} />
-                Most Active
-              </h2>
-              <span className="text-xs font-bold text-red-500 hover:underline cursor-pointer">
-                View All &gt;
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {(mostActiveBuddies.length > 0 ? mostActiveBuddies : filteredBuddies.slice(0, 5)).map(renderBuddyCard)}
+              {filteredBuddies.map(renderBuddyCard)}
             </div>
           </section>
         </>
@@ -762,7 +479,7 @@ export default function FindPage() {
               <div>
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">About</h4>
                 <p className="text-sm text-gray-700 leading-relaxed font-medium">
-                  {selectedBuddy.bio || 'Love exploring new cafes, outdoor activities and meeting friendly people in the city.'}
+                  {selectedBuddy.bio || 'This member has not added a bio yet.'}
                 </p>
               </div>
 

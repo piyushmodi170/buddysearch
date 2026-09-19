@@ -44,7 +44,7 @@ export const updateProfileSchema = z.object({
 });
 
 export const createRequestSchema = z.object({
-  type: z.string().optional(),
+  type: z.enum(['NEED_BUDDY', 'AM_BUDDY']).optional(),
   category: z.string(),
   title: z.string().min(3).max(100),
   description: z.string().optional(),

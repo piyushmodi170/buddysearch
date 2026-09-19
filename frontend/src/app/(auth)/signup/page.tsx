@@ -66,7 +66,7 @@ export default function SignupPage() {
       const data = res.data.data || res.data;
       login(data.user, data.token);
       toast.success('Account created successfully!');
-      router.push('/dashboard');
+      router.push('/hire');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Unable to create your account. Please try again.');
     } finally {

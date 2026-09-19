@@ -19,7 +19,7 @@ export const registerChatHandlers = (io: Server, socket: Socket) => {
   socket.on('send_message', async (data: { chatId: string, text: string }) => {
     try {
       const msg = await sendMessageService(data.chatId, userId, data.text);
-      io.to(data.chatId).emit('new_message', msg);
+      io.to(data.chatId).emit('new_message', { chatId: data.chatId, message: msg });
 
       // Notify the other participant if they are not in the room
       const chat = await prisma.chat.findUnique({

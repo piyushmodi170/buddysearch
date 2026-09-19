@@ -27,6 +27,29 @@ export function getGreeting() {
   return 'GOOD EVENING';
 }
 
+export function isPaidMembership(user?: {
+  membershipPlan?: string | null;
+  membershipExpiry?: string | Date | null;
+  membership?: string | null;
+} | null) {
+  if (!user) return false;
+  const plan = (user.membershipPlan || user.membership || 'BASIC').toUpperCase();
+  if (plan === 'STAR') return true;
+  if (!plan || plan === 'BASIC' || plan === 'FREE') return false;
+  if (!user.membershipExpiry) return false;
+  const when = new Date(user.membershipExpiry);
+  return !Number.isNaN(when.getTime()) && when.getTime() > Date.now();
+}
+
+export function planDisplayLabel(user?: {
+  membershipPlan?: string | null;
+  membershipExpiry?: string | Date | null;
+  membership?: string | null;
+} | null) {
+  if (!isPaidMembership(user)) return 'Free';
+  return (user?.membershipPlan || user?.membership || 'Paid').toString();
+}
+
 export function getInitials(name: string) {
   if (!name) return '?';
   const parts = name.split(' ');

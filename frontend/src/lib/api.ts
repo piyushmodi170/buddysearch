@@ -1,12 +1,17 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
+import { getApiBaseUrl } from './publicUrl';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  baseURL: getApiBaseUrl(),
+  timeout: 20000,
 });
 
 api.interceptors.request.use(
   (config) => {
+    if (!config.baseURL) {
+      config.baseURL = getApiBaseUrl();
+    }
     const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -19,8 +24,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      console.warn('API authentication note:', error.config?.url);
+    const url = String(error.config?.url || '');
+    const isAuthAttempt = /\/auth\/(login|signup|otp)/.test(url);
+    if (error.response?.status === 401 && !isAuthAttempt) {
+      console.warn('API authentication note:', url);
     }
     return Promise.reject(error);
   }

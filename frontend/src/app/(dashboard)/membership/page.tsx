@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Star, Shield, Heart, CheckCircle2, Lock, Zap } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
+import { isPaidMembership, planDisplayLabel } from '@/lib/utils';
 import api from '@/lib/api';
 import { loadRazorpayScript, openCheckout } from '@/lib/razorpay';
 import toast from 'react-hot-toast';
@@ -129,10 +130,11 @@ export default function MembershipPage() {
     }
   };
 
-  const currentPlan = user?.membershipPlan || 'BASIC';
-  const expiryDate = user?.membershipExpiry
+  const currentPlan = isPaidMembership(user) ? (user?.membershipPlan || 'BASIC') : 'BASIC';
+  const paid = isPaidMembership(user);
+  const expiryDate = paid && user?.membershipExpiry
     ? new Date(user.membershipExpiry).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
-    : '—';
+    : null;
 
   if (fetching) {
     return (
@@ -153,7 +155,9 @@ export default function MembershipPage() {
         <h3 className="text-primary font-bold tracking-widest text-sm mb-3">UPGRADE YOUR EXPERIENCE</h3>
         <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Choose Your Plan</h1>
         <p className="text-gray-500 font-medium">
-          Current plan: <span className="text-gray-900 font-bold">{currentPlan}</span> · Expires {expiryDate}
+          Current plan:{' '}
+          <span className="text-gray-900 font-bold">{paid ? planDisplayLabel(user) : 'Free'}</span>
+          {expiryDate ? ` · Expires ${expiryDate}` : paid ? '' : ' · No paid membership'}
         </p>
       </div>
 
@@ -219,7 +223,7 @@ export default function MembershipPage() {
               {/* CTA Button */}
               {isCurrent ? (
                 <div className="text-center text-sm font-medium text-primary">
-                  ✓ Active Plan
+                  {plan.name === 'BASIC' && !paid ? 'Your free plan' : '✓ Active Plan'}
                 </div>
               ) : (
                 <Button

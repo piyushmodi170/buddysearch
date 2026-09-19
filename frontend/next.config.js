@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const backend = process.env.BACKEND_INTERNAL_URL || 'http://127.0.0.1:4000';
+
 const nextConfig = {
   output: 'standalone',
   images: {
@@ -8,10 +10,13 @@ const nextConfig = {
       { protocol: 'http', hostname: 'localhost' },
     ],
   },
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api',
-    NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000',
-  }
-}
+  async rewrites() {
+    return [
+      { source: '/api/:path*', destination: `${backend}/api/:path*` },
+      { source: '/socket.io', destination: `${backend}/socket.io` },
+      { source: '/socket.io/:path*', destination: `${backend}/socket.io/:path*` },
+    ];
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

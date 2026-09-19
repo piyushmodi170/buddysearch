@@ -8,8 +8,8 @@ const router = Router();
 
 router.get('/usage', auth, async (req, res, next) => {
   try {
-    const count = await requestService.getMonthlyPostCount(req.user!.id);
-    res.json({ success: true, data: { count } });
+    const data = await requestService.getPostUsage(req.user!.id);
+    res.json({ success: true, data });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }
