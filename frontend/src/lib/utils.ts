@@ -31,11 +31,14 @@ export function isPaidMembership(user?: {
   membershipPlan?: string | null;
   membershipExpiry?: string | Date | null;
   membership?: string | null;
+  isAdmin?: boolean;
 } | null) {
   if (!user) return false;
-  const plan = (user.membershipPlan || user.membership || 'BASIC').toUpperCase();
+  if (user.isAdmin) return true;
+  const plan = (user.membershipPlan || user.membership || '').toUpperCase();
   if (plan === 'STAR') return true;
-  if (!plan || plan === 'BASIC' || plan === 'FREE') return false;
+  if (!plan || plan === 'FREE') return false;
+  // New accounts are BASIC with no expiry. Buying any plan (including Basic) sets expiry.
   if (!user.membershipExpiry) return false;
   const when = new Date(user.membershipExpiry);
   return !Number.isNaN(when.getTime()) && when.getTime() > Date.now();

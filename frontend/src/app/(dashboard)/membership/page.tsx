@@ -40,7 +40,7 @@ const PLAN_COLORS: Record<string, string> = {
 };
 
 export default function MembershipPage() {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState<string | null>(null);
   const [fetching, setFetching] = useState(true);
@@ -106,11 +106,18 @@ export default function MembershipPage() {
         order_id: order.id,
         handler: async (response: any) => {
           try {
-            await api.post('/api/payment/verify', {
+            const verifyRes = await api.post('/api/payment/verify', {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
             });
+            const nextUser = verifyRes.data?.data?.user;
+            if (nextUser) {
+              updateUser(nextUser);
+            } else {
+              const profile = await api.get('/api/users/profile').catch(() => null);
+              if (profile?.data?.data) updateUser(profile.data.data);
+            }
             toast.success('Membership upgraded successfully!');
           } catch {
             toast.error('Payment verification failed');
@@ -156,8 +163,8 @@ export default function MembershipPage() {
         <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">Choose Your Plan</h1>
         <p className="text-gray-500 font-medium">
           Current plan:{' '}
-          <span className="text-gray-900 font-bold">{paid ? planDisplayLabel(user) : 'Free'}</span>
-          {expiryDate ? ` · Expires ${expiryDate}` : paid ? '' : ' · No paid membership'}
+          <span className="text-gray-900 font-bold">{paid ? planDisplayLabel(user) : 'None'}</span>
+          {expiryDate ? ` · Expires ${expiryDate}` : paid ? '' : ' · Subscribe to unlock Hire, Find, chats, and posts'}
         </p>
       </div>
 

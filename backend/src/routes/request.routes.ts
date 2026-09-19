@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
+import { requirePaid } from '../middleware/requirePaid.js';
 import { validate } from '../middleware/validate.js';
 import { createRequestSchema, updateRequestSchema, createOfferSchema } from '../utils/validators.js';
 import * as requestService from '../services/request.service.js';
@@ -15,7 +16,7 @@ router.get('/usage', auth, async (req, res, next) => {
   }
 });
 
-router.post('/', auth, validate(createRequestSchema), async (req, res, next) => {
+router.post('/', auth, requirePaid, validate(createRequestSchema), async (req, res, next) => {
   try {
     const data = await requestService.createRequestService(req.user!.id, req.body);
     res.json({ success: true, data });
@@ -71,7 +72,7 @@ router.delete('/:id', auth, async (req, res, next) => {
   }
 });
 
-router.post('/:id/offer', auth, validate(createOfferSchema), async (req, res, next) => {
+router.post('/:id/offer', auth, requirePaid, validate(createOfferSchema), async (req, res, next) => {
   try {
     const data = await requestService.createOfferService(req.params.id, req.user!.id, req.body.message);
     res.json({ success: true, data });
