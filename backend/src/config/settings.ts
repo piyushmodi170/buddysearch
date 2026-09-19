@@ -104,6 +104,18 @@ export const getSetting = async <K extends SettingKey>(key: K): Promise<Settings
   }
 };
 
+/** GIS may use the env Client ID while Admin settings store a different one. Accept both. */
+export const googleAudienceIds = async () => {
+  const google = await getSetting('google');
+  return Array.from(
+    new Set(
+      [process.env.GOOGLE_CLIENT_ID, google.clientId]
+        .map((value) => String(value || '').trim())
+        .filter(Boolean)
+    )
+  );
+};
+
 const looksMasked = (value: string) => value.includes('•') || /^\*+$/.test(value);
 
 export const setSetting = async <K extends SettingKey>(

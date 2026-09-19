@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { validate } from '../middleware/validate.js';
 import { signupSchema, loginSchema } from '../utils/validators.js';
 import * as authService from '../services/auth.service.js';
-import { getSetting } from '../config/settings.js';
+import { googleAudienceIds } from '../config/settings.js';
 import { isDatabaseError, publicAuthError } from '../config/db-errors.js';
 
 const router = Router();
@@ -10,21 +10,12 @@ const router = Router();
 const authErrorMessage = (error: any, fallback: string) => publicAuthError(error, fallback);
 
 router.get('/google/config', async (_req, res) => {
-  const fromEnv = process.env.GOOGLE_CLIENT_ID || '';
-  if (fromEnv) {
-    return res.json({
-      success: true,
-      data: { clientId: fromEnv, configured: true },
-    });
-  }
   try {
-    const google = await getSetting('google');
+    const ids = await googleAudienceIds();
+    const clientId = ids[0] || '';
     res.json({
       success: true,
-      data: {
-        clientId: google.clientId || '',
-        configured: Boolean(google.clientId),
-      }
+      data: { clientId, configured: Boolean(clientId) },
     });
   } catch {
     res.json({ success: true, data: { clientId: '', configured: false } });
@@ -33,11 +24,11 @@ router.get('/google/config', async (_req, res) => {
 
 router.post('/google', async (req, res, next) => {
   try {
-    const { idToken } = req.body;
+    const { idToken, role } = req.body;
     if (!idToken) {
       return res.status(400).json({ success: false, message: 'Google identity token is required' });
     }
-    const data = await authService.googleAuthService(idToken);
+    const data = await authService.googleAuthService(idToken, role);
     res.json({ success: true, data });
   } catch (error: any) {
     res.status(400).json({ success: false, message: authErrorMessage(error, 'Google sign-in failed') });

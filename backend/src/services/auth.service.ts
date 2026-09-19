@@ -3,7 +3,7 @@ import { generateToken, generateRefreshToken, verifyRefreshToken } from '../util
 import bcrypt from 'bcryptjs';
 import { isOwnerEmail } from '../config/owner.js';
 import { ensureOwnerAccount } from '../config/owner-account.js';
-import { getSetting } from '../config/settings.js';
+import { googleAudienceIds } from '../config/settings.js';
 
 export const publicUser = (user: any) => {
   if (!user) return user;
@@ -34,12 +34,14 @@ const tokensFor = (user: any) => {
   };
 };
 
-export const googleAuthService = async (idToken: string) => {
-  const google = await getSetting('google');
-  if (!google.clientId) throw new Error('Google Sign-In is not configured');
+export const googleAuthService = async (idToken: string, role?: string) => {
+  const allowedAud = await googleAudienceIds();
+  if (!allowedAud.length) {
+    throw new Error('Google Sign-In is not configured. Add the Client ID in Admin → Google or set GOOGLE_CLIENT_ID.');
+  }
 
   const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
-  if (!response.ok) throw new Error('Invalid Google identity token');
+  if (!response.ok) throw new Error('Google could not verify that sign-in. Try again, or use email and password.');
   const claims = await response.json() as {
     aud?: string;
     email?: string;
@@ -49,12 +51,13 @@ export const googleAuthService = async (idToken: string) => {
     sub?: string;
   };
   const emailVerified = claims.email_verified === true || claims.email_verified === 'true';
-  if (claims.aud !== google.clientId || !emailVerified || !claims.email || !claims.sub) {
-    throw new Error('Invalid Google identity token');
+  if (!claims.aud || !allowedAud.includes(claims.aud) || !emailVerified || !claims.email || !claims.sub) {
+    throw new Error('This Google app is not authorized for buddysearch.online. Add this site under Authorized JavaScript origins, then try again.');
   }
 
   const cleanEmail = claims.email.toLowerCase().trim();
   const googleId = claims.sub;
+  const nextRole = role === 'BUDDY' || role === 'BOTH' || role === 'CLIENT' ? role : 'CLIENT';
 
   let user = await prisma.user.findFirst({
     where: {
@@ -66,22 +69,29 @@ export const googleAuthService = async (idToken: string) => {
   });
 
   if (!user) {
-    user = await prisma.user.create({
-      data: {
-        name: claims.name || cleanEmail.split('@')[0],
-        email: cleanEmail,
-        googleId,
-        avatar: claims.picture,
-        role: 'CLIENT',
-        verified: true,
-        membershipPlan: 'BASIC',
-        membershipExpiry: null,
-        onboardingCompleted: false,
-        availableForRequests: false,
-        profileCompletion: 10,
-        isAdmin: isOwnerEmail(cleanEmail),
-      }
-    });
+    try {
+      user = await prisma.user.create({
+        data: {
+          name: claims.name || cleanEmail.split('@')[0],
+          email: cleanEmail,
+          googleId,
+          avatar: claims.picture,
+          role: nextRole,
+          verified: true,
+          membershipPlan: 'BASIC',
+          membershipExpiry: null,
+          onboardingCompleted: false,
+          availableForRequests: nextRole !== 'CLIENT',
+          profileCompletion: 10,
+          isAdmin: isOwnerEmail(cleanEmail),
+        }
+      });
+    } catch (err: any) {
+      user = await prisma.user.findFirst({
+        where: { OR: [{ googleId }, { email: cleanEmail }] }
+      });
+      if (!user) throw err;
+    }
   } else if (!user.googleId || String(user.googleId).startsWith('owner:')) {
     user = await prisma.user.update({
       where: { id: user.id },
@@ -101,17 +111,25 @@ export const signup = async (data: any) => {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw new Error('An account with this email already exists');
 
+  const digits = String(data.phone || '').replace(/\D/g, '').slice(-10);
+  const phone = digits.length === 10 ? digits : undefined;
+  if (phone) {
+    const phoneTaken = await prisma.user.findFirst({ where: { phone } });
+    if (phoneTaken) throw new Error('An account with this phone number already exists');
+  }
+
   const hashedPassword = await bcrypt.hash(data.password, 10);
   let user = await prisma.user.create({
     data: {
       name: data.name,
       email,
+      phone: phone || undefined,
       passwordHash: hashedPassword,
       role: data.role || 'CLIENT',
       membershipPlan: 'BASIC',
       membershipExpiry: null,
       onboardingCompleted: false,
-      availableForRequests: false,
+      availableForRequests: data.role === 'BUDDY' || data.role === 'BOTH',
       profileCompletion: 10,
       isAdmin: isOwnerEmail(email),
     }
