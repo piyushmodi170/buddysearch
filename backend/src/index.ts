@@ -9,7 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { config } from './config/index.js';
-import { prisma, connectDatabase } from './config/db.js';
+import { prisma, connectDatabase, databaseUrlInfo, lookupOutboundIp } from './config/db.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { initializeSocket } from './socket/index.js';
 
@@ -56,12 +56,12 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.get('/health', async (req, res) => {
   let database: 'up' | 'down' = 'down';
   let databaseError: string | undefined;
+  const urlInfo = databaseUrlInfo();
+  const outboundIp = await lookupOutboundIp();
   try {
-    // Bound the probe: when the cluster is unreachable the driver blocks on
-    // server selection for far longer than a health check should ever take.
     await Promise.race([
       prisma.$runCommandRaw({ ping: 1 }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('health probe timed out')), 3000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('health probe timed out')), 8000))
     ]);
     database = 'up';
   } catch (err: any) {
@@ -70,6 +70,11 @@ app.get('/health', async (req, res) => {
   res.status(database === 'up' ? 200 : 503).json({
     status: database === 'up' ? 'ok' : 'degraded',
     database,
+    databaseUrl: urlInfo,
+    outboundIp,
+    hint: database === 'down'
+      ? `Add ${outboundIp || '0.0.0.0/0'} in Atlas → Network Access (Coolify UI IPs are often wrong). Wait 60s.`
+      : undefined,
     ...(databaseError ? { databaseError } : {}),
     timestamp: new Date()
   });

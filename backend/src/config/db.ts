@@ -1,36 +1,52 @@
 import { PrismaClient } from '@prisma/client';
 
-const atlasUrl = (url?: string) => {
+const cleanDatabaseUrl = (url?: string) => {
   if (!url) return url;
-  const join = url.includes('?') ? '&' : '?';
-  const extras: string[] = [];
-  if (!/[?&]tls=/.test(url) && !/[?&]ssl=/.test(url) && url.includes('mongodb+srv://')) {
-    extras.push('tls=true');
-  }
-  if (!/[?&]retryWrites=/.test(url)) extras.push('retryWrites=true');
-  return extras.length ? `${url}${join}${extras.join('&')}` : url;
+  return url.trim().replace(/^["']|["']$/g, '');
 };
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+const databaseUrl = cleanDatabaseUrl(process.env.DATABASE_URL);
 
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    datasources: process.env.DATABASE_URL
-      ? { db: { url: atlasUrl(process.env.DATABASE_URL) } }
-      : undefined,
+    datasources: databaseUrl ? { db: { url: databaseUrl } } : undefined,
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-export const isDatabaseError = (err: unknown) => {
-  const text = String((err as any)?.message || err || '');
-  return /prisma|mongodb|replica|server selection|tls|atlas|database ping/i.test(text);
+export { isDatabaseError, publicAuthError, publicDatabaseError } from './db-errors.js';
+
+export const databaseUrlInfo = () => {
+  const url = databaseUrl || '';
+  let host = '';
+  try {
+    host = url ? new URL(url.replace('mongodb+srv://', 'https://').replace('mongodb://', 'https://')).host : '';
+  } catch {
+    host = '';
+  }
+  return {
+    configured: Boolean(url),
+    protocol: url.startsWith('mongodb+srv://') ? 'mongodb+srv' : url.startsWith('mongodb://') ? 'mongodb' : 'missing',
+    host,
+  };
 };
 
-export const publicDatabaseError =
-  'Cannot reach the database. In MongoDB Atlas → Network Access, add 0.0.0.0/0 (or your Coolify server IP), then try again.';
+export const lookupOutboundIp = async () => {
+  try {
+    const res = await fetch('https://api.ipify.org?format=json', {
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!res.ok) return null;
+    const body = await res.json() as { ip?: string };
+    return body.ip || null;
+  } catch {
+    return null;
+  }
+};
 
 export const connectDatabase = async () => {
   let last: unknown;
