@@ -20,9 +20,11 @@ declare global {
 
 export function GoogleSignIn({
   role,
+  className,
 }: {
   label?: string;
   role?: 'CLIENT' | 'BUDDY' | 'BOTH';
+  className?: string;
 }) {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
@@ -102,7 +104,7 @@ export function GoogleSignIn({
   if (!clientId) return null;
 
   return (
-    <div className="mt-5">
+    <div className={className ?? 'mt-5'}>
       <div ref={buttonRef} className="flex justify-center min-h-[44px] w-full" />
       {!ready && <p className="text-center text-xs text-gray-400 mt-2">Loading Google…</p>}
     </div>
