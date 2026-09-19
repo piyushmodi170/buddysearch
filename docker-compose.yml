@@ -61,6 +61,8 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        BACKEND_INTERNAL_URL: http://backend:4000
     container_name: buddysearch-frontend
     restart: always
     environment:
