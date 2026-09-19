@@ -1,7 +1,15 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, type ComponentProps } from 'react';
 import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
 import indiaTopo from '@/data/india.topo.json';
+
+// react-simple-maps accepts TopoJSON; @types/react-simple-maps only types GeoJSON.
+const indiaGeography = {
+  type: 'Topology',
+  objects: { india: indiaTopo.objects.india },
+  arcs: indiaTopo.arcs,
+  transform: indiaTopo.transform,
+} as unknown as ComponentProps<typeof Geographies>['geography'];
 
 const CITIES = [
   { name: 'Mumbai', state: 'Maharashtra', coordinates: [72.8777, 19.076], hot: true },
@@ -134,14 +142,7 @@ export default function IndiaMap() {
                   preserveAspectRatio="xMidYMid meet"
                   style={{ width: '100%', height: '100%', display: 'block' }}
                 >
-                  <Geographies
-                    geography={{
-                      type: 'Topology',
-                      objects: { india: indiaTopo.objects.india },
-                      arcs: indiaTopo.arcs,
-                      transform: indiaTopo.transform,
-                    }}
-                  >
+                  <Geographies geography={indiaGeography}>
                     {({ geographies }) =>
                       geographies.map((geo) => {
                         const key = normalize(geo.properties?.name);
@@ -152,15 +153,11 @@ export default function IndiaMap() {
                             key={geo.rsmKey}
                             geography={geo}
                             tabIndex={-1}
-                            focusable={false}
+                            className={selected ? 'ab-india__state ab-india__state--selected' : 'ab-india__state'}
                             fill={selected ? '#F96566' : '#F9EFEF'}
                             stroke={selected ? '#F96566' : '#EE9CA0'}
                             strokeWidth={selected ? 1 : 0.5}
-                            style={{
-                              default: { outline: 'none', transition: 'fill 0.25s ease' },
-                              hover: { fill: selected ? '#F96566' : '#F0AAB4', outline: 'none' },
-                              pressed: { outline: 'none' },
-                            }}
+                            style={{ outline: 'none', transition: 'fill 0.25s ease' }}
                           />
                         );
                       })
