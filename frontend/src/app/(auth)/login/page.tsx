@@ -63,7 +63,7 @@ export default function LoginPage() {
         throw new Error('Invalid response');
       }
       toast.success('Signed in successfully!');
-      router.push('/dashboard');
+      router.push('/hire');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Unable to sign in. Please check your credentials.');
     } finally {

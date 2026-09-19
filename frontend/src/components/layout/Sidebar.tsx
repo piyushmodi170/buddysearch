@@ -6,7 +6,7 @@ import {
   Users, Search, MessageSquare, Bell, List, 
   FileText, User, Star, HelpCircle, LogOut, ShieldCheck
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, isPaidMembership } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { useChatStore } from '@/store/useChatStore';
@@ -36,7 +36,7 @@ const SECTIONS = [
   {
     label: 'ACCOUNT',
     items: [
-      { href: '/profile', label: 'Profile', icon: User },
+      { href: '/account', label: 'Profile', icon: User },
       { href: '/membership', label: 'Membership', icon: Star, badge: 'membership' },
       { href: '/help', label: 'Help', icon: HelpCircle },
     ]
@@ -54,8 +54,8 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 w-60 bg-white border-r border-gray-200 hidden lg:flex flex-col">
       <div className="flex items-center px-6 h-16 border-b border-gray-100">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white">
+        <Link href="/hire" className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-[#F04438] rounded-full flex items-center justify-center text-white">
             <Users size={18} />
           </div>
           <span className="font-bold text-xl tracking-tight text-gray-900">BuddySearch</span>
@@ -98,7 +98,7 @@ export function Sidebar() {
                         {unreadNotifications > 99 ? '99+' : unreadNotifications}
                       </span>
                     )}
-                    {item.badge === 'membership' && user.membership && (
+                    {item.badge === 'membership' && isPaidMembership(user) && (
                       <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded">
                         ACTIVE
                       </span>

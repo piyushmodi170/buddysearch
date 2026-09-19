@@ -18,6 +18,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const isMessages = pathname.startsWith('/messages');
+  const isFeed = pathname.startsWith('/hire') || pathname.startsWith('/find') || pathname.startsWith('/account');
 
   useEffect(() => {
     setMounted(true);
@@ -74,14 +75,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main
         className={cn(
           'lg:pl-60 pt-16 lg:pt-0 min-h-screen',
-          isMessages ? 'h-[100dvh] pb-16 lg:pb-0 overflow-hidden' : 'pb-16 lg:pb-0'
+          isMessages ? 'h-[100dvh] pb-16 lg:pb-0 overflow-hidden' : 'pb-20 lg:pb-0'
         )}
       >
         <div
           className={cn(
             isMessages
               ? 'h-full p-0 max-w-none'
-              : 'max-w-7xl mx-auto p-4 sm:p-6 lg:p-8'
+              : isFeed
+                ? 'max-w-7xl mx-auto px-3 pt-3 pb-4 sm:p-6 lg:p-8'
+                : 'max-w-7xl mx-auto p-4 sm:p-6 lg:p-8'
           )}
         >
           {children}

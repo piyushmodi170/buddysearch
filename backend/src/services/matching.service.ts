@@ -42,8 +42,7 @@ export const discoverBuddies = async (
   // Build base where clause
   const where: any = {
     id: { not: userId },
-    role: { in: ['BUDDY', 'BOTH'] },
-    availableForRequests: true,
+    banned: false,
   };
 
   if (filters.city) where.city = { equals: filters.city, mode: 'insensitive' };
@@ -75,6 +74,7 @@ export const discoverBuddies = async (
       break;
 
     case 'new':
+    case 'new-joiners':
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       where.createdAt = { gte: thirtyDaysAgo };

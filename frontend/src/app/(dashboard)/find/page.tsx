@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface Buddy {
   id: string;
@@ -66,6 +67,7 @@ const LOCATIONS_LIST = ['All Locations', 'Mumbai', 'Pune', 'Navi Mumbai', 'Banga
 const INTERESTS_LIST = ['All Interests', 'Movies', 'Fitness', 'Travel', 'Photography', 'Food', 'Events', 'Gaming', 'Art', 'Nightlife', 'Shopping', 'Tech', 'Music'];
 
 export default function FindPage() {
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<string>('for-you');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('All Locations');
@@ -82,9 +84,10 @@ export default function FindPage() {
   const [apiBuddies, setApiBuddies] = useState<Buddy[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const nearCity = user?.city || '';
   const filterTabs = [
     { id: 'for-you', label: 'For You' },
-    { id: 'near-you', label: 'Near You - Mumbai' },
+    { id: 'near-you', label: nearCity ? `Near You - ${nearCity}` : 'Near You' },
     { id: 'new-joiners', label: 'New Joiners' },
     { id: 'trending', label: 'Trending' },
     { id: 'all-india', label: 'All India' },
@@ -98,10 +101,13 @@ export default function FindPage() {
   const fetchBuddiesFromApi = async () => {
     setLoading(true);
     try {
-      const cityFilter = selectedLocation !== 'All Locations' ? selectedLocation : (activeTab === 'near-you' ? 'Mumbai' : undefined);
+      const cityFilter = selectedLocation !== 'All Locations'
+        ? selectedLocation
+        : (activeTab === 'near-you' ? nearCity || undefined : undefined);
+      const tab = activeTab === 'new-joiners' ? 'new' : activeTab;
       const res = await api.get('/api/users/discover', {
         params: {
-          tab: activeTab,
+          tab,
           search: searchQuery || undefined,
           city: cityFilter
         }
@@ -143,9 +149,13 @@ export default function FindPage() {
     // Filter by Active Tab
     switch (activeTab) {
       case 'near-you':
-        return dataset.filter(b => b.city === 'Mumbai' || b.location.includes('Mumbai') || b.city === 'Pune' || b.city === 'Navi Mumbai');
+        if (!nearCity) return dataset;
+        return dataset.filter(b =>
+          b.city.toLowerCase() === nearCity.toLowerCase() ||
+          b.location.toLowerCase().includes(nearCity.toLowerCase())
+        );
       case 'new-joiners':
-        return [...dataset].sort((a, b) => new Date(b.createdAt || '2026-09-01').getTime() - new Date(a.createdAt || '2026-09-01').getTime());
+        return [...dataset].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       case 'trending':
         return [...dataset].sort((a, b) => (b.rating || 0) - (a.rating || 0));
       case 'all-india':
@@ -154,7 +164,7 @@ export default function FindPage() {
       default:
         return dataset;
     }
-  }, [apiBuddies, activeTab, searchQuery, selectedLocation, selectedInterest]);
+  }, [apiBuddies, activeTab, searchQuery, selectedLocation, selectedInterest, nearCity]);
 
   // Render Individual Buddy Card
   const renderBuddyCard = (buddy: Buddy) => (
@@ -370,7 +380,11 @@ export default function FindPage() {
       </div>
 
       {/* RENDER DYNAMIC SECTIONS */}
-      {filteredBuddies.length === 0 ? (
+      {loading ? (
+        <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 text-gray-400 text-sm flex items-center justify-center gap-2">
+          <Loader2 size={18} className="animate-spin" /> Loading people…
+        </div>
+      ) : filteredBuddies.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
           <Globe size={48} className="text-gray-300 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-gray-900 mb-1">No buddies found</h3>
@@ -387,12 +401,25 @@ export default function FindPage() {
           </Button>
         </div>
       ) : (
-        <section className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-900">People on BuddySearch</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {filteredBuddies.map(renderBuddyCard)}
-          </div>
-        </section>
+        <>
+          {filteredBuddies.some((buddy) => buddy.isStar) && (
+            <section className="space-y-4">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Star size={18} className="text-amber-500 fill-amber-400" />
+                Spotlight — Star buddies
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {filteredBuddies.filter((buddy) => buddy.isStar).map(renderBuddyCard)}
+              </div>
+            </section>
+          )}
+          <section className="space-y-4">
+            <h2 className="text-lg font-bold text-gray-900">People on BuddySearch</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {filteredBuddies.map(renderBuddyCard)}
+            </div>
+          </section>
+        </>
       )}
 
       {/* RICH BUDDY DETAILS MODAL */}

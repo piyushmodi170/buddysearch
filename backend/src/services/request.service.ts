@@ -13,7 +13,16 @@ export const getPostLimit = (plan: string) => {
   if (plan === 'STAR') return -1; // Unlimited
   if (plan === 'PREMIUM') return 15;
   if (plan === 'STANDARD') return 10;
-  return 5; // BASIC
+  return 5; // BASIC / free
+};
+
+export const isPaidPlan = (plan?: string | null, expiry?: Date | string | null) => {
+  const name = (plan || 'BASIC').toUpperCase();
+  if (name === 'STAR') return true;
+  if (name === 'BASIC' || !name) return false;
+  if (!expiry) return false;
+  const when = expiry instanceof Date ? expiry : new Date(expiry);
+  return !Number.isNaN(when.getTime()) && when.getTime() > Date.now();
 };
 
 export const getMonthlyPostCount = async (userId: string) => {
@@ -32,6 +41,39 @@ export const getMonthlyPostCount = async (userId: string) => {
   } catch {
     return 0;
   }
+};
+
+export const getPostUsage = async (userId: string) => {
+  let plan = 'BASIC';
+  let membershipExpiry: Date | null = null;
+  try {
+    const user = await withTimeout(
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { membershipPlan: true, membershipExpiry: true },
+      })
+    );
+    plan = user?.membershipPlan || 'BASIC';
+    membershipExpiry = user?.membershipExpiry || null;
+  } catch {
+    plan = 'BASIC';
+    membershipExpiry = null;
+  }
+
+  const count = await getMonthlyPostCount(userId);
+  const limit = getPostLimit(plan);
+  const paid = isPaidPlan(plan, membershipExpiry);
+  const remaining = limit === -1 ? null : Math.max(0, limit - count);
+
+  return {
+    count,
+    limit,
+    remaining,
+    plan,
+    planLabel: paid ? plan : 'FREE',
+    isPaid: paid,
+    membershipExpiry,
+  };
 };
 
 export const createRequestService = async (userId: string, data: any) => {

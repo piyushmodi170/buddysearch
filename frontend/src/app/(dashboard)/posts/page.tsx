@@ -1,13 +1,14 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Badge } from '@/components/ui/Badge';
-import { Star, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
+import { isPaidMembership, planDisplayLabel } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -57,7 +58,7 @@ export default function PostRequestPage() {
 
     setLoading(true);
     try {
-      await api.post('/api/request', {
+      await api.post('/api/requests', {
         type: tab === 'need' ? 'NEED_BUDDY' : 'AM_BUDDY',
         category: formData.category,
         title: formData.title,
@@ -75,8 +76,51 @@ export default function PostRequestPage() {
     }
   };
 
-  const planName = user?.membershipPlan || 'BASIC';
-  const postLimit = planName === 'STAR' ? 'Unlimited' : planName === 'PREMIUM' ? '15' : planName === 'STANDARD' ? '10' : '5';
+  const [usage, setUsage] = useState({
+    count: 0,
+    limit: 5,
+    remaining: 5 as number | null,
+    planLabel: planDisplayLabel(user),
+    isPaid: isPaidMembership(user),
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get('/api/requests/usage');
+        const data = res.data?.data || {};
+        if (cancelled) return;
+        const count = Number(data.count) || 0;
+        const limit = data.limit === -1 ? -1 : Number(data.limit) || 5;
+        const remaining = limit === -1 ? null : (data.remaining != null ? Number(data.remaining) : Math.max(0, limit - count));
+        setUsage({
+          count,
+          limit,
+          remaining,
+          planLabel: data.isPaid ? (data.plan || data.planLabel || 'BASIC') : (data.planLabel || 'FREE'),
+          isPaid: Boolean(data.isPaid),
+        });
+      } catch {
+        if (!cancelled) {
+          setUsage({
+            count: 0,
+            limit: 5,
+            remaining: 5,
+            planLabel: 'FREE',
+            isPaid: false,
+          });
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const usedLabel = `${usage.count} used`;
+  const remainingLabel = usage.remaining == null ? 'Unlimited remaining' : `${usage.remaining} remaining`;
+  const limitLabel = usage.limit === -1 ? 'Unlimited' : `${usage.limit} / month limit`;
+  const progressValue = usage.limit === -1 ? 0 : usage.count;
+  const progressMax = usage.limit === -1 ? 1 : usage.limit;
 
   return (
     <div className="max-w-3xl mx-auto py-4">
@@ -116,20 +160,23 @@ export default function PostRequestPage() {
         </button>
       </div>
 
-      {/* Plan Usage Meter */}
-      <Card className="mb-6 bg-emerald-50/50 border-emerald-200/80">
+      {/* Plan Usage Meter — real count only; unpaid BASIC is labeled Free */}
+      <Card className={usage.isPaid ? 'mb-6 bg-emerald-50/50 border-emerald-200/80' : 'mb-6 bg-gray-50 border-gray-200'}>
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
             📅 This month's posts
           </h3>
-          <Badge className="bg-emerald-100 text-emerald-800 font-bold uppercase tracking-wider text-[10px]">
-            {planName} PLAN
+          <Badge className={usage.isPaid
+            ? 'bg-emerald-100 text-emerald-800 font-bold uppercase tracking-wider text-[10px]'
+            : 'bg-white text-gray-600 border border-gray-200 font-bold uppercase tracking-wider text-[10px]'
+          }>
+            {usage.isPaid ? `${usage.planLabel} PLAN` : 'Free'}
           </Badge>
         </div>
-        <ProgressBar value={20} className="mb-2 bg-emerald-100" />
-        <p className="text-xs text-emerald-800 font-semibold flex justify-between items-center">
-          <span>1 used · 4 remaining</span>
-          <span>{postLimit} / month limit</span>
+        <ProgressBar value={progressValue} max={progressMax} className="mb-2 bg-gray-200" />
+        <p className={`text-xs font-semibold flex justify-between items-center ${usage.isPaid ? 'text-emerald-800' : 'text-gray-600'}`}>
+          <span>{usedLabel} · {remainingLabel}</span>
+          <span>{limitLabel}</span>
         </p>
       </Card>
 

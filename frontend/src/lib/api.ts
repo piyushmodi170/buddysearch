@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
+const rawBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  // next.config may inject ".../api"; route calls already start with /api.
+  baseURL: rawBase.replace(/\/api\/?$/, ''),
 });
 
 api.interceptors.request.use(

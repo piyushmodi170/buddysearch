@@ -23,6 +23,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { encodeRateOffer } from '@/lib/messageText';
+import { getInitials } from '@/lib/utils';
 
 interface HirePost {
   id: string;
@@ -196,12 +197,12 @@ export default function HirePage() {
       {/* 1. TOP SEARCH BAR */}
       <div className="bg-[#F8F9FA] border border-gray-200 rounded-2xl p-2.5 shadow-sm mb-4">
         <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-2.5 border border-gray-200 focus-within:border-red-400 transition-all">
-          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-gray-200">
-            <img 
-              src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'} 
-              alt="User Avatar" 
-              className="w-full h-full object-cover"
-            />
+          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-gray-200 bg-red-100 text-red-600 text-[10px] font-bold flex items-center justify-center">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="You" className="w-full h-full object-cover" />
+            ) : (
+              getInitials(user?.name || '')
+            )}
           </div>
           <input 
             type="text" 
@@ -213,7 +214,7 @@ export default function HirePage() {
         </div>
 
         {/* 2. FILTER TABS */}
-        <div className="flex items-center justify-center gap-2 mt-3">
+        <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
           <button
             onClick={() => setActiveTab('All')}
             className={`px-6 py-2 text-xs font-bold rounded-xl transition-all ${
