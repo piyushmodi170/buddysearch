@@ -8,7 +8,6 @@ import {
   CheckCircle2, 
   ChevronDown, 
   X, 
-  Filter, 
   Loader2, 
   Globe
 } from 'lucide-react';
