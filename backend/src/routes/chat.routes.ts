@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
+import { requirePaid } from '../middleware/requirePaid.js';
 import * as chatService from '../services/chat.service.js';
 
 const router = Router();
 
-router.get('/', auth, async (req, res, next) => {
+router.get('/', auth, requirePaid, async (req, res, next) => {
   try {
     const data = await chatService.getUserChats(req.user!.id);
     res.json({ success: true, data });
@@ -13,7 +14,7 @@ router.get('/', auth, async (req, res, next) => {
   }
 });
 
-router.post('/', auth, async (req, res, next) => {
+router.post('/', auth, requirePaid, async (req, res, next) => {
   try {
     const { userId } = req.body;
     if (!userId) throw new Error('userId is required');
@@ -24,7 +25,7 @@ router.post('/', auth, async (req, res, next) => {
   }
 });
 
-router.get('/:id/messages', auth, async (req, res, next) => {
+router.get('/:id/messages', auth, requirePaid, async (req, res, next) => {
   try {
     const { page = 1, limit = 50 } = req.query;
     const data = await chatService.getChatMessages(req.params.id, req.user!.id, Number(page), Number(limit));
@@ -34,7 +35,7 @@ router.get('/:id/messages', auth, async (req, res, next) => {
   }
 });
 
-router.post('/:id/messages', auth, async (req, res, next) => {
+router.post('/:id/messages', auth, requirePaid, async (req, res, next) => {
   try {
     const text = String(req.body?.text || '').trim();
     if (!text) throw new Error('Message text is required');
@@ -49,7 +50,7 @@ router.post('/:id/messages', auth, async (req, res, next) => {
   }
 });
 
-router.put('/:id/seen', auth, async (req, res, next) => {
+router.put('/:id/seen', auth, requirePaid, async (req, res, next) => {
   try {
     await chatService.markAsSeenService(req.params.id, req.user!.id);
     res.json({ success: true, message: 'Messages marked as seen' });

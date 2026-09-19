@@ -6,14 +6,17 @@ import { MobileNav } from '@/components/layout/MobileNav';
 import { TopBar } from '@/components/layout/TopBar';
 import { PWAPrompt } from '@/components/shared/PWAPrompt';
 import { SocketProvider } from '@/providers/SocketProvider';
+import { MembersOnlyGate } from '@/components/shared/MembersOnlyGate';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { Loader2 } from 'lucide-react';
 import api from '@/lib/api';
-import { cn } from '@/lib/utils';
+import { cn, isPaidMembership } from '@/lib/utils';
+import { isOwnerEmail } from '@/lib/owner';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
   const needsOnboarding = useAuthStore(
     (s) => s.user?.onboardingCompleted === false && !s.user?.isAdmin
   );
@@ -25,6 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
   const isMessages = pathname.startsWith('/messages');
   const isFeed = pathname.startsWith('/hire') || pathname.startsWith('/find') || pathname.startsWith('/account') || pathname.startsWith('/profile');
+  const memberAccess = isPaidMembership(user) || isOwnerEmail(user?.email);
 
   useEffect(() => {
     const finish = () => setHydrated(true);
@@ -106,12 +110,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 : 'max-w-7xl mx-auto p-4 sm:p-6 lg:p-8'
           )}
         >
-          {children}
+          <MembersOnlyGate>{children}</MembersOnlyGate>
         </div>
       </main>
 
       <MobileNav />
-      {!isMessages && <PWAPrompt />}
+      {!isMessages && memberAccess && <PWAPrompt />}
     </div>
     </SocketProvider>
   );

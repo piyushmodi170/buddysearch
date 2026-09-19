@@ -2,6 +2,7 @@ import { prisma } from '../config/db.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { activatePlan } from './membership.service.js';
+import { publicUser } from './auth.service.js';
 import { getSetting } from '../config/settings.js';
 import { config } from '../config/index.js';
 
@@ -77,7 +78,8 @@ export const verifyPayment = async (data: any, userId: string) => {
   if (payment.userId !== userId) throw new Error('Payment does not belong to this user');
 
   if (payment.status === 'SUCCESS') {
-    return { success: true };
+    const existing = await prisma.user.findUnique({ where: { id: userId } });
+    return { success: true, user: existing ? publicUser(existing) : undefined };
   }
 
   await prisma.payment.update({
@@ -85,9 +87,9 @@ export const verifyPayment = async (data: any, userId: string) => {
     data: { razorpayPaymentId, status: 'SUCCESS' }
   });
 
-  await activatePlan(userId, payment.planId);
+  const updated = await activatePlan(userId, payment.planId);
 
-  return { success: true };
+  return { success: true, user: publicUser(updated) };
 };
 
 export const testRazorpayCredentials = async () => {

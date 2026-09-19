@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
+import { requirePaid } from '../middleware/requirePaid.js';
 import { validate } from '../middleware/validate.js';
 import { updateProfileSchema, completeOnboardingSchema } from '../utils/validators.js';
 import * as userService from '../services/user.service.js';
@@ -94,7 +95,7 @@ router.get('/discover', auth, async (req, res, next) => {
   }
 });
 
-router.get('/:id', auth, async (req, res, next) => {
+router.get('/:id', auth, requirePaid, async (req, res, next) => {
   try {
     const profile = await userService.getProfile(req.params.id);
     res.json({ success: true, data: profile });
