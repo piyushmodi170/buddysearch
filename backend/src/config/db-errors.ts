@@ -11,18 +11,17 @@ export const isDatabaseError = (err: unknown) => {
 export const publicDatabaseError =
   'Cannot reach MongoDB Atlas. The Coolify dashboard IP is often not the IP Atlas sees. Open /health, copy outboundIp, add that IP in Atlas → Network Access (or add 0.0.0.0/0), wait one minute, then try again.';
 
-export const publicAuthError = (err: unknown, fallback: string) => {
+export const publicSafeError = (err: unknown, fallback: string) => {
   if (isDatabaseError(err)) return publicDatabaseError;
   const text = String((err as { message?: string })?.message || '');
   if (
-    /Invalid `prisma|Inconsistent column data|was provided invalid|Record to update not found|P2025/i.test(
+    /Invalid `prisma|Inconsistent column data|was provided invalid|Record to update not found|P2025|E11000|duplicate key|converting field/i.test(
       text
     )
   ) {
-    return 'Could not finish signing you in. Please try Sign In again.';
-  }
-  if (/E11000|duplicate key/i.test(text)) {
-    return 'Could not finish signing you in. Please try Sign In again.';
+    return fallback;
   }
   return text || fallback;
 };
+
+export const publicAuthError = (err: unknown, fallback: string) => publicSafeError(err, fallback);

@@ -15,13 +15,20 @@ assert.equal(
   publicAuthError({ message: 'Server selection timeout' }, 'fallback'),
   publicDatabaseError
 );
-assert.match(
+assert.equal(
   publicAuthError({ message: 'Invalid `prisma.user.update()` invocation' }, 'fallback'),
-  /try Sign In again/i
+  'fallback'
 );
-assert.match(
+assert.equal(
   publicAuthError({ message: 'Record to update not found.' }, 'fallback'),
-  /try Sign In again/i
+  'fallback'
+);
+assert.equal(
+  publicAuthError(
+    { message: 'Error converting field "email" of expected non-nullable type "String", found incompatible value of "null".' },
+    'Could not load dashboard'
+  ),
+  'Could not load dashboard'
 );
 assert.equal(publicAuthError(new Error('Wrong password'), 'fallback'), 'Wrong password');
 

@@ -1,29 +1,6 @@
-import { MongoClient, ObjectId, type Collection, type Document } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { OWNER_EMAIL } from './owner.js';
-
-const cleanUrl = (url?: string) => url?.trim().replace(/^["']|["']$/g, '') || '';
-
-let clientPromise: Promise<MongoClient> | null = null;
-
-const getClient = () => {
-  const url = cleanUrl(process.env.DATABASE_URL);
-  if (!url) throw new Error('DATABASE_URL is not set');
-  if (!clientPromise) {
-    clientPromise = new MongoClient(url, { serverSelectionTimeoutMS: 8000 }).connect();
-  }
-  return clientPromise;
-};
-
-const dbNameFromUrl = (url: string) => {
-  try {
-    const parsed = new URL(
-      url.replace(/^mongodb\+srv:\/\//, 'https://').replace(/^mongodb:\/\//, 'https://')
-    );
-    return decodeURIComponent(parsed.pathname.replace(/^\//, '')) || 'buddysearch';
-  } catch {
-    return 'buddysearch';
-  }
-};
+import { usersCollection } from './mongo.js';
 
 const emailFilter = {
   email: {
@@ -60,15 +37,6 @@ export const ownerSessionUser = (id: string, doc: Record<string, unknown> = {}) 
   profileCompletion: Number(doc.profileCompletion || 100),
   banned: Boolean(doc.banned),
 });
-
-const usersCollection = async (): Promise<Collection<Document>> => {
-  const url = cleanUrl(process.env.DATABASE_URL);
-  const client = await getClient();
-  const db = client.db(dbNameFromUrl(url));
-  const names = (await db.listCollections({}, { nameOnly: true }).toArray()).map((c) => c.name);
-  const pick = ['User', 'users', 'Users'].find((n) => names.includes(n)) || 'User';
-  return db.collection(pick);
-};
 
 export const ensureOwnerAccount = async (passwordHash: string) => {
   const col = await usersCollection();
