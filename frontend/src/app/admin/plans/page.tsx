@@ -14,7 +14,7 @@ interface Plan {
   id: string; name: string; displayName: string; tagline: string;
   price: number; originalPrice: number; discount: number;
   durationMonths: number; postLimit: number; features: string[] | unknown;
-  isPopular: boolean; sortOrder: number;
+  isPopular: boolean; isOneTime?: boolean; sortOrder: number;
 }
 
 export default function AdminPlansPage() {
@@ -67,10 +67,11 @@ export default function AdminPlansPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Membership Plans</h1>
-        <p className="text-sm text-gray-500 mt-1">Pricing shown to users on the membership page. Changes apply immediately.</p>
+        <p className="text-sm text-gray-500 mt-1">Pricing shown to users on the membership page. Changes apply immediately. Plan names must be BASIC, STANDARD, PREMIUM, or STAR.</p>
       </div>
 
       <ErrorCard message={error} />
+      <CreatePlanForm onCreated={load} existing={plans.map(p => p.name)} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {plans.map(p => {
@@ -113,12 +114,12 @@ export default function AdminPlansPage() {
                 Highlight as &ldquo;Most popular&rdquo;
               </label>
 
-              {features.length > 0 && (
-                <ul className="text-xs text-gray-500 space-y-1 mb-4 list-disc list-inside">
-                  {features.slice(0, 4).map((f, i) => <li key={i} className="truncate">{f}</li>)}
-                  {features.length > 4 && <li className="list-none text-gray-400">+{features.length - 4} more</li>}
-                </ul>
-              )}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Features (one per line)</label>
+              <textarea
+                className="w-full min-h-[88px] rounded-md border border-gray-300 px-3 py-2 text-sm mb-4"
+                value={Array.isArray(val(p, 'features')) ? (val(p, 'features') as string[]).join('\n') : features.join('\n')}
+                onChange={e => edit(p.id, { features: e.target.value.split('\n') })}
+              />
 
               <Button size="sm" disabled={!dirty || busyId === p.id} isLoading={busyId === p.id} onClick={() => save(p)}>
                 <Save size={14} className="mr-1.5" /> {dirty ? 'Save changes' : 'No changes'}
@@ -128,5 +129,73 @@ export default function AdminPlansPage() {
         })}
       </div>
     </div>
+  );
+}
+
+function CreatePlanForm({ onCreated, existing }: { onCreated: () => Promise<void>; existing: string[] }) {
+  const remaining = ['BASIC', 'STANDARD', 'PREMIUM', 'STAR'].filter(n => !existing.includes(n));
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({
+    name: remaining[0] || 'BASIC',
+    displayName: '',
+    tagline: '',
+    price: 0,
+    originalPrice: 0,
+    discount: 0,
+    durationMonths: 1,
+    postLimit: 5,
+    features: '',
+    isPopular: false,
+    isOneTime: false,
+    sortOrder: 10,
+  });
+
+  if (remaining.length === 0) return null;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await api.post('/api/admin/plans', {
+        ...form,
+        features: form.features.split('\n').map(s => s.trim()).filter(Boolean),
+      });
+      toast.success('Plan created');
+      setOpen(false);
+      await onCreated();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not create plan');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="mb-6">
+      {!open ? (
+        <Button variant="outline" onClick={() => setOpen(true)}>Create plan</Button>
+      ) : (
+        <form onSubmit={submit} className="grid grid-cols-2 gap-3">
+          <label className="text-sm font-medium text-gray-700 col-span-2">Tier
+            <select className="mt-1 w-full h-10 rounded-md border border-gray-300 px-3 text-sm" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}>
+              {remaining.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </label>
+          <Input label="Display name" value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value })} />
+          <Input label="Tagline" value={form.tagline} onChange={e => setForm({ ...form, tagline: e.target.value })} />
+          <Input label="Price (₹)" type="number" value={String(form.price)} onChange={e => setForm({ ...form, price: Number(e.target.value) })} />
+          <Input label="Post limit" type="number" value={String(form.postLimit)} onChange={e => setForm({ ...form, postLimit: Number(e.target.value) })} />
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Features</label>
+            <textarea className="w-full min-h-[72px] rounded-md border border-gray-300 px-3 py-2 text-sm" value={form.features} onChange={e => setForm({ ...form, features: e.target.value })} />
+          </div>
+          <div className="col-span-2 flex gap-2">
+            <Button type="submit" isLoading={busy}>Create</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+          </div>
+        </form>
+      )}
+    </Card>
   );
 }

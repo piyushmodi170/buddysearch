@@ -10,6 +10,7 @@ import { cn, isPaidMembership } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { useChatStore } from '@/store/useChatStore';
+import { isOwnerEmail } from '@/lib/owner';
 
 const SECTIONS = [
   {
@@ -109,7 +110,7 @@ export function Sidebar() {
             </div>
           </div>
         ))}
-        {user.isAdmin && (
+        {user && isOwnerEmail(user.email) && (
           <div className="mb-6 px-4">
             <h3 className="px-2 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               ADMINISTRATION

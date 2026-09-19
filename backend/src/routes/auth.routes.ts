@@ -1,9 +1,25 @@
 import { Router } from 'express';
 import { validate } from '../middleware/validate.js';
-import { signupSchema, loginSchema, otpSendSchema, otpVerifySchema } from '../utils/validators.js';
+import { signupSchema, loginSchema } from '../utils/validators.js';
 import * as authService from '../services/auth.service.js';
+import { getSetting } from '../config/settings.js';
 
 const router = Router();
+
+router.get('/google/config', async (_req, res, next) => {
+  try {
+    const google = await getSetting('google');
+    res.json({
+      success: true,
+      data: {
+        clientId: google.clientId || '',
+        configured: Boolean(google.clientId),
+      }
+    });
+  } catch (error: any) {
+    next(error);
+  }
+});
 
 router.post('/google', async (req, res, next) => {
   try {
@@ -33,24 +49,6 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
     res.json({ success: true, data });
   } catch (error: any) {
     res.status(401).json({ success: false, message: error.message });
-  }
-});
-
-router.post('/otp/send', validate(otpSendSchema), async (req, res, next) => {
-  try {
-    await authService.sendOTPService(req.body.phone);
-    res.json({ success: true, message: 'OTP sent' });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-});
-
-router.post('/otp/verify', validate(otpVerifySchema), async (req, res, next) => {
-  try {
-    const data = await authService.verifyOTPService(req.body.phone, req.body.code);
-    res.json({ success: true, data });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
   }
 });
 

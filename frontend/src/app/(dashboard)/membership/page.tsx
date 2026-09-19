@@ -98,7 +98,7 @@ export default function MembershipPage() {
       }
 
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_demo',
+        key: order.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
         amount: order.amount,
         currency: order.currency || 'INR',
         name: 'BuddySearch',

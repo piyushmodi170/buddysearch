@@ -1,33 +1,41 @@
 import { prisma } from '../config/db.js';
-import { config } from '../config/index.js';
 import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import bcrypt from 'bcryptjs';
-import { sendOTP, generateOTP } from '../utils/otp.js';
-import { setCache, getCache, delCache } from '../config/redis.js';
+import { isOwnerEmail } from '../config/owner.js';
+import { getSetting } from '../config/settings.js';
 
-const sanitizePhone = (phone?: string): string => {
-  if (!phone) return '';
-  const digits = phone.replace(/\D/g, '');
-  return digits.length >= 10 ? digits.slice(-10) : digits;
-};
-
-// Never let the password hash leave the service layer.
 const publicUser = (user: any) => {
   if (!user) return user;
   const { passwordHash, ...safe } = user;
-  return safe;
+  return { ...safe, isAdmin: isOwnerEmail(user.email) };
 };
 
-const promoteConfiguredAdmin = async (user: any) => {
-  if (!config.adminEmails.includes(user.email.toLowerCase()) || user.isAdmin) return user;
+const syncOwnerFlag = async (user: any) => {
+  const shouldBeAdmin = isOwnerEmail(user.email);
+  if (user.isAdmin === shouldBeAdmin) return user;
   return prisma.user.update({
     where: { id: user.id },
-    data: { isAdmin: true },
+    data: { isAdmin: shouldBeAdmin },
   });
 };
 
+const assertNotBanned = (user: any) => {
+  if (user?.banned) throw new Error('This account has been suspended');
+};
+
+const tokensFor = (user: any) => {
+  const isAdmin = isOwnerEmail(user.email);
+  const payload = { id: user.id, email: user.email, phone: user.phone || '', role: user.role, isAdmin };
+  return {
+    user: publicUser(user),
+    token: generateToken(payload),
+    refreshToken: generateRefreshToken(payload),
+  };
+};
+
 export const googleAuthService = async (idToken: string) => {
-  if (!config.google.clientId) throw new Error('Google Sign-In is not configured');
+  const google = await getSetting('google');
+  if (!google.clientId) throw new Error('Google Sign-In is not configured');
 
   const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
   if (!response.ok) throw new Error('Invalid Google identity token');
@@ -39,7 +47,7 @@ export const googleAuthService = async (idToken: string) => {
     picture?: string;
     sub?: string;
   };
-  if (claims.aud !== config.google.clientId || claims.email_verified !== 'true' || !claims.email || !claims.sub) {
+  if (claims.aud !== google.clientId || claims.email_verified !== 'true' || !claims.email || !claims.sub) {
     throw new Error('Invalid Google identity token');
   }
 
@@ -49,14 +57,13 @@ export const googleAuthService = async (idToken: string) => {
   let user = await prisma.user.findFirst({
     where: {
       OR: [
-        ...(googleId ? [{ googleId }] : []),
+        { googleId },
         { email: cleanEmail }
       ]
     }
   });
 
   if (!user) {
-    // Create new user with Google details
     user = await prisma.user.create({
       data: {
         name: claims.name || cleanEmail.split('@')[0],
@@ -65,24 +72,20 @@ export const googleAuthService = async (idToken: string) => {
         avatar: claims.picture,
         role: 'CLIENT',
         verified: true,
-        membershipPlan: 'BASIC'
+        membershipPlan: 'BASIC',
+        isAdmin: isOwnerEmail(cleanEmail),
       }
     });
-  } else if (googleId && !user.googleId) {
+  } else if (!user.googleId) {
     user = await prisma.user.update({
       where: { id: user.id },
       data: { googleId, avatar: claims.picture || user.avatar }
     });
   }
-  user = await promoteConfiguredAdmin(user);
-  if (!user) throw new Error('Unable to create or load Google account');
 
-  const payload = { id: user.id, email: user.email, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
-  return {
-    user: publicUser(user),
-    token: generateToken(payload),
-    refreshToken: generateRefreshToken(payload)
-  };
+  user = await syncOwnerFlag(user);
+  assertNotBanned(user);
+  return tokensFor(user);
 };
 
 export const signup = async (data: any) => {
@@ -99,16 +102,12 @@ export const signup = async (data: any) => {
       email,
       passwordHash: hashedPassword,
       role: data.role || 'CLIENT',
+      isAdmin: isOwnerEmail(email),
     }
   });
 
-  user = await promoteConfiguredAdmin(user);
-  const payload = { id: user.id, email: user.email, role: user.role, isAdmin: user.isAdmin };
-  return {
-    user: publicUser(user),
-    token: generateToken(payload),
-    refreshToken: generateRefreshToken(payload)
-  };
+  user = await syncOwnerFlag(user);
+  return tokensFor(user);
 };
 
 export const login = async (identifierInput: string, pass: string) => {
@@ -120,64 +119,14 @@ export const login = async (identifierInput: string, pass: string) => {
     where: { email: input }
   });
 
-  // One generic message covers both "no such account" and "wrong password",
-  // so this endpoint cannot be used to enumerate which accounts exist.
   if (!user || !user.passwordHash) throw new Error('Invalid credentials');
 
   const valid = await bcrypt.compare(pass, user.passwordHash);
   if (!valid) throw new Error('Invalid credentials');
 
-  const adminUser = await promoteConfiguredAdmin(user);
-  const authenticatedUser = adminUser;
-  const payload = { id: authenticatedUser.id, email: authenticatedUser.email, role: authenticatedUser.role, isAdmin: authenticatedUser.isAdmin };
-  return {
-    user: publicUser(authenticatedUser),
-    token: generateToken(payload),
-    refreshToken: generateRefreshToken(payload)
-  };
-};
-
-export const sendOTPService = async (phoneInput: string) => {
-  const phone = sanitizePhone(phoneInput);
-  const code = generateOTP();
-  await setCache(`otp:${phone}`, code, 300); // 5 min
-  const sent = await sendOTP(phone, code);
-  if (!sent) throw new Error('Failed to send OTP');
-  return true;
-};
-
-export const verifyOTPService = async (phoneInput: string, code: string) => {
-  const phone = sanitizePhone(phoneInput);
-  const saved = await getCache(`otp:${phone}`);
-  if (!saved || saved !== code) throw new Error('Invalid or expired OTP');
-  
-  await delCache(`otp:${phone}`);
-
-  let user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { phone },
-        { email: `${phone}@buddysearch.in` }
-      ]
-    }
-  });
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        phone,
-        email: `${phone}@buddysearch.in`,
-        name: 'User' + Math.floor(Math.random()*10000),
-        role: 'CLIENT'
-      }
-    });
-  }
-
-  const payload = { id: user.id, email: user.email, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
-  return {
-    user: publicUser(user),
-    token: generateToken(payload),
-    refreshToken: generateRefreshToken(payload)
-  };
+  const authenticatedUser = await syncOwnerFlag(user);
+  assertNotBanned(authenticatedUser);
+  return tokensFor(authenticatedUser);
 };
 
 export const refreshTokenService = async (token: string) => {
@@ -186,8 +135,10 @@ export const refreshTokenService = async (token: string) => {
 
   const user = await prisma.user.findUnique({ where: { id: decoded.id } });
   if (!user) throw new Error('User not found');
-
-  const payload = { id: user.id, email: user.email, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
+  assertNotBanned(user);
+  const synced = await syncOwnerFlag(user);
+  const isAdmin = isOwnerEmail(synced.email);
+  const payload = { id: synced.id, email: synced.email, phone: synced.phone || '', role: synced.role, isAdmin };
   return {
     token: generateToken(payload),
     refreshToken: generateRefreshToken(payload)

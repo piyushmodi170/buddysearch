@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt.js';
+import { prisma } from '../config/db.js';
+import { isOwnerEmail } from '../config/owner.js';
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -40,9 +42,22 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction) =>
 
 export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
   auth(req, res, () => {
-    if (!req.user?.isAdmin) {
-      return res.status(403).json({ success: false, message: 'Admin access required' });
-    }
-    next();
+    void (async () => {
+      try {
+        if (isOwnerEmail(req.user?.email)) {
+          return next();
+        }
+        const user = await prisma.user.findUnique({
+          where: { id: req.user!.id },
+          select: { email: true },
+        });
+        if (!isOwnerEmail(user?.email)) {
+          return res.status(403).json({ success: false, message: 'Admin access required' });
+        }
+        next();
+      } catch {
+        res.status(403).json({ success: false, message: 'Admin access required' });
+      }
+    })();
   });
 };

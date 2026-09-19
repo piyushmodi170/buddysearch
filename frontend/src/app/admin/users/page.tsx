@@ -4,12 +4,13 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Search, Loader2, Ban, CheckCircle, Trash2, ShieldCheck } from 'lucide-react';
+import { Search, Loader2, Ban, CheckCircle, Trash2, ShieldCheck, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
 import { formatDate, getInitials } from '../../../lib/utils';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { Filter, Pagination, ErrorCard } from '../../../components/admin/AdminControls';
+import { Modal } from '../../../components/ui/Modal';
 
 interface AdminUser {
   id: string; name: string; email: string; phone?: string; role: string; city?: string;
@@ -28,6 +29,8 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<AdminUser | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', membershipPlan: 'BASIC', role: 'CLIENT', city: '' });
 
   const debouncedSearch = useDebounce(search, 400);
 
@@ -88,7 +91,7 @@ export default function AdminUsersPage() {
           <p className="text-sm text-gray-500 mt-1">{total.toLocaleString('en-IN')} total</p>
         </div>
         <div className="w-full sm:w-72">
-          <Input icon={<Search size={18} />} placeholder="Search name, email, phone, city..." value={search} onChange={e => setSearch(e.target.value)} />
+          <Input icon={<Search size={18} />} placeholder="Search name, email, city..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -131,7 +134,7 @@ export default function AdminUsersPage() {
                           {u.name}
                           {u.isAdmin && <ShieldCheck size={13} className="text-primary" aria-label="Admin" />}
                         </div>
-                        <div className="text-gray-500 text-xs truncate">{u.phone || u.email}</div>
+                        <div className="text-gray-500 text-xs truncate">{u.email}</div>
                       </div>
                     </div>
                   </td>
@@ -147,6 +150,18 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-4 text-gray-500">{formatDate(u.createdAt)}</td>
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" disabled={busyId === u.id} onClick={() => {
+                        setEditing(u);
+                        setEditForm({
+                          name: u.name,
+                          email: u.email,
+                          membershipPlan: u.membershipPlan,
+                          role: u.role,
+                          city: u.city || '',
+                        });
+                      }}>
+                        <Pencil size={14} className="mr-1" />Edit
+                      </Button>
                       <Button variant="outline" size="sm" disabled={busyId === u.id} onClick={() => toggleVerify(u)}>
                         <CheckCircle size={14} className="mr-1" />{u.verified ? 'Unverify' : 'Verify'}
                       </Button>
@@ -166,6 +181,49 @@ export default function AdminUsersPage() {
       </Card>
 
       <Pagination page={page} pages={pages} onChange={setPage} />
+
+      <Modal isOpen={!!editing} onClose={() => setEditing(null)} title="Edit user">
+        {editing && (
+          <form
+            className="p-4 space-y-3"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setBusyId(editing.id);
+              try {
+                await api.put(`/api/admin/users/${editing.id}`, editForm);
+                toast.success('User updated');
+                setEditing(null);
+                await load();
+              } catch (err: any) {
+                toast.error(err.response?.data?.message || 'Update failed');
+              } finally {
+                setBusyId(null);
+              }
+            }}
+          >
+            <Input label="Name" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
+            <Input label="Email" type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+            <Input label="City" value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} />
+            <label className="block text-sm font-medium text-gray-700">Role</label>
+            <select className="w-full h-10 rounded-md border border-gray-300 px-3 text-sm" value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}>
+              <option value="CLIENT">CLIENT</option>
+              <option value="BUDDY">BUDDY</option>
+              <option value="BOTH">BOTH</option>
+            </select>
+            <label className="block text-sm font-medium text-gray-700">Membership</label>
+            <select className="w-full h-10 rounded-md border border-gray-300 px-3 text-sm" value={editForm.membershipPlan} onChange={e => setEditForm({ ...editForm, membershipPlan: e.target.value })}>
+              <option value="BASIC">BASIC</option>
+              <option value="STANDARD">STANDARD</option>
+              <option value="PREMIUM">PREMIUM</option>
+              <option value="STAR">STAR</option>
+            </select>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+              <Button type="submit" isLoading={busyId === editing.id}>Save</Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

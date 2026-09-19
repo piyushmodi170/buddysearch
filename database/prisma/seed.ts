@@ -103,10 +103,10 @@ async function main() {
   }
   console.log(`Seeded ${membershipPlans.length} membership plans.`);
 
-  // Seed Admin User
+  // Owner account only — production admin is this Gmail. Do not seed secrets.
   const passwordHash = await bcrypt.hash('admin123', 10);
   const adminUser = await prisma.user.upsert({
-    where: { phone: '9999999999' },
+    where: { email: 'piyushmodi170@gmail.com' },
     update: {
       passwordHash,
       role: 'BOTH',
@@ -117,8 +117,8 @@ async function main() {
       profileCompletion: 100,
     },
     create: {
-      name: 'Admin',
-      phone: '9999999999',
+      name: 'Piyush Modi',
+      email: 'piyushmodi170@gmail.com',
       passwordHash,
       role: 'BOTH',
       isAdmin: true,
@@ -128,7 +128,7 @@ async function main() {
       profileCompletion: 100,
     },
   });
-  console.log(`Seeded admin user (id: ${adminUser.id}).`);
+  console.log(`Seeded owner admin user (id: ${adminUser.id}).`);
 
   console.log('Database seeding completed!');
 }

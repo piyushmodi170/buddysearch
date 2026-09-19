@@ -3,10 +3,12 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
-  Users, LayoutDashboard, ShieldCheck, List, IndianRupee, Star, Tag, Loader2, ArrowLeft
+  Users, LayoutDashboard, ShieldCheck, List, IndianRupee, Star, Tag,
+  Loader2, ArrowLeft, Settings, Mail, KeyRound, CreditCard
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../store/useAuthStore';
+import { isOwnerEmail } from '../../lib/owner';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,23 +18,26 @@ const NAV = [
   { href: '/admin/payments', label: 'Payments', icon: IndianRupee },
   { href: '/admin/plans', label: 'Plans', icon: Tag },
   { href: '/admin/reviews', label: 'Reviews', icon: Star },
+  { href: '/admin/razorpay', label: 'Razorpay', icon: CreditCard },
+  { href: '/admin/smtp', label: 'SMTP', icon: Mail },
+  { href: '/admin/google', label: 'Google login', icon: KeyRound },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const allowed = isOwnerEmail(user?.email);
 
-  // The store is persisted to localStorage, so on the very first client render
-  // it is still empty. Wait for hydration before deciding to redirect.
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
   useEffect(() => {
-    if (hydrated && (!isAuthenticated || !user?.isAdmin)) {
+    if (hydrated && (!isAuthenticated || !allowed)) {
       router.replace('/login');
     }
-  }, [hydrated, isAuthenticated, user, router]);
+  }, [hydrated, isAuthenticated, allowed, router]);
 
   if (!hydrated) {
     return (
@@ -42,12 +47,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!isAuthenticated || !user?.isAdmin) {
+  if (!isAuthenticated || !allowed) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-3 px-6 text-center">
         <ShieldCheck className="text-gray-300" size={48} />
-        <h1 className="text-xl font-bold text-gray-900">Admin access required</h1>
-        <p className="text-sm text-gray-500">Sign in with an administrator account to continue.</p>
+        <h1 className="text-xl font-bold text-gray-900">Owner access only</h1>
+        <p className="text-sm text-gray-500">This panel is restricted to the site owner.</p>
         <Link href="/login" className="text-primary font-semibold text-sm mt-2">Go to login</Link>
       </div>
     );
@@ -75,14 +80,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
         <div className="p-4 border-t border-gray-800 shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white">
+          <Link href="/hire" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white">
             <ArrowLeft size={14} /> Back to app
           </Link>
-          <p className="text-xs text-gray-500 mt-3 truncate">Signed in as {user.name}</p>
+          <p className="text-xs text-gray-500 mt-3 truncate">Signed in as {user?.email}</p>
         </div>
       </aside>
 
-      <main className="flex-1 md:ml-64 p-6 md:p-8">{children}</main>
+      <main className="flex-1 md:ml-64 p-6 md:p-8">
+        <div className="md:hidden flex gap-2 overflow-x-auto mb-6 pb-1">
+          {NAV.map(item => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'whitespace-nowrap text-xs font-semibold px-3 py-2 rounded-full border',
+                pathname === item.href ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-200'
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+        {children}
+      </main>
     </div>
   );
 }

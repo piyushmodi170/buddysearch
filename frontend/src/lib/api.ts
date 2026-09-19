@@ -25,7 +25,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const url = String(error.config?.url || '');
-    const isAuthAttempt = /\/auth\/(login|signup|otp)/.test(url);
+    const isAuthAttempt = /\/auth\/(login|signup|google)/.test(url);
     if (error.response?.status === 401 && !isAuthAttempt) {
       console.warn('API authentication note:', url);
     }
