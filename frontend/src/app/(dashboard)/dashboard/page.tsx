@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/useAuthStore';
 import { getGreeting } from '@/lib/utils';
@@ -18,6 +18,32 @@ export default function DashboardOverview() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const [stats, setStats] = useState({ requests: 0, open: 0, notifications: 0, messages: 0 });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [reqRes, notifRes, chatRes] = await Promise.all([
+          api.get('/api/requests', { params: { limit: 50 } }).catch(() => null),
+          api.get('/api/notifications/unread-count').catch(() => null),
+          api.get('/api/chats').catch(() => null),
+        ]);
+        if (cancelled) return;
+        const requests = Array.isArray(reqRes?.data?.data?.data) ? reqRes.data.data.data : [];
+        const chats = Array.isArray(chatRes?.data?.data) ? chatRes.data.data : [];
+        setStats({
+          requests: requests.length,
+          open: requests.filter((item: any) => item.status === 'OPEN').length,
+          notifications: notifRes?.data?.data?.count || 0,
+          messages: chats.reduce((sum: number, chat: any) => sum + (chat.unreadCount || 0), 0),
+        });
+      } catch {
+        if (!cancelled) setStats({ requests: 0, open: 0, notifications: 0, messages: 0 });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Handle Photo Change directly from Dashboard
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,7 +216,7 @@ export default function DashboardOverview() {
               <Activity size={20} />
             </div>
             <div>
-              <p className="text-sm font-bold text-amber-900">Your profile is {currentUser.profileCompletion || 90}% complete</p>
+              <p className="text-sm font-bold text-amber-900">Your profile is {currentUser.profileCompletion || 0}% complete</p>
               <p className="text-xs text-amber-700 mt-0.5">Complete identity verification to get more visibility</p>
             </div>
           </div>
@@ -210,7 +236,10 @@ export default function DashboardOverview() {
               {currentUser.role || 'BOTH'}
             </Badge>
             <p className="text-red-100 max-w-md mb-8 text-sm leading-relaxed">
-              Welcome back to your dashboard. You have 2 new messages and 1 request waiting for your response.
+              Welcome back to your dashboard.
+              {stats.messages || stats.open
+                ? ` You have ${stats.messages} unread message${stats.messages === 1 ? '' : 's'} and ${stats.open} open request${stats.open === 1 ? '' : 's'}.`
+                : ' Start by finding a buddy or posting a request — your inbox is empty until you do.'}
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/discover">
@@ -233,10 +262,10 @@ export default function DashboardOverview() {
         {/* 4 Quick Stat Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'My Requests', value: '4', icon: List, color: 'text-blue-600', bg: 'bg-blue-50', href: '/requests' },
-            { label: 'Open Now', value: '2', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', href: '/requests' },
-            { label: 'Notifications', value: '5', icon: Bell, color: 'text-amber-600', bg: 'bg-amber-50', href: '/notifications' },
-            { label: 'Messages', value: '12', icon: MessageSquare, color: 'text-purple-600', bg: 'bg-purple-50', href: '/messages' },
+            { label: 'My Requests', value: String(stats.requests), icon: List, color: 'text-blue-600', bg: 'bg-blue-50', href: '/requests' },
+            { label: 'Open Now', value: String(stats.open), icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', href: '/requests' },
+            { label: 'Notifications', value: String(stats.notifications), icon: Bell, color: 'text-amber-600', bg: 'bg-amber-50', href: '/notifications' },
+            { label: 'Unread chats', value: String(stats.messages), icon: MessageSquare, color: 'text-purple-600', bg: 'bg-purple-50', href: '/messages' },
           ].map((stat, i) => (
             <Link key={i} href={stat.href}>
               <Card className="flex flex-col items-center justify-center py-6 text-center hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group">

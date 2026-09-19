@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 export interface AppNotification {
   id: string;
-  type: 'PROFILE_VIEW' | 'MESSAGE' | 'REQUEST_RESPONSE' | 'SYSTEM';
+  type: string;
   title: string;
   body: string;
   createdAt: string;

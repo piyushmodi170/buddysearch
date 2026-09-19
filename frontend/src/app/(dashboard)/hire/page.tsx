@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -21,9 +21,12 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import toast from 'react-hot-toast';
+import api from '@/lib/api';
+import { encodeRateOffer } from '@/lib/messageText';
 
 interface HirePost {
   id: string;
+  userId?: string;
   name: string;
   avatar: string;
   isStar?: boolean;
@@ -38,77 +41,23 @@ interface HirePost {
   price: number;
 }
 
-const HIRE_POSTS: HirePost[] = [
-  {
-    id: 'hp-sajal',
-    name: 'Sajal Srivastav',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300',
-    location: 'LUCKNOW, Uttar Pradesh',
-    date: '15 Sept',
-    type: 'I need a buddy',
-    title: 'Need cafe buddy for anytime',
-    category: 'Cafe Buddy',
-    description: "☕ Café Plan: Small modern café\n⏰ Time: 8 AM–10 PM\n📍 Location: Anywhere where you feel comfortable\n🍔 Anything: Coffee, snacks, Wi-Fi, comfortable seating, music...",
-    priceType: 'BUDGET',
-    price: 1000
-  },
-  {
-    id: 'hp-pankaj',
-    name: 'Pankaj',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300',
-    isStar: true,
-    location: 'Lucknow, Uttar Pradesh',
-    date: '15 Sept',
-    type: 'I need a buddy',
-    title: 'Movie dinner',
-    category: 'Nightout Buddy',
-    description: "Normallly we go for chill party n watching movies dinner . Any good vibes positive perosn humble good looking any cute girl",
-    priceType: 'BUDGET',
-    price: 5000
-  },
-  {
-    id: 'hp-lonewolf',
-    name: 'Lonewolf',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
-    isStar: true,
-    location: 'Lucknow, Uttar Pradesh',
-    date: '15 Sept',
-    type: 'I need a buddy',
-    title: 'Chat friend required',
-    category: 'Chat Buddy',
-    description: "Looking for an empathetic and friendly chat buddy for daily evening catchups and sharing thoughts.",
-    priceType: 'BUDGET',
-    price: 300
-  },
-  {
-    id: 'hp-abhishek',
-    name: 'Abhishek Prajapati',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
-    isStar: true,
-    location: 'Mumbai, Maharashtra',
-    date: '16 Sept',
-    type: 'I need a buddy',
-    title: "Need a Partner For Garba and Dandia so let's Rock",
-    category: 'City Explorer Buddy',
-    description: "🪔💃 Navratri Alert! 💃🪔\nLooking for a Garba/Dandiya partner for this Navratri! 💃🕺\nSomeone who can match my energy for the fast beats, doesn't mind a little crowd, and wants to dance the night away.",
-    priceType: 'BUDGET',
-    price: 700
-  },
-  {
-    id: 'hp-manish',
-    name: 'Manish Verma',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300',
-    isVerified: true,
-    location: 'Mumbai, Maharashtra',
-    date: '16 Sept',
-    type: "I'm a buddy",
-    title: 'Available for anything you want.',
-    category: 'Cafe Buddy',
-    description: "Looking for someone to share the little moments and make them special. Whether it's going on walks, shopping, exploring cafés, watching a movie, or simply having great conversations over coffee.",
-    priceType: 'RATE',
-    price: 1000
-  }
-];
+function mapHirePost(req: any): HirePost {
+  const created = req.createdAt ? new Date(req.createdAt) : new Date();
+  return {
+    id: req.id,
+    userId: req.userId || req.user?.id,
+    name: req.user?.name || 'Member',
+    avatar: req.user?.avatar || '',
+    location: req.location || 'India',
+    date: created.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+    type: req.type === 'AM_BUDDY' ? "I'm a buddy" : 'I need a buddy',
+    title: req.title,
+    category: req.category,
+    description: req.description || '',
+    priceType: req.type === 'AM_BUDDY' ? 'RATE' : 'BUDGET',
+    price: req.budget || 0,
+  };
+}
 
 export default function HirePage() {
   const router = useRouter();
@@ -118,9 +67,11 @@ export default function HirePage() {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
   
   // Interactive States
+  const [posts, setPosts] = useState<HirePost[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
   const [likedIds, setLikedIds] = useState<string[]>([]);
-  const [pendingIds, setPendingIds] = useState<string[]>(['hp-sajal']);
-  const [showToast, setShowToast] = useState<boolean>(true);
+  const [pendingIds, setPendingIds] = useState<string[]>([]);
+  const [showToast, setShowToast] = useState<boolean>(false);
 
   // Modal States
   const [counterPost, setCounterPost] = useState<HirePost | null>(null);
@@ -131,7 +82,24 @@ export default function HirePage() {
   const [requestNote, setRequestNote] = useState<string>('');
 
   // PWA Prompt
-  const [showPWA, setShowPWA] = useState(true);
+  const [showPWA, setShowPWA] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingPosts(true);
+      try {
+        const res = await api.get('/api/requests/marketplace', { params: { limit: 50 } });
+        const rows = res.data?.data?.data || [];
+        if (!cancelled) setPosts(rows.map(mapHirePost));
+      } catch {
+        if (!cancelled) setPosts([]);
+      } finally {
+        if (!cancelled) setLoadingPosts(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Toggle see more
   const toggleExpand = (id: string) => {
@@ -153,40 +121,62 @@ export default function HirePage() {
   };
 
   // Send Direct Request
-  const handleSendDirectRequest = (postId: string, name: string) => {
-    if (!pendingIds.includes(postId)) {
-      setPendingIds([...pendingIds, postId]);
+  const handleSendDirectRequest = async (post: HirePost) => {
+    if (!post.userId) {
+      toast.error('This post has no owner to contact');
+      return;
     }
-    setShowToast(true);
-    setRequestPost(null);
-    setRequestNote('');
-    toast.success('Request sent successfully!');
+    try {
+      await api.post(`/api/requests/${post.id}/offer`, { message: requestNote || 'I would like to connect.' });
+      const chatRes = await api.post('/api/chats', { userId: post.userId });
+      if (!pendingIds.includes(post.id)) {
+        setPendingIds([...pendingIds, post.id]);
+      }
+      setShowToast(true);
+      setRequestPost(null);
+      setRequestNote('');
+      toast.success('Request sent');
+      if (chatRes.data?.data?.id) {
+        router.push(`/messages?chat=${chatRes.data.data.id}`);
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not send request');
+    }
   };
 
-  // Send Proposal (Counter)
-  const handleSendCounterProposal = () => {
+  const handleSendCounterProposal = async () => {
     if (!counterOfferAmount || Number(counterOfferAmount) <= 0) {
       toast.error('Please enter a valid rate');
       return;
     }
-    if (counterPost && !pendingIds.includes(counterPost.id)) {
-      setPendingIds([...pendingIds, counterPost.id]);
+    if (!counterPost?.userId) {
+      toast.error('This post has no owner to contact');
+      return;
     }
-    localStorage.setItem('buddysearch_active_proposal', JSON.stringify({
-      amount: counterOfferAmount,
-      name: counterPost?.name
-    }));
-    setShowToast(true);
-    setCounterPost(null);
-    setCounterOfferAmount('');
-    setCounterNote('');
-    toast.success(`Proposal sent to ${counterPost?.name}! Opening chat...`);
-    router.push('/messages');
+    try {
+      const chatRes = await api.post('/api/chats', { userId: counterPost.userId });
+      const chatId = chatRes.data?.data?.id;
+      if (chatId) {
+        await api.post(`/api/chats/${chatId}/messages`, { text: encodeRateOffer(Number(counterOfferAmount)) });
+      }
+      if (!pendingIds.includes(counterPost.id)) {
+        setPendingIds([...pendingIds, counterPost.id]);
+      }
+      setShowToast(true);
+      const name = counterPost.name;
+      setCounterPost(null);
+      setCounterOfferAmount('');
+      setCounterNote('');
+      toast.success(`Proposal sent to ${name}`);
+      if (chatId) router.push(`/messages?chat=${chatId}`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not send proposal');
+    }
   };
 
 
   // Filter Posts
-  const filteredPosts = HIRE_POSTS.filter(post => {
+  const filteredPosts = posts.filter(post => {
     if (activeTab !== 'All' && post.type !== activeTab) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -263,7 +253,14 @@ export default function HirePage() {
 
       {/* 3. CARDS FEED */}
       <div className="space-y-4">
-        {filteredPosts.map((post) => {
+        {loadingPosts ? (
+          <div className="bg-white border border-gray-200 rounded-2xl py-16 text-center text-gray-400 text-sm">Loading posts…</div>
+        ) : filteredPosts.length === 0 ? (
+          <div className="bg-white border border-dashed border-gray-300 rounded-2xl py-16 text-center px-6">
+            <h3 className="font-bold text-gray-900 mb-1">No posts yet</h3>
+            <p className="text-sm text-gray-500">When members post requests, they will appear here. New accounts start with an empty feed.</p>
+          </div>
+        ) : filteredPosts.map((post) => {
           const isExpanded = expandedIds.includes(post.id);
           const isLiked = likedIds.includes(post.id);
           const isPending = pendingIds.includes(post.id);
@@ -275,8 +272,12 @@ export default function HirePage() {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-11 h-11 rounded-full overflow-hidden border border-gray-200">
-                      <img src={post.avatar} alt={post.name} className="w-full h-full object-cover" />
+                    <div className="w-11 h-11 rounded-full overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
+                      {post.avatar ? (
+                        <img src={post.avatar} alt={post.name} className="w-full h-full object-cover" />
+                      ) : (
+                        post.name.slice(0, 2).toUpperCase()
+                      )}
                     </div>
                     {post.isStar && (
                       <div className="absolute -bottom-1 -right-1 bg-amber-400 text-white rounded-full p-0.5 border border-white shadow-sm">
@@ -385,7 +386,7 @@ export default function HirePage() {
                     </div>
                   ) : (
                     <Button
-                      onClick={() => handleSendDirectRequest(post.id, post.name)}
+                      onClick={() => handleSendDirectRequest(post)}
                       className="bg-[#F04438] hover:bg-[#D92D20] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm flex items-center gap-1.5"
                     >
                       <Send size={13} />

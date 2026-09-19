@@ -9,7 +9,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   const TABS = [
-    { href: '/', label: 'Home', icon: Home },
+    { href: '/dashboard', label: 'Home', icon: Home },
     { href: '/find', label: 'Find', icon: Search },
     { href: '/posts', label: 'Post', icon: PlusCircle },
     { href: '/messages', label: 'Chat', icon: MessageSquare },

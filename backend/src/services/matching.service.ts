@@ -149,8 +149,7 @@ export const discoverBuddies = async (
           ratingBonus * 0.05;
       }
 
-      // Strip reviews from response
-      const { receivedReviews, ...buddyData } = buddy;
+      const { receivedReviews, passwordHash, ...buddyData } = buddy as typeof buddy & { passwordHash?: string };
       return { ...buddyData, _score: score, _distance: distanceScore };
     });
 
@@ -176,7 +175,11 @@ export const discoverBuddies = async (
     prisma.user.count({ where }),
   ]);
 
-  const result = { data: buddies, total, page, limit };
+  const safeBuddies = buddies.map((buddy) => {
+    const { passwordHash, ...rest } = buddy as typeof buddy & { passwordHash?: string };
+    return rest;
+  });
+  const result = { data: safeBuddies, total, page, limit };
   await setCache(cacheKey, JSON.stringify(result), 60);
   return result;
 };

@@ -69,9 +69,7 @@ export default function PostRequestPage() {
       toast.success(tab === 'need' ? 'Request posted successfully!' : 'Buddy offer published successfully!');
       router.push('/requests');
     } catch {
-      // Instant success fallback for immediate feedback
-      toast.success(tab === 'need' ? 'Request posted successfully!' : 'Buddy offer published successfully!');
-      router.push('/requests');
+      toast.error('Could not post. Please try again.');
     } finally {
       setLoading(false);
     }

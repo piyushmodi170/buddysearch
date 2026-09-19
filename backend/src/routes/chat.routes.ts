@@ -34,6 +34,21 @@ router.get('/:id/messages', auth, async (req, res, next) => {
   }
 });
 
+router.post('/:id/messages', auth, async (req, res, next) => {
+  try {
+    const text = String(req.body?.text || '').trim();
+    if (!text) throw new Error('Message text is required');
+    const data = await chatService.sendMessageService(req.params.id, req.user!.id, text);
+    const io = req.app.get('io');
+    if (io) {
+      io.to(req.params.id).emit('new_message', { chatId: req.params.id, message: data });
+    }
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
 router.put('/:id/seen', auth, async (req, res, next) => {
   try {
     await chatService.markAsSeenService(req.params.id, req.user!.id);

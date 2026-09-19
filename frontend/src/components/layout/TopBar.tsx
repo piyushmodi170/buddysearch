@@ -15,7 +15,7 @@ export function TopBar() {
         <Menu size={24} />
       </button>
 
-      <Link href="/" className="flex items-center gap-2">
+      <Link href="/dashboard" className="flex items-center gap-2">
         <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white">
           <Users size={18} />
         </div>
