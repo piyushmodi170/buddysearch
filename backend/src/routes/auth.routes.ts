@@ -3,8 +3,14 @@ import { validate } from '../middleware/validate.js';
 import { signupSchema, loginSchema } from '../utils/validators.js';
 import * as authService from '../services/auth.service.js';
 import { getSetting } from '../config/settings.js';
+import { isDatabaseError, publicDatabaseError } from '../config/db.js';
 
 const router = Router();
+
+const authErrorMessage = (error: any, fallback: string) => {
+  if (isDatabaseError(error)) return publicDatabaseError;
+  return error?.message || fallback;
+};
 
 router.get('/google/config', async (_req, res) => {
   const fromEnv = process.env.GOOGLE_CLIENT_ID || '';
@@ -37,7 +43,7 @@ router.post('/google', async (req, res, next) => {
     const data = await authService.googleAuthService(idToken);
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: authErrorMessage(error, 'Google sign-in failed') });
   }
 });
 
@@ -46,7 +52,7 @@ router.post('/signup', validate(signupSchema), async (req, res, next) => {
     const data = await authService.signup(req.body);
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: authErrorMessage(error, 'Unable to create your account') });
   }
 });
 
@@ -55,7 +61,11 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
     const data = await authService.login(req.body.email, req.body.password);
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(401).json({ success: false, message: error.message });
+    const invalid = error?.message === 'Invalid credentials' || error?.message === 'Please sign in with your email address';
+    res.status(invalid ? 401 : 503).json({
+      success: false,
+      message: invalid ? error.message : authErrorMessage(error, 'Unable to sign in'),
+    });
   }
 });
 
