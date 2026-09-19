@@ -1,0 +1,21 @@
+{
+  "name": "BuddySearch",
+  "install": "cd /workspace/frontend && npm ci\ncd /workspace/backend && npm ci\ncd /workspace/database && npm ci",
+  "start": "true",
+  "terminals": [
+    {
+      "name": "frontend",
+      "command": "cd /workspace/frontend && npx next dev -H 0.0.0.0 -p 3000",
+      "description": "Next.js landing page and app on port 3000"
+    },
+    {
+      "name": "backend",
+      "command": "cd /workspace/backend && npm run dev",
+      "description": "Express API on port 4000"
+    }
+  ],
+  "ports": [
+    { "name": "frontend", "port": 3000 },
+    { "name": "backend", "port": 4000 }
+  ]
+}
