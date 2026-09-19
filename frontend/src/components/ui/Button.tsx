@@ -10,8 +10,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', isLoading, children, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50';
+  ({ className, variant = 'primary', size = 'md', isLoading, children, type = 'button', disabled, ...props }, ref) => {
+    const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 touch-manipulation';
     
     const variants = {
       primary: 'bg-primary text-white hover:bg-primary-dark shadow-sm',
@@ -29,8 +29,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        type={type}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
-        disabled={isLoading || props.disabled}
+        disabled={isLoading || disabled}
         {...props}
       >
         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

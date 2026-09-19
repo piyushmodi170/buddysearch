@@ -218,8 +218,9 @@ export default function HirePage() {
         {/* 2. FILTER TABS */}
         <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
           <button
+            type="button"
             onClick={() => setActiveTab('All')}
-            className={`px-6 py-2 text-xs font-bold rounded-xl transition-all ${
+            className={`px-6 py-2 min-h-11 text-xs font-bold rounded-xl transition-all touch-manipulation ${
               activeTab === 'All'
                 ? 'bg-[#2B3445] text-white shadow-md'
                 : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
@@ -229,8 +230,9 @@ export default function HirePage() {
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('I need a buddy')}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-2 min-h-11 text-xs font-bold rounded-xl transition-all touch-manipulation ${
               activeTab === 'I need a buddy'
                 ? 'bg-[#2B3445] text-white shadow-md'
                 : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
@@ -241,8 +243,9 @@ export default function HirePage() {
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab("I'm a buddy")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-2 min-h-11 text-xs font-bold rounded-xl transition-all touch-manipulation ${
               activeTab === "I'm a buddy"
                 ? 'bg-[#2B3445] text-white shadow-md'
                 : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'

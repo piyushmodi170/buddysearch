@@ -26,6 +26,29 @@ interface DiscoverFilters {
   interestSlugs?: string[];
 }
 
+const matchesDiscoverFilters = (
+  buddy: { name?: string | null; city?: string | null; state?: string | null; bio?: string | null; interests?: { interest?: { slug?: string } }[] },
+  filters: DiscoverFilters
+) => {
+  if (filters.city) {
+    const city = filters.city.toLowerCase();
+    const hit =
+      (buddy.city || '').toLowerCase() === city ||
+      (buddy.state || '').toLowerCase().includes(city);
+    if (!hit) return false;
+  }
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    const blob = `${buddy.name || ''} ${buddy.city || ''} ${buddy.state || ''} ${buddy.bio || ''}`.toLowerCase();
+    if (!blob.includes(q)) return false;
+  }
+  if (filters.interestSlugs && filters.interestSlugs.length > 0) {
+    const have = (buddy.interests || []).map((row) => row.interest?.slug).filter(Boolean) as string[];
+    if (!filters.interestSlugs.some((slug) => have.includes(slug))) return false;
+  }
+  return true;
+};
+
 export const discoverBuddies = async (
   userId: string,
   filters: DiscoverFilters,
@@ -46,13 +69,11 @@ export const discoverBuddies = async (
     banned: false,
   };
 
-  if (filters.city) where.city = { equals: filters.city, mode: 'insensitive' };
+  if (filters.city) {
+    // MongoDB does not support Prisma `mode: 'insensitive'` — filter in memory below.
+  }
   if (filters.search) {
-    where.OR = [
-      { name: { contains: filters.search, mode: 'insensitive' } },
-      { city: { contains: filters.search, mode: 'insensitive' } },
-      { bio: { contains: filters.search, mode: 'insensitive' } },
-    ];
+    // Applied in memory after fetch so Atlas is not asked for unsupported string modes.
   }
   if (filters.interestSlugs && filters.interestSlugs.length > 0) {
     where.interests = {
@@ -124,12 +145,14 @@ export const discoverBuddies = async (
       },
     });
 
+    const filteredPool = pool.filter((buddy) => matchesDiscoverFilters(buddy, filters));
+
     const currentInterestSlugs = new Set(
       currentUser?.interests.map((i) => i.interest.slug) || []
     );
 
     // Score each buddy
-    const scored = pool.map((buddy) => {
+    const scored = filteredPool.map((buddy) => {
       const buddyInterestSlugs = buddy.interests.map((i) => i.interest.slug);
       const interestOverlap = currentInterestSlugs.size > 0
         ? buddyInterestSlugs.filter((s) => currentInterestSlugs.has(s)).length / currentInterestSlugs.size
@@ -180,18 +203,16 @@ export const discoverBuddies = async (
   }
 
   // Standard DB-sorted query for 'new' and 'trending' tabs
-  const [buddies, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: orderBy.length > 0 ? orderBy : undefined,
-      include: { interests: { include: { interest: true } } },
-    }),
-    prisma.user.count({ where }),
-  ]);
-
-  const safeBuddies = buddies.map((buddy) => {
+  const buddies = await prisma.user.findMany({
+    where,
+    take: poolSize,
+    orderBy: orderBy.length > 0 ? orderBy : undefined,
+    include: { interests: { include: { interest: true } } },
+  });
+  const matched = buddies.filter((buddy) => matchesDiscoverFilters(buddy, filters));
+  const total = matched.length;
+  const pageRows = matched.slice(skip, skip + limit);
+  const safeBuddies = pageRows.map((buddy) => {
     const { passwordHash, ...rest } = buddy as typeof buddy & { passwordHash?: string };
     return rest;
   });
