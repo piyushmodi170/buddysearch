@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
 import indiaTopo from '@/data/india.topo.json';
 
@@ -99,8 +99,12 @@ function PinIcon() {
 }
 
 export default function IndiaMap() {
-  const onlineCount = useMemo(() => (Math.floor(Math.random() * 1601) + 1200).toLocaleString(), []);
+  const [onlineCount, setOnlineCount] = useState('2,000');
   const [activeState, setActiveState] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOnlineCount((Math.floor(Math.random() * 1601) + 1200).toLocaleString('en-IN'));
+  }, []);
 
   return (
     <section className="active-buddies" id="buddy-map" aria-label="Active Buddies on BuddySearch">
