@@ -5,6 +5,7 @@ import { activatePlan, findPlan } from './membership.service.js';
 import { publicUser } from './auth.service.js';
 import { getSetting } from '../config/settings.js';
 import { config } from '../config/index.js';
+import { sendTransactional } from './mail.service.js';
 
 const razorpayClient = async () => {
   const razorpay = await getSetting('razorpay');
@@ -99,6 +100,18 @@ export const verifyPayment = async (data: any, userId: string) => {
   });
 
   const updated = await activatePlan(userId, payment.planId);
+  const plan = await findPlan(payment.planId).catch(() => null);
+  void sendTransactional('payment-confirmation', updated.email, {
+    name: updated.name,
+    email: updated.email,
+    plan: plan?.displayName || updated.membershipPlan,
+    amount: String(payment.amount),
+  }).then(() => sendTransactional('purchase-thanks', updated.email, {
+    name: updated.name,
+    email: updated.email,
+    plan: plan?.displayName || updated.membershipPlan,
+    amount: String(payment.amount),
+  })).catch(() => undefined);
 
   return { success: true, user: publicUser(updated) };
 };

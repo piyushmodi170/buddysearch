@@ -16,6 +16,24 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+export const emailOnlySchema = z.object({
+  email: z.string().email('Enter a valid email address').transform((val) => val.toLowerCase().trim()),
+});
+
+export const verifyEmailSchema = z.object({
+  email: z.string().email('Enter a valid email address').transform((val) => val.toLowerCase().trim()),
+  code: z.string().min(4, 'Enter the 6-digit code from your email'),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email('Enter a valid email address').transform((val) => val.toLowerCase().trim()),
+  code: z.string().min(4, 'Enter the 6-digit code from your email'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Za-z]/, 'Password must include a letter')
+    .regex(/\d/, 'Password must include a number'),
+});
+
 export const updateProfileSchema = z.object({
   name: z.string().min(2).optional(),
   email: z.string().email().optional(),

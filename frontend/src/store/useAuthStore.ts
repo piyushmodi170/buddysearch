@@ -24,6 +24,7 @@ export interface User {
   gender?: string;
   isAdmin?: boolean;
   verified?: boolean;
+  emailVerified?: boolean;
   aadhaarUrl?: string;
   aadhaarVerified?: boolean;
   availableForRequests?: boolean;

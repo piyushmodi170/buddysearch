@@ -12,6 +12,7 @@ export type SmtpSettings = {
   user: string;
   password: string;
   from: string;
+  fromName: string;
   secure: boolean;
 };
 
@@ -45,6 +46,7 @@ const envDefaults: SettingsMap = {
     user: process.env.SMTP_USER || '',
     password: process.env.SMTP_PASSWORD || '',
     from: process.env.SMTP_FROM || '',
+    fromName: process.env.SMTP_FROM_NAME || 'BuddySearch',
     secure: String(process.env.SMTP_SECURE || '').toLowerCase() === 'true',
   },
   google: {

@@ -33,6 +33,7 @@ export const ownerSessionUser = (id: string, doc: Record<string, unknown> = {}) 
   gender: doc.gender || null,
   isAdmin: true,
   verified: true,
+  emailVerified: true,
   availableForRequests: true,
   profileCompletion: Number(doc.profileCompletion || 100),
   banned: Boolean(doc.banned),
@@ -52,6 +53,7 @@ export const ensureOwnerAccount = async (passwordHash: string) => {
     profileCompletion: 100,
     isAdmin: true,
     verified: true,
+    emailVerified: true,
     banned: false,
     updatedAt: now,
   };

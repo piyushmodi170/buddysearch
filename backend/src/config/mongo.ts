@@ -120,6 +120,7 @@ export const insertUser = async (doc: Record<string, unknown>) => {
   if (doc.googleId) payload.googleId = String(doc.googleId);
   if (doc.passwordHash) payload.passwordHash = String(doc.passwordHash);
   if (doc.avatar) payload.avatar = String(doc.avatar);
+  payload.emailVerified = Boolean(doc.emailVerified);
   await col.insertOne(payload);
   return { ...payload, id: _id.toHexString() };
 };
