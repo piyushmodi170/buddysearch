@@ -237,7 +237,9 @@ export default function LandingPage() {
             </div>
             <h1 className="hero__title">
               Hire a Buddy<br />
-              or <span className="hero__title-accent hero__title-accent--underline">Become One.</span>
+              <span className="hero__title-row">
+                or <span className="hero__title-accent hero__title-accent--underline">Become One.</span>
+              </span>
             </h1>
             <div className="hero__features">
               <div className="hero__feature">

@@ -595,6 +595,10 @@
   letter-spacing: -0.02em;
 }
 
+.hero__title-row {
+  white-space: nowrap;
+}
+
 .hero__title-accent {
   background: linear-gradient(135deg, var(--color-carnation), var(--color-sea-pink));
   -webkit-background-clip: text;
@@ -605,13 +609,17 @@
 .hero__title-accent--underline {
   position: relative;
   display: inline-block;
+  white-space: nowrap;
 }
 
 .hero__title-accent--underline::after {
   content: '';
   position: absolute;
-  left: 0; bottom: -4px;
-  width: 100%; height: 4px;
+  left: 0;
+  right: 0;
+  bottom: 0.08em;
+  width: 100%;
+  height: 0.09em;
   background: linear-gradient(90deg, var(--color-carnation), var(--color-sea-pink));
   border-radius: 2px;
 }
@@ -3688,11 +3696,6 @@
   border: none;
   cursor: pointer;
 }
-
-.hero__title-accent--underline {
-  -webkit-text-fill-color: transparent;
-}
-
 
 .active-buddies {
   padding: 100px 0 80px;
