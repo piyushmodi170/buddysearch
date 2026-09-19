@@ -115,6 +115,8 @@ async function main() {
       membershipPlan: 'STAR',
       verified: true,
       profileCompletion: 100,
+      onboardingCompleted: true,
+      availableForRequests: true,
     },
     create: {
       name: 'Piyush Modi',
@@ -126,6 +128,8 @@ async function main() {
       membershipPlan: 'STAR',
       verified: true,
       profileCompletion: 100,
+      onboardingCompleted: true,
+      availableForRequests: true,
     },
   });
   console.log(`Seeded owner admin user (id: ${adminUser.id}).`);

@@ -45,7 +45,8 @@ export default function LoginPage() {
         throw new Error('Invalid response');
       }
       toast.success('Signed in successfully!');
-      router.push('/hire');
+      const needsOnboarding = data.user && data.user.onboardingCompleted === false && !data.user.isAdmin;
+      router.push(needsOnboarding ? '/onboarding' : '/hire');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Unable to sign in. Please check your credentials.');
     } finally {

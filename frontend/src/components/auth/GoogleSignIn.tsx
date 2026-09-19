@@ -47,7 +47,8 @@ export function GoogleSignIn({ label }: { label: string }) {
       const data = res.data.data || res.data;
       login(data.user, data.token);
       toast.success('Signed in with Google');
-      router.push('/hire');
+      const needsOnboarding = data.user && data.user.onboardingCompleted === false && !data.user.isAdmin;
+      router.push(needsOnboarding ? '/onboarding' : '/hire');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Google sign-in failed');
     } finally {

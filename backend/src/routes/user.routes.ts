@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { updateProfileSchema } from '../utils/validators.js';
+import { updateProfileSchema, completeOnboardingSchema } from '../utils/validators.js';
 import * as userService from '../services/user.service.js';
 import { uploadAvatar, uploadAadhaar } from '../middleware/upload.js';
 import * as matchingService from '../services/matching.service.js';
@@ -50,6 +50,24 @@ router.put('/interests', auth, async (req, res, next) => {
   try {
     await userService.updateInterestsService(req.user!.id, req.body.interestIds || []);
     res.json({ success: true, message: 'Interests updated' });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.get('/interest-options', auth, async (req, res, next) => {
+  try {
+    const data = await userService.listInterests();
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/onboarding', auth, validate(completeOnboardingSchema), async (req, res, next) => {
+  try {
+    const profile = await userService.completeOnboarding(req.user!.id, req.body);
+    res.json({ success: true, data: profile, message: 'Profile completed!' });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }

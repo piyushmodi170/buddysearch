@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { isOwnerEmail } from '../config/owner.js';
 import { getSetting } from '../config/settings.js';
 
-const publicUser = (user: any) => {
+export const publicUser = (user: any) => {
   if (!user) return user;
   const { passwordHash, ...safe } = user;
   return { ...safe, isAdmin: isOwnerEmail(user.email) };
@@ -42,12 +42,13 @@ export const googleAuthService = async (idToken: string) => {
   const claims = await response.json() as {
     aud?: string;
     email?: string;
-    email_verified?: string;
+    email_verified?: string | boolean;
     name?: string;
     picture?: string;
     sub?: string;
   };
-  if (claims.aud !== google.clientId || claims.email_verified !== 'true' || !claims.email || !claims.sub) {
+  const emailVerified = claims.email_verified === true || claims.email_verified === 'true';
+  if (claims.aud !== google.clientId || !emailVerified || !claims.email || !claims.sub) {
     throw new Error('Invalid Google identity token');
   }
 
@@ -73,6 +74,10 @@ export const googleAuthService = async (idToken: string) => {
         role: 'CLIENT',
         verified: true,
         membershipPlan: 'BASIC',
+        membershipExpiry: null,
+        onboardingCompleted: false,
+        availableForRequests: false,
+        profileCompletion: 10,
         isAdmin: isOwnerEmail(cleanEmail),
       }
     });
@@ -102,6 +107,11 @@ export const signup = async (data: any) => {
       email,
       passwordHash: hashedPassword,
       role: data.role || 'CLIENT',
+      membershipPlan: 'BASIC',
+      membershipExpiry: null,
+      onboardingCompleted: false,
+      availableForRequests: false,
+      profileCompletion: 10,
       isAdmin: isOwnerEmail(email),
     }
   });
