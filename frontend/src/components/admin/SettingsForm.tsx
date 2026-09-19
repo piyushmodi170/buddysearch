@@ -25,7 +25,7 @@ export function SettingsForm({
 }: {
   group: 'razorpay' | 'smtp' | 'google' | 'app';
   title: string;
-  description: string;
+  description: React.ReactNode;
   fields: Field[];
   extra?: React.ReactNode;
 }) {
@@ -82,7 +82,7 @@ export function SettingsForm({
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-      <p className="text-sm text-gray-500 mt-1 mb-6">{description}</p>
+      <div className="text-sm text-gray-500 mt-1 mb-6">{description}</div>
       <ErrorCard message={error} />
       <Card>
         <form onSubmit={save} className="space-y-4 max-w-xl">
