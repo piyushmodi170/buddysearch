@@ -12,6 +12,7 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      { source: '/favicon.ico', destination: '/favicon.png' },
       { source: '/api/:path*', destination: `${backend}/api/:path*` },
       { source: '/socket.io', destination: `${backend}/socket.io` },
       { source: '/socket.io/:path*', destination: `${backend}/socket.io/:path*` },
