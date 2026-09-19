@@ -342,7 +342,7 @@ export default function HirePage() {
               </div>
 
               {/* Card Footer Actions */}
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+              <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 
                 {/* Price Display */}
                 <div>
@@ -355,7 +355,7 @@ export default function HirePage() {
                 </div>
 
                 {/* Counter & Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => {
                       setCounterPost(post);

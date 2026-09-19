@@ -2,14 +2,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Briefcase, Search, Plus, MessageSquare, User } from 'lucide-react';
+import { Home, Search, Plus, MessageSquare, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function MobileNav() {
   const pathname = usePathname();
 
   const sideTabs = [
-    { href: '/hire', label: 'Hire', icon: Briefcase },
+    { href: '/hire', label: 'Hire', icon: Home },
     { href: '/find', label: 'Find', icon: Search },
     { href: '/messages', label: 'Messages', icon: MessageSquare },
     { href: '/account', label: 'Profile', icon: User },

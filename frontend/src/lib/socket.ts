@@ -1,15 +1,18 @@
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/useAuthStore';
+import { getSocketUrl } from './publicUrl';
 
 let socket: Socket | null = null;
 
 export const getSocket = () => {
   if (!socket) {
     const token = useAuthStore.getState().token;
-    socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000', {
+    socket = io(getSocketUrl(), {
       auth: { token },
       autoConnect: false,
       reconnection: true,
+      transports: ['polling', 'websocket'],
+      withCredentials: true,
     });
   }
   return socket;

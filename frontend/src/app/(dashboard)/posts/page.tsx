@@ -8,7 +8,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Badge } from '@/components/ui/Badge';
 import { Info } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { isPaidMembership, planDisplayLabel } from '@/lib/utils';
+import { isPaidMembership } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -76,12 +76,13 @@ export default function PostRequestPage() {
     }
   };
 
+  const [usageLoaded, setUsageLoaded] = useState(false);
   const [usage, setUsage] = useState({
     count: 0,
     limit: 5,
     remaining: 5 as number | null,
-    planLabel: planDisplayLabel(user),
-    isPaid: isPaidMembership(user),
+    planLabel: 'Free',
+    isPaid: false,
   });
 
   useEffect(() => {
@@ -98,7 +99,7 @@ export default function PostRequestPage() {
           count,
           limit,
           remaining,
-          planLabel: data.isPaid ? (data.plan || data.planLabel || 'BASIC') : (data.planLabel || 'FREE'),
+          planLabel: data.isPaid ? (data.plan || data.planLabel || 'Paid') : 'Free',
           isPaid: Boolean(data.isPaid),
         });
       } catch {
@@ -107,14 +108,16 @@ export default function PostRequestPage() {
             count: 0,
             limit: 5,
             remaining: 5,
-            planLabel: 'FREE',
-            isPaid: false,
+            planLabel: 'Free',
+            isPaid: isPaidMembership(user),
           });
         }
+      } finally {
+        if (!cancelled) setUsageLoaded(true);
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [user]);
 
   const usedLabel = `${usage.count} used`;
   const remainingLabel = usage.remaining == null ? 'Unlimited remaining' : `${usage.remaining} remaining`;
@@ -170,7 +173,7 @@ export default function PostRequestPage() {
             ? 'bg-emerald-100 text-emerald-800 font-bold uppercase tracking-wider text-[10px]'
             : 'bg-white text-gray-600 border border-gray-200 font-bold uppercase tracking-wider text-[10px]'
           }>
-            {usage.isPaid ? `${usage.planLabel} PLAN` : 'Free'}
+            {usageLoaded && usage.isPaid ? `${usage.planLabel} PLAN` : 'Free'}
           </Badge>
         </div>
         <ProgressBar value={progressValue} max={progressMax} className="mb-2 bg-gray-200" />
