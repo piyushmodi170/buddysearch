@@ -4,15 +4,14 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Button } from '@/components/ui/Button';
 
 declare global {
   interface Window {
     google?: {
       accounts: {
         id: {
-          initialize: (opts: { client_id: string; callback: (res: { credential: string }) => void }) => void;
-          prompt: (cb?: (n: { isNotDisplayed?: () => boolean; isSkippedMoment?: () => boolean }) => void) => void;
+          initialize: (opts: Record<string, unknown>) => void;
+          prompt: (cb?: (n: { isNotDisplayed?: () => boolean; isSkippedMoment?: () => boolean; isDismissedMoment?: () => boolean }) => void) => void;
           renderButton: (el: HTMLElement, opts: Record<string, unknown>) => void;
         };
       };
@@ -22,7 +21,7 @@ declare global {
 
 function GoogleIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" className="mr-2">
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
@@ -31,19 +30,25 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleSignIn({ label }: { label: string }) {
+export function GoogleSignIn({
+  label,
+  role,
+}: {
+  label: string;
+  role?: 'CLIENT' | 'BUDDY' | 'BOTH';
+}) {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
   const [clientId, setClientId] = useState('');
-  const [configured, setConfigured] = useState(false);
   const [loading, setLoading] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
-  const ready = useRef(false);
+  const roleRef = useRef(role);
+  roleRef.current = role;
 
   const finish = async (idToken: string) => {
     setLoading(true);
     try {
-      const res = await api.post('/api/auth/google', { idToken });
+      const res = await api.post('/api/auth/google', { idToken, role: roleRef.current });
       const data = res.data.data || res.data;
       login(data.user, data.token);
       toast.success('Signed in with Google');
@@ -58,40 +63,34 @@ export function GoogleSignIn({ label }: { label: string }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 3000);
-    api.get('/api/auth/google/config', { signal: controller.signal, timeout: 3000 })
-      .then((res) => {
-        setClientId(res.data.data?.clientId || '');
-        setConfigured(Boolean(res.data.data?.configured));
-      })
-      .catch(() => setConfigured(false))
-      .finally(() => window.clearTimeout(timer));
-    return () => {
-      controller.abort();
-      window.clearTimeout(timer);
-    };
+    api.get('/api/auth/google/config', { signal: controller.signal, timeout: 5000 })
+      .then((res) => setClientId(res.data.data?.clientId || ''))
+      .catch(() => setClientId(''));
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
     if (!clientId) return;
-    const existing = document.getElementById('google-gsi');
     const init = () => {
       if (!window.google?.accounts?.id) return;
       window.google.accounts.id.initialize({
         client_id: clientId,
-        callback: (res) => { void finish(res.credential); },
+        ux_mode: 'popup',
+        auto_select: false,
+        callback: (res: { credential: string }) => { void finish(res.credential); },
       });
-      ready.current = true;
       if (buttonRef.current) {
         buttonRef.current.innerHTML = '';
         window.google.accounts.id.renderButton(buttonRef.current, {
           theme: 'outline',
           size: 'large',
-          width: 360,
+          type: 'standard',
           text: 'continue_with',
+          width: String(Math.max(buttonRef.current.parentElement?.clientWidth || 360, 240)),
         });
       }
     };
+    const existing = document.getElementById('google-gsi');
     if (existing) {
       init();
       return;
@@ -104,32 +103,38 @@ export function GoogleSignIn({ label }: { label: string }) {
     document.head.appendChild(script);
   }, [clientId]);
 
-  const fallbackClick = () => {
-    if (!configured || !clientId) {
-      toast.error('Google sign-in is not configured yet. Use email and password, or add keys in Admin → Google.');
+  const onClick = () => {
+    if (!clientId) {
+      toast.error('Google sign-in is not set up yet. Use email below, or add the Client ID in Admin → Google.');
       return;
     }
-    if (window.google?.accounts?.id) {
-      window.google.accounts.id.prompt();
+    if (!window.google?.accounts?.id) {
+      toast.error('Google is still loading. Wait a moment and try again.');
+      return;
     }
+    window.google.accounts.id.prompt((notification) => {
+      if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
+        toast.error('Google blocked this site. In Google Cloud, add this exact URL under Authorized JavaScript origins, then retry.');
+      }
+    });
   };
 
   return (
-    <div className="mb-6">
-      <div ref={buttonRef} className={configured ? 'flex justify-center min-h-[44px]' : 'hidden'} />
-      {!configured && (
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="w-full py-5 flex items-center justify-center border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold shadow-sm text-sm"
-          onClick={fallbackClick}
-          isLoading={loading}
-        >
-          <GoogleIcon />
-          {label}
-        </Button>
-      )}
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={loading}
+        className="w-full h-12 rounded-xl border border-[#D2E3FC] bg-[#F8FBFF] hover:bg-[#eef4ff] text-sm font-semibold text-gray-700 flex items-center justify-center gap-2"
+      >
+        <GoogleIcon />
+        {loading ? 'Connecting…' : label}
+      </button>
+      <div
+        ref={buttonRef}
+        className="absolute inset-0 overflow-hidden opacity-[0.02] cursor-pointer"
+        aria-hidden
+      />
     </div>
   );
 }
