@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import './globals.css';
-import { SocketProvider } from '../providers/SocketProvider';
 import { Toaster } from '../components/ui/Toast';
 
 export const metadata: Metadata = {
@@ -22,10 +21,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <SocketProvider>
-          {children}
-          <Toaster />
-        </SocketProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );

@@ -6,7 +6,14 @@ import { getSetting } from '../config/settings.js';
 
 const router = Router();
 
-router.get('/google/config', async (_req, res, next) => {
+router.get('/google/config', async (_req, res) => {
+  const fromEnv = process.env.GOOGLE_CLIENT_ID || '';
+  if (fromEnv) {
+    return res.json({
+      success: true,
+      data: { clientId: fromEnv, configured: true },
+    });
+  }
   try {
     const google = await getSetting('google');
     res.json({
@@ -16,8 +23,8 @@ router.get('/google/config', async (_req, res, next) => {
         configured: Boolean(google.clientId),
       }
     });
-  } catch (error: any) {
-    next(error);
+  } catch {
+    res.json({ success: true, data: { clientId: '', configured: false } });
   }
 });
 

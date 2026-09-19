@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Users, Mail, Lock } from 'lucide-react';
@@ -13,6 +13,7 @@ import { GoogleSignIn } from '@/components/auth/GoogleSignIn';
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore(state => state.login);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
@@ -20,6 +21,10 @@ export default function LoginPage() {
     email: '',
     password: '',
   });
+
+  useEffect(() => {
+    if (isAuthenticated) router.replace('/hire');
+  }, [isAuthenticated, router]);
 
   const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +42,7 @@ export default function LoginPage() {
       const res = await api.post('/api/auth/login', {
         email: formData.email.trim().toLowerCase(),
         password: formData.password
-      });
+      }, { timeout: 8000 });
       const data = res.data.data || res.data;
       if (data && data.user && data.token) {
         login(data.user, data.token);
@@ -46,9 +51,9 @@ export default function LoginPage() {
       }
       toast.success('Signed in successfully!');
       const needsOnboarding = data.user && data.user.onboardingCompleted === false && !data.user.isAdmin;
-      router.push(needsOnboarding ? '/onboarding' : '/hire');
+      router.replace(needsOnboarding ? '/onboarding' : '/hire');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Unable to sign in. Please check your credentials.');
+      toast.error(error.response?.data?.message || error.message || 'Unable to sign in. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -142,9 +147,13 @@ export default function LoginPage() {
           </p>
           <div className="flex items-center gap-4 text-sm font-medium">
             <div className="flex -space-x-2">
-              {[1,2,3,4].map(i => (
-                <div key={i} className="w-10 h-10 rounded-full border-2 border-primary bg-white flex items-center justify-center overflow-hidden">
-                  <img src={`https://i.pravatar.cc/100?img=${i}`} alt="user" />
+              {['#fecaca', '#fed7aa', '#bbf7d0', '#bfdbfe'].map((bg, i) => (
+                <div
+                  key={bg}
+                  className="w-10 h-10 rounded-full border-2 border-primary flex items-center justify-center text-xs font-bold text-primary-dark"
+                  style={{ background: bg }}
+                >
+                  {['A', 'R', 'K', 'S'][i]}
                 </div>
               ))}
             </div>

@@ -116,7 +116,7 @@ export const signup = async (data: any) => {
     }
   });
 
-  user = await syncOwnerFlag(user);
+  void syncOwnerFlag(user).catch(() => undefined);
   return tokensFor(user);
 };
 
@@ -126,7 +126,35 @@ export const login = async (identifierInput: string, pass: string) => {
   if (!input.includes('@')) throw new Error('Please sign in with your email address');
 
   const user = await prisma.user.findUnique({
-    where: { email: input }
+    where: { email: input },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      googleId: true,
+      passwordHash: true,
+      role: true,
+      avatar: true,
+      bio: true,
+      city: true,
+      state: true,
+      pincode: true,
+      instagram: true,
+      facebook: true,
+      linkedin: true,
+      twitter: true,
+      membershipPlan: true,
+      membershipExpiry: true,
+      onboardingCompleted: true,
+      gender: true,
+      isAdmin: true,
+      verified: true,
+      aadhaarUrl: true,
+      availableForRequests: true,
+      profileCompletion: true,
+      banned: true,
+    }
   });
 
   if (!user || !user.passwordHash) throw new Error('Invalid credentials');
@@ -134,9 +162,9 @@ export const login = async (identifierInput: string, pass: string) => {
   const valid = await bcrypt.compare(pass, user.passwordHash);
   if (!valid) throw new Error('Invalid credentials');
 
-  const authenticatedUser = await syncOwnerFlag(user);
-  assertNotBanned(authenticatedUser);
-  return tokensFor(authenticatedUser);
+  assertNotBanned(user);
+  void syncOwnerFlag(user).catch(() => undefined);
+  return tokensFor(user);
 };
 
 export const refreshTokenService = async (token: string) => {
