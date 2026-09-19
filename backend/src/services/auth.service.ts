@@ -6,6 +6,7 @@ import { ensureOwnerAccount } from '../config/owner-account.js';
 import { insertUser } from '../config/mongo.js';
 import { googleAudienceIds } from '../config/settings.js';
 import { mailboxVerified, sendSignupEmails, sendWelcomeEmail } from './auth-email.service.js';
+import { verifyGoogleIdToken } from './google-id-token.js';
 
 export const publicUser = (user: any) => {
   if (!user) return user;
@@ -40,41 +41,14 @@ const tokensFor = (user: any) => {
   };
 };
 
-const decodeGoogleToken = (idToken: string) => {
-  const parts = String(idToken || '').split('.');
-  if (parts.length < 2) throw new Error('Google sign-in did not return a valid token. Try email signup.');
-  const padded = parts[1].replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(parts[1].length / 4) * 4, '=');
-  return JSON.parse(Buffer.from(padded, 'base64').toString('utf8')) as {
-    aud?: string;
-    email?: string;
-    email_verified?: string | boolean;
-    name?: string;
-    picture?: string;
-    sub?: string;
-    exp?: number;
-  };
-};
-
-const readGoogleClaims = async (idToken: string) => {
-  try {
-    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`, {
-      signal: AbortSignal.timeout(4000),
-    });
-    if (response.ok) return await response.json() as ReturnType<typeof decodeGoogleToken>;
-  } catch {
-    // Coolify sometimes cannot reach tokeninfo; fall back to the ID token payload.
-  }
-  return decodeGoogleToken(idToken);
-};
-
 export const googleAuthService = async (idToken: string, role?: string) => {
   const allowedAud = await googleAudienceIds();
   if (!allowedAud.length) {
     throw new Error('Google Sign-In is not configured. Add the Client ID in Admin → Google or set GOOGLE_CLIENT_ID.');
   }
 
-  const claims = await readGoogleClaims(idToken);
-  const emailVerified = claims.email_verified === true || claims.email_verified === 'true' || claims.email_verified === undefined;
+  const claims = await verifyGoogleIdToken(idToken);
+  const emailVerified = claims.email_verified === true || claims.email_verified === 'true';
   if (claims.exp && claims.exp * 1000 < Date.now() - 60_000) {
     throw new Error('Google sign-in expired. Click Continue with Google again.');
   }
