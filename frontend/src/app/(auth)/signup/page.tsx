@@ -65,10 +65,7 @@ export default function SignupPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
         <div className="w-full max-w-md">
           <Link href="/" className="flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white">
-              <Users size={18} />
-            </div>
-            <span className="font-bold text-xl tracking-tight text-gray-900">BuddySearch</span>
+            <img src="/logo.png" alt="BuddySearch" className="h-9 w-auto" />
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Create your account</h1>
@@ -164,7 +161,7 @@ export default function SignupPage() {
       </div>
 
       <div className="hidden lg:flex w-1/2 bg-gray-50 items-center justify-center p-12">
-        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Friends" className="rounded-2xl shadow-xl object-cover h-full w-full max-h-[80vh]" />
+        <img src="/activities-on-buddy-search.webp" alt="Friends on BuddySearch" className="rounded-2xl shadow-xl object-cover h-full w-full max-h-[80vh]" />
       </div>
     </div>
   );

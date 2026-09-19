@@ -128,9 +128,11 @@ const shutdown = (signal: string) => async () => {
 process.on('SIGTERM', shutdown('SIGTERM'));
 process.on('SIGINT', shutdown('SIGINT'));
 
-httpServer.listen(config.port, '0.0.0.0', () => {
-  console.log(`Server is running in ${config.nodeEnv} mode on port ${config.port}`);
-  void connectDatabase()
-    .then(() => console.log('Database connected'))
-    .catch((err: any) => console.error('[database]', err?.message || err));
-});
+void connectDatabase()
+  .then(() => console.log('Database connected'))
+  .catch((err: any) => console.error('[database]', err?.message || err))
+  .finally(() => {
+    httpServer.listen(config.port, '0.0.0.0', () => {
+      console.log(`Server is running in ${config.nodeEnv} mode on port ${config.port}`);
+    });
+  });

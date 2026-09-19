@@ -1,57 +1,78 @@
 #!/bin/sh
 set -eu
 
-# Coolify injects PORT for the public site. The API stays on 4000 in-process.
+# Coolify binds the public PORT. Express and Next stay on internal ports so
+# /api is never rewritten back to the public hostname (that looped and timed out).
+PUBLIC_PORT="${PORT:-3000}"
 export API_PORT="${API_PORT:-4000}"
+export WEB_PORT="${WEB_PORT:-3001}"
 export HOSTNAME="${HOSTNAME:-0.0.0.0}"
-export PORT="${PORT:-3000}"
 
-node /app/api/dist/index.js &
-API_PID=$!
-
-trap 'kill $API_PID 2>/dev/null || true' TERM INT EXIT
-
-# Wait until Express is accepting traffic before starting Next, otherwise
-# /api rewrites hang on first login and every dashboard fetch.
-node -e "
+wait_http() {
+  CHECK_PATH="$1"
+  CHECK_PORT="$2"
+  CHECK_PATH="$CHECK_PATH" CHECK_PORT="$CHECK_PORT" node -e "
 const http = require('http');
-const port = process.env.API_PORT || 4000;
-const tryOnce = (path) => new Promise((resolve, reject) => {
-  const req = http.get('http://127.0.0.1:' + port + path, (res) => {
+const path = process.env.CHECK_PATH;
+const port = process.env.CHECK_PORT;
+const tryOnce = () => new Promise((resolve, reject) => {
+  const req = http.get({ hostname: '127.0.0.1', port, path, timeout: 800 }, (res) => {
     res.resume();
     resolve(res.statusCode);
   });
   req.on('error', reject);
-  req.setTimeout(1500, () => { req.destroy(); reject(new Error('timeout')); });
+  req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
 });
 (async () => {
-  let live = false;
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 60; i++) {
     try {
-      const code = await tryOnce('/health/live');
-      if (code && code < 500) { live = true; break; }
+      const code = await tryOnce();
+      if (code && code < 500) process.exit(0);
     } catch {}
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 250));
   }
-  if (!live) process.exit(1);
-  try { await tryOnce('/health'); } catch {}
-  process.exit(0);
+  process.exit(1);
 })();
 "
+}
 
-if ! kill -0 "$API_PID" 2>/dev/null; then
-  echo "API failed to start" >&2
-  exit 1
-fi
+# Isolate the API from Coolify's public PORT.
+PORT="$API_PORT" API_PORT="$API_PORT" node /app/api/dist/index.js &
+API_PID=$!
+
+wait_http /health/live "$API_PORT"
 
 if [ -f /app/web/server.js ]; then
-  cd /app/web
+  WEB_DIR=/app/web
 elif [ -f /app/web/frontend/server.js ]; then
-  cd /app/web/frontend
+  WEB_DIR=/app/web/frontend
 else
   echo "Next.js server.js not found under /app/web" >&2
   ls -la /app/web || true
   exit 1
 fi
 
-exec node server.js
+cd "$WEB_DIR"
+PORT="$WEB_PORT" HOSTNAME=0.0.0.0 node ./server.js &
+WEB_PID=$!
+
+trap 'kill $API_PID $WEB_PID 2>/dev/null || true' TERM INT EXIT
+
+wait_http / "$WEB_PORT"
+
+if ! kill -0 "$API_PID" 2>/dev/null; then
+  echo "API failed to start" >&2
+  exit 1
+fi
+if ! kill -0 "$WEB_PID" 2>/dev/null; then
+  echo "Web failed to start" >&2
+  exit 1
+fi
+
+# Warm Mongo so the first login is not the first DB handshake.
+node -e "
+const http = require('http');
+http.get('http://127.0.0.1:' + (process.env.API_PORT || 4000) + '/health', (r) => { r.resume(); });
+" || true
+
+PORT="$PUBLIC_PORT" API_PORT="$API_PORT" WEB_PORT="$WEB_PORT" exec node /app/gateway.js

@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
-const backend = process.env.BACKEND_INTERNAL_URL || 'http://127.0.0.1:4000';
+// Always proxy internally. Using the public site URL here caused a 508 loop
+// and made login hang until the client timed out.
+const backend = 'http://127.0.0.1:4000';
 
 const nextConfig = {
   output: 'standalone',

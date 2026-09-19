@@ -30,7 +30,7 @@ api.interceptors.response.use(
       console.warn('API authentication note:', url);
     }
     if (error.code === 'ECONNABORTED' && !error.response) {
-      error.message = 'That took too long. Please try again.';
+      error.message = 'Server did not respond. Please try again.';
     }
     return Promise.reject(error);
   }

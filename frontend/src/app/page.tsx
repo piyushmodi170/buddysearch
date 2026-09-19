@@ -192,7 +192,7 @@ export default function LandingPage() {
       <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
         <div className="container navbar__inner">
           <Link href="/" className="navbar__logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img src="/BuddySearch Logo Files.png" alt="BuddySearch" className="navbar__logo-img" />
+            <img src="/logo.png" alt="BuddySearch" className="navbar__logo-img" />
           </Link>
           <ul className="navbar__links">
             {NAV_LINKS.map((l) => (
