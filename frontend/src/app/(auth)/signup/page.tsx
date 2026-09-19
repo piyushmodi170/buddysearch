@@ -143,7 +143,18 @@ export default function SignupPage() {
       <section className="flex items-center justify-center px-5 py-10 bg-white">
         <div className="w-full max-w-[420px]">
           <h1 className="text-3xl font-extrabold text-gray-900">Create account</h1>
-          <p className="text-sm text-gray-400 mt-1 mb-6">Start for free — no credit card needed</p>
+          <p className="text-sm text-gray-400 mt-1 mb-5">Start for free — no credit card needed</p>
+
+          <GoogleSignIn role={formData.role} className="mb-1" />
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-3 text-gray-400 font-medium">Or continue with email</span>
+            </div>
+          </div>
 
           <div className="flex rounded-full bg-[#FDECEC] p-1 mb-6">
             {ROLES.map((role) => {
@@ -229,8 +240,6 @@ export default function SignupPage() {
             Already have an account?{' '}
             <Link href="/login" className="font-semibold text-[#F04438]">Log in</Link>
           </p>
-
-          <GoogleSignIn role={formData.role} />
         </div>
       </section>
     </div>
