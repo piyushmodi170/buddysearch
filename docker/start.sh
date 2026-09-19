@@ -7,6 +7,7 @@ PUBLIC_PORT="${PORT:-3000}"
 export API_PORT="${API_PORT:-4000}"
 export WEB_PORT="${WEB_PORT:-3001}"
 export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+export NODE_OPTIONS="${NODE_OPTIONS:-} --dns-result-order=ipv4first"
 
 wait_http() {
   CHECK_PATH="$1"
