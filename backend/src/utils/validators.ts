@@ -79,7 +79,7 @@ export const sendMessageSchema = z.object({
 });
 
 export const createOrderSchema = z.object({
-  planId: z.string(),
+  planId: z.string().trim().min(1, 'Select a plan'),
 });
 
 export const verifyPaymentSchema = z.object({

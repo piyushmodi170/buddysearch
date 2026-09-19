@@ -21,7 +21,10 @@ assert.equal(ignoresTest.mode, 'live');
 assert.equal(ignoresTest.keyId, 'rzp_live_abc');
 assert.equal(ignoresTest.keySecret, 'live-secret');
 
-assert.equal(resolveRazorpaySettings({ keyId: 'rzp_test_abc', keySecret: 'x' }).keyId, '');
+const fromTestOnly = resolveRazorpaySettings({ keyId: 'rzp_test_abc', keySecret: 'x' });
+assert.equal(fromTestOnly.mode, 'test');
+assert.equal(fromTestOnly.keyId, 'rzp_test_abc');
+assert.equal(fromTestOnly.keySecret, 'x');
 assert.equal(resolveRazorpaySettings({}).webhookSecret, '');
 
 console.log('razorpay settings tests passed');

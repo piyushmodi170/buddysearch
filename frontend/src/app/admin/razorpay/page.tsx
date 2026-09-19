@@ -27,9 +27,9 @@ export default function AdminRazorpayPage() {
       description={
         <div className="space-y-2 max-w-2xl">
           <p>
-            Checkout uses your <strong>Live</strong> API keys from Razorpay Dashboard (Live mode,
-            Key ID starts with <span className="font-mono">rzp_live_</span>). Razorpay Test mode keys
-            (<span className="font-mono">rzp_test_</span>) are not used.
+            Checkout uses <strong>Live</strong> API keys when they are saved (Key ID starts with{' '}
+            <span className="font-mono">rzp_live_</span>). If live keys are empty, it falls back to
+            Test keys (<span className="font-mono">rzp_test_</span>) so you can still open checkout.
           </p>
           <p>
             <strong>Webhook secret is optional.</strong> Payments are confirmed with the live key
@@ -41,6 +41,8 @@ export default function AdminRazorpayPage() {
       fields={[
         { name: 'liveKeyId', label: 'Live Key ID', placeholder: 'rzp_live_…' },
         { name: 'liveKeySecret', label: 'Live Key secret', type: 'password', hint: 'From Razorpay Live API keys. Masked after save.' },
+        { name: 'testKeyId', label: 'Test Key ID (fallback)', placeholder: 'rzp_test_…' },
+        { name: 'testKeySecret', label: 'Test Key secret (fallback)', type: 'password', hint: 'Used only when live keys are not saved.' },
         {
           name: 'webhookSecret',
           label: 'Webhook secret (optional)',
