@@ -10,31 +10,48 @@ export type DefaultEmailTemplate = {
   active: boolean;
 };
 
-export const renderVars = (source: string, vars: MailVars) =>
-  String(source || '').replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) => (
-    vars[key] == null ? '' : String(vars[key])
+export const renderVars = (source: string, vars: MailVars) => {
+  const merged: MailVars = { ...vars };
+  if (merged.code && !merged.otp) merged.otp = merged.code;
+  if (merged.otp && !merged.code) merged.code = merged.otp;
+  return String(source || '').replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) => (
+    merged[key] == null ? '' : String(merged[key])
   ));
+};
+
+export const SAMPLE_PREVIEW_VARS: MailVars = {
+  name: 'Jane',
+  email: 'jane@example.com',
+  code: '482910',
+  otp: '482910',
+  minutes: '10',
+  appName: 'BuddySearch',
+  appUrl: 'https://buddysearch.online',
+  plan: 'Premium',
+  amount: '449',
+};
 
 export const wrapEmailHtml = (inner: string, appName: string) => `<!DOCTYPE html>
 <html>
-<body style="margin:0;padding:0;background:#f6f7fb;font-family:Arial,sans-serif;color:#111827;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f7fb;padding:24px 12px;">
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f4f6;padding:24px 12px;">
     <tr>
       <td align="center">
         <table role="presentation" width="560" cellspacing="0" cellpadding="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
           <tr>
-            <td style="background:#E53E3E;color:#fff;padding:18px 24px;font-size:18px;font-weight:700;">
-              ${appName}
+            <td style="background:#E53E3E;color:#fff;padding:22px 24px;text-align:center;">
+              <div style="font-size:20px;font-weight:800;letter-spacing:0.02em;">${appName}</div>
+              <div style="font-size:12px;opacity:0.9;margin-top:4px;">Find a buddy for every plan</div>
             </td>
           </tr>
           <tr>
-            <td style="padding:24px;font-size:15px;line-height:1.6;color:#374151;">
+            <td style="padding:28px 28px 8px;font-size:15px;line-height:1.65;color:#374151;">
               ${inner}
             </td>
           </tr>
           <tr>
-            <td style="padding:0 24px 24px;font-size:12px;color:#9ca3af;">
-              You received this email from ${appName}. If you were not expecting it, you can ignore it.
+            <td style="padding:8px 28px 28px;font-size:12px;color:#9ca3af;text-align:center;">
+              © ${new Date().getFullYear()} ${appName}. You’re receiving this because you have an account with us.
             </td>
           </tr>
         </table>
@@ -62,11 +79,14 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
     description: 'Sent during signup with a 6-digit code to verify the user’s email.',
     kind: 'SYSTEM',
     active: true,
-    subject: 'Your {{appName}} verification code is {{otp}}',
-    body: `<p>Hi {{name}},</p>
-<p>Use this code to verify your email address. It expires in 10 minutes.</p>
-<p style="font-size:32px;letter-spacing:8px;font-weight:800;color:#111827;margin:20px 0;">{{otp}}</p>
-<p>If you did not create an account, ignore this email.</p>`,
+    subject: 'Your {{appName}} verification code: {{code}}',
+    body: `<h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Verify your email, {{name}} 👋</h2>
+<p>Welcome to {{appName}}! Use the code below to verify your email address and finish setting up your account.</p>
+<div style="text-align:center;background:#f3f4f6;border-radius:12px;padding:20px 16px;margin:20px 0;">
+  <p style="margin:0 0 8px;color:#6b7280;font-size:13px;">Your verification code</p>
+  <p style="margin:0;font-size:36px;font-weight:800;letter-spacing:10px;color:#2563eb;font-family:ui-monospace,Menlo,monospace;">{{code}}</p>
+</div>
+<p>This code expires in <strong>{{minutes}} minutes</strong>. If you didn’t request this, you can safely ignore the email.</p>`,
   },
   {
     slug: 'password-reset',
@@ -75,9 +95,12 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
     kind: 'SYSTEM',
     active: true,
     subject: 'Reset your {{appName}} password',
-    body: `<p>Hi {{name}},</p>
-<p>Use this code to reset your password. It expires in 10 minutes.</p>
-<p style="font-size:32px;letter-spacing:8px;font-weight:800;color:#111827;margin:20px 0;">{{otp}}</p>
+    body: `<h2 style="margin:0 0 12px;font-size:22px;color:#111827;">Reset your password, {{name}}</h2>
+<p>Use the code below to choose a new password. It expires in <strong>{{minutes}} minutes</strong>.</p>
+<div style="text-align:center;background:#f3f4f6;border-radius:12px;padding:20px 16px;margin:20px 0;">
+  <p style="margin:0 0 8px;color:#6b7280;font-size:13px;">Your reset code</p>
+  <p style="margin:0;font-size:36px;font-weight:800;letter-spacing:10px;color:#2563eb;font-family:ui-monospace,Menlo,monospace;">{{code}}</p>
+</div>
 <p>If you did not request this, you can ignore this email.</p>`,
   },
   {

@@ -1,6 +1,6 @@
 import { prisma } from '../config/db.js';
 import bcrypt from 'bcryptjs';
-import { sendTransactional, smtpConfigured } from './mail.service.js';
+import { sendTemplate, sendTransactional, smtpConfigured } from './mail.service.js';
 import { isOwnerEmail } from '../config/owner.js';
 
 const OTP_TTL_MS = 10 * 60 * 1000;
@@ -39,6 +39,21 @@ const consumeOtp = async (email: string, purpose: 'VERIFY_EMAIL' | 'RESET_PASSWO
   await prisma.emailOtp.update({ where: { id: row.id }, data: { used: true } });
 };
 
+const otpVars = (user: { name: string; email: string }, code: string) => ({
+  name: user.name,
+  email: user.email,
+  otp: code,
+  code,
+  minutes: '10',
+});
+
+const sendOtpMail = async (slug: 'email-otp' | 'password-reset', user: { name: string; email: string }, code: string) => {
+  const result = await sendTemplate(slug, user.email, otpVars(user, code));
+  if (result && 'skipped' in result && result.skipped) {
+    throw new Error('That email template is disabled. Enable it in Admin → Email.');
+  }
+};
+
 export const sendWelcomeEmail = async (user: { name: string; email: string }) =>
   sendTransactional('welcome', user.email, { name: user.name, email: user.email });
 
@@ -47,8 +62,8 @@ export const sendSignupEmails = async (user: { name: string; email: string }) =>
   const canSend = await smtpConfigured();
   if (!canSend) return { sent: false };
   const code = await issueOtp(email, 'VERIFY_EMAIL');
-  await sendTransactional('email-otp', email, { name: user.name, email, otp: code });
-  await sendTransactional('welcome', email, { name: user.name, email });
+  await sendOtpMail('email-otp', { name: user.name, email }, code);
+  void sendTransactional('welcome', email, { name: user.name, email });
   return { sent: true };
 };
 
@@ -62,7 +77,7 @@ export const resendVerification = async (emailInput: string) => {
     throw new Error('Email is not configured yet. Ask the site owner to save SMTP in Admin → Email.');
   }
   const code = await issueOtp(email, 'VERIFY_EMAIL');
-  await sendTransactional('email-otp', email, { name: user.name, email, otp: code });
+  await sendOtpMail('email-otp', { name: user.name, email }, code);
   return { sent: true };
 };
 
@@ -83,7 +98,7 @@ export const forgotPassword = async (emailInput: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (user && (await smtpConfigured())) {
     const code = await issueOtp(email, 'RESET_PASSWORD');
-    await sendTransactional('password-reset', email, { name: user.name, email, otp: code });
+    await sendOtpMail('password-reset', { name: user.name, email }, code);
   }
   return { sent: true };
 };

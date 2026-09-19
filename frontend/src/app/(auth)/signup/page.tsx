@@ -78,7 +78,7 @@ export default function SignupPage() {
         password: formData.password,
         phone,
         role: formData.role,
-      }, { timeout: 20000 });
+      }, { timeout: 25000 });
       const data = res.data.data || res.data;
       if (!data?.user || !data?.token) throw new Error('Unable to create your account');
       login(data.user, data.token);

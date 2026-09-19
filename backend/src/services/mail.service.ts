@@ -1,6 +1,6 @@
 import { prisma } from '../config/db.js';
 import { getSetting } from '../config/settings.js';
-import { DEFAULT_EMAIL_TEMPLATES, renderVars, wrapEmailHtml, type MailVars } from '../config/email-templates.js';
+import { DEFAULT_EMAIL_TEMPLATES, renderVars, wrapEmailHtml, SAMPLE_PREVIEW_VARS, type MailVars } from '../config/email-templates.js';
 
 type Transport = {
   sendMail: (opts: {
@@ -67,11 +67,20 @@ const appContext = async () => {
 
 export const ensureDefaultTemplates = async () => {
   for (const tpl of DEFAULT_EMAIL_TEMPLATES) {
-    await prisma.emailTemplate.upsert({
-      where: { slug: tpl.slug },
-      update: {},
-      create: tpl,
-    });
+    const existing = await prisma.emailTemplate.findUnique({ where: { slug: tpl.slug } });
+    if (!existing) {
+      await prisma.emailTemplate.create({ data: tpl });
+      continue;
+    }
+    const shouldUpgradeOtp =
+      (tpl.slug === 'email-otp' || tpl.slug === 'password-reset') &&
+      !existing.body.includes('{{code}}');
+    if (shouldUpgradeOtp) {
+      await prisma.emailTemplate.update({
+        where: { slug: tpl.slug },
+        data: { subject: tpl.subject, body: tpl.body },
+      });
+    }
   }
 };
 
@@ -141,6 +150,16 @@ export const sendTestEmail = async (to: string) => {
     html: `<p>This is a test email from the BuddySearch admin panel. SMTP is working.</p><p>App URL: ${ctx.appUrl}</p>`,
     slug: 'smtp-test',
     vars: { name: 'Admin' },
+  });
+};
+
+export const sendTemplatePreview = async (opts: { to: string; subject: string; body: string; slug?: string }) => {
+  return sendRawEmail({
+    to: opts.to,
+    subject: opts.subject || 'BuddySearch email preview',
+    html: opts.body || '<p>Empty template</p>',
+    slug: opts.slug || 'template-test',
+    vars: SAMPLE_PREVIEW_VARS,
   });
 };
 
