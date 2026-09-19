@@ -3800,6 +3800,18 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.ab-india__state {
+  cursor: default;
+}
+
+.ab-india__state:hover {
+  fill: #F0AAB4;
+}
+
+.ab-india__state--selected:hover {
+  fill: #F96566;
+}
+
 .ab-india__pulse {
   animation: ab-map-pulse 2.5s ease-in-out infinite;
   transform-origin: center;
