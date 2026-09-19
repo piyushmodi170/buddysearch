@@ -32,14 +32,18 @@ export function useSocket() {
     socket.on('new_message', onMessage);
     socket.on('new_notification', onNotification);
 
-    api.get('/api/chats').then((res) => {
-      const rows = Array.isArray(res.data?.data) ? res.data.data : [];
-      useChatStore.getState().setChats(rows);
-      const live = getSocket();
-      rows.forEach((chat: { id: string }) => live.emit('join_chat', chat.id));
-    }).catch(() => undefined);
+    const loadChats = () => {
+      api.get('/api/chats').then((res) => {
+        const rows = Array.isArray(res.data?.data) ? res.data.data : [];
+        useChatStore.getState().setChats(rows);
+        const live = getSocket();
+        rows.forEach((chat: { id: string }) => live.emit('join_chat', chat.id));
+      }).catch(() => undefined);
+    };
+    const idle = window.setTimeout(loadChats, 800);
 
     return () => {
+      window.clearTimeout(idle);
       socket.off('new_message', onMessage);
       socket.off('new_notification', onNotification);
     };

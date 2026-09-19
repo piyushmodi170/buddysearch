@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { TopBar } from '@/components/layout/TopBar';
 import { PWAPrompt } from '@/components/shared/PWAPrompt';
+import { SocketProvider } from '@/providers/SocketProvider';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { Loader2 } from 'lucide-react';
@@ -85,6 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
+    <SocketProvider>
     <div className="min-h-screen bg-background">
       <Sidebar />
       <TopBar />
@@ -111,5 +113,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <MobileNav />
       {!isMessages && <PWAPrompt />}
     </div>
+    </SocketProvider>
   );
 }

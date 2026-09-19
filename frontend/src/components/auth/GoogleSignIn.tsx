@@ -48,7 +48,7 @@ export function GoogleSignIn({ label }: { label: string }) {
       login(data.user, data.token);
       toast.success('Signed in with Google');
       const needsOnboarding = data.user && data.user.onboardingCompleted === false && !data.user.isAdmin;
-      router.push(needsOnboarding ? '/onboarding' : '/hire');
+      router.replace(needsOnboarding ? '/onboarding' : '/hire');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Google sign-in failed');
     } finally {
@@ -57,12 +57,19 @@ export function GoogleSignIn({ label }: { label: string }) {
   };
 
   useEffect(() => {
-    api.get('/api/auth/google/config')
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 3000);
+    api.get('/api/auth/google/config', { signal: controller.signal, timeout: 3000 })
       .then((res) => {
         setClientId(res.data.data?.clientId || '');
         setConfigured(Boolean(res.data.data?.configured));
       })
-      .catch(() => setConfigured(false));
+      .catch(() => setConfigured(false))
+      .finally(() => window.clearTimeout(timer));
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {

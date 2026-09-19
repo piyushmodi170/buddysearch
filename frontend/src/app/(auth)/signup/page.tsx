@@ -42,11 +42,11 @@ export default function SignupPage() {
         role: formData.role
       };
 
-      const res = await api.post('/api/auth/signup', payload);
+      const res = await api.post('/api/auth/signup', payload, { timeout: 10000 });
       const data = res.data.data || res.data;
       login(data.user, data.token);
       toast.success('Account created successfully! Complete your profile to continue.');
-      router.push('/onboarding');
+      router.replace('/onboarding');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Unable to create your account. Please try again.');
     } finally {

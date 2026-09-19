@@ -11,9 +11,10 @@ export const getSocket = () => {
       auth: { token },
       autoConnect: false,
       reconnection: true,
-      reconnectionAttempts: 8,
-      timeout: 8000,
-      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 6,
+      timeout: 4000,
+      // Next rewrites proxy HTTP well; websocket upgrade often stalls for seconds.
+      transports: ['polling', 'websocket'],
       withCredentials: true,
     });
   }

@@ -38,6 +38,7 @@ export const discoverBuddies = async (
   if (cached) return JSON.parse(cached);
 
   const skip = (page - 1) * limit;
+  const poolSize = Math.min(80, Math.max(limit * 4, 40));
 
   // Build base where clause
   const where: any = {
@@ -62,7 +63,12 @@ export const discoverBuddies = async (
   // Get current user for scoring context
   const currentUser = await prisma.user.findUnique({
     where: { id: userId },
-    include: { interests: { include: { interest: true } } },
+    select: {
+      lat: true,
+      lng: true,
+      city: true,
+      interests: { include: { interest: { select: { slug: true } } } },
+    },
   });
 
   let orderBy: any[] = [];
@@ -96,10 +102,25 @@ export const discoverBuddies = async (
     // Fetch a larger pool to score/sort in-memory
     const pool = await prisma.user.findMany({
       where,
-      take: 200,
-      include: {
-        interests: { include: { interest: true } },
-        receivedReviews: { select: { rating: true } },
+      take: poolSize,
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        city: true,
+        state: true,
+        avatar: true,
+        bio: true,
+        lat: true,
+        lng: true,
+        isOnline: true,
+        lastSeen: true,
+        membershipPlan: true,
+        profileCompletion: true,
+        verified: true,
+        availableForRequests: true,
+        createdAt: true,
+        interests: { include: { interest: { select: { slug: true, label: true } } } },
       },
     });
 
@@ -129,11 +150,7 @@ export const discoverBuddies = async (
         ? (Date.now() - buddy.lastSeen.getTime()) / (1000 * 60 * 60 * 24)
         : 30;
       const activityRecency = Math.max(0, 1 - daysSinceActive / 30);
-
-      const avgRating = buddy.receivedReviews.length > 0
-        ? buddy.receivedReviews.reduce((sum, r) => sum + r.rating, 0) / buddy.receivedReviews.length
-        : 3;
-      const ratingBonus = avgRating / 5;
+      const ratingBonus = 0.6;
 
       let score: number;
       if (tab === 'near-you') {
@@ -149,8 +166,7 @@ export const discoverBuddies = async (
           ratingBonus * 0.05;
       }
 
-      const { receivedReviews, passwordHash, ...buddyData } = buddy as typeof buddy & { passwordHash?: string };
-      return { ...buddyData, _score: score, _distance: distanceScore };
+      return { ...buddy, _score: score, _distance: distanceScore };
     });
 
     scored.sort((a, b) => b._score - a._score);

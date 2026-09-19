@@ -90,11 +90,18 @@ export const getSetting = async <K extends SettingKey>(key: K): Promise<Settings
   if (cache.has(key)) {
     return cache.get(key) as SettingsMap[K];
   }
-  const row = await prisma.appSetting.findUnique({ where: { key } });
-  const stored = row && isObject(row.value) ? row.value : {};
-  const merged = { ...envDefaults[key], ...stored } as SettingsMap[K];
-  cache.set(key, merged);
-  return merged;
+  try {
+    const row = await Promise.race([
+      prisma.appSetting.findUnique({ where: { key } }),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+    ]);
+    const stored = row && isObject(row.value) ? row.value : {};
+    const merged = { ...envDefaults[key], ...stored } as SettingsMap[K];
+    cache.set(key, merged);
+    return merged;
+  } catch {
+    return envDefaults[key];
+  }
 };
 
 const looksMasked = (value: string) => value.includes('•') || /^\*+$/.test(value);

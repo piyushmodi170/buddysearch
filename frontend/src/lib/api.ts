@@ -4,7 +4,7 @@ import { getApiBaseUrl } from './publicUrl';
 
 const api = axios.create({
   baseURL: getApiBaseUrl(),
-  timeout: 20000,
+  timeout: 10000,
 });
 
 api.interceptors.request.use(
@@ -28,6 +28,9 @@ api.interceptors.response.use(
     const isAuthAttempt = /\/auth\/(login|signup|google)/.test(url);
     if (error.response?.status === 401 && !isAuthAttempt) {
       console.warn('API authentication note:', url);
+    }
+    if (error.code === 'ECONNABORTED' && !error.response) {
+      error.message = 'That took too long. Please try again.';
     }
     return Promise.reject(error);
   }
