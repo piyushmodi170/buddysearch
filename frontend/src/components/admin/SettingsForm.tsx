@@ -13,6 +13,7 @@ type Field = {
   type?: string;
   placeholder?: string;
   hint?: string;
+  options?: { value: string; label: string }[];
 };
 
 export function SettingsForm({
@@ -96,6 +97,20 @@ export function SettingsForm({
                 />
                 {f.label}
               </label>
+            ) : f.type === 'select' ? (
+              <div key={f.name}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  value={String(values[f.name] ?? '')}
+                  onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
+                >
+                  {(f.options || []).map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                {f.hint && <p className="text-xs text-gray-400 mt-1">{f.hint}</p>}
+              </div>
             ) : (
               <div key={f.name}>
                 <Input

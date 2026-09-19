@@ -1,13 +1,10 @@
 import { prisma } from './db.js';
 import { config } from './index.js';
+import { resolveRazorpaySettings, type RazorpaySettings } from './razorpay.js';
 
 export type SettingKey = 'razorpay' | 'smtp' | 'google' | 'app';
 
-export type RazorpaySettings = {
-  keyId: string;
-  keySecret: string;
-  webhookSecret: string;
-};
+export type { RazorpaySettings } from './razorpay.js';
 
 export type SmtpSettings = {
   host: string;
@@ -37,11 +34,11 @@ type SettingsMap = {
 const cache = new Map<SettingKey, unknown>();
 
 const envDefaults: SettingsMap = {
-  razorpay: {
+  razorpay: resolveRazorpaySettings({
     keyId: config.razorpay.keyId,
     keySecret: config.razorpay.keySecret,
     webhookSecret: config.razorpay.webhookSecret,
-  },
+  }),
   smtp: {
     host: process.env.SMTP_HOST || '',
     port: Number(process.env.SMTP_PORT || 587),
@@ -60,7 +57,7 @@ const envDefaults: SettingsMap = {
 };
 
 const SECRET_FIELDS: Record<SettingKey, string[]> = {
-  razorpay: ['keySecret', 'webhookSecret'],
+  razorpay: ['keySecret', 'testKeySecret', 'liveKeySecret', 'webhookSecret'],
   smtp: ['password'],
   google: ['clientSecret'],
   app: [],
@@ -97,8 +94,11 @@ export const getSetting = async <K extends SettingKey>(key: K): Promise<Settings
     ]);
     const stored = row && isObject(row.value) ? row.value : {};
     const merged = { ...envDefaults[key], ...stored } as SettingsMap[K];
-    cache.set(key, merged);
-    return merged;
+    const value = key === 'razorpay'
+      ? resolveRazorpaySettings(merged as RazorpaySettings) as SettingsMap[K]
+      : merged;
+    cache.set(key, value);
+    return value;
   } catch {
     return envDefaults[key];
   }
@@ -124,11 +124,17 @@ export const setSetting = async <K extends SettingKey>(
       next[field] = Number(raw) || 0;
     } else if (field === 'secure') {
       next[field] = Boolean(raw);
+    } else if (field === 'mode') {
+      next[field] = raw === 'live' ? 'live' : 'test';
     } else if (typeof raw === 'string') {
       next[field] = raw.trim();
     } else {
       next[field] = raw;
     }
+  }
+
+  if (key === 'razorpay') {
+    Object.assign(next, resolveRazorpaySettings(next));
   }
 
   await prisma.appSetting.upsert({
@@ -150,7 +156,9 @@ export const settingStatus = async () => {
   return {
     razorpay: {
       configured: Boolean(razorpay.keyId && razorpay.keySecret),
+      mode: razorpay.mode,
       webhookConfigured: Boolean(razorpay.webhookSecret),
+      webhookRequired: false,
     },
     smtp: {
       configured: Boolean(smtp.host && smtp.from),

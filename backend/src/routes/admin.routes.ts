@@ -5,6 +5,7 @@ import { publicSafeError } from '../config/db-errors.js';
 import { repairBrokenUsers } from '../config/mongo.js';
 import { getSetting, setSetting, maskSettings, settingStatus } from '../config/settings.js';
 import { sendTestEmail } from '../services/mail.service.js';
+import * as paymentService from '../services/payment.service.js';
 import { isOwnerEmail } from '../config/owner.js';
 
 const router = Router();
@@ -395,6 +396,19 @@ router.put('/settings/:key', adminAuth, async (req, res) => {
     res.json({ success: true, data: maskSettings(key, value) });
   } catch (error: any) {
     res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
+  }
+});
+
+router.post('/settings/razorpay/test', adminAuth, async (_req, res) => {
+  try {
+    const data = await paymentService.testRazorpayCredentials();
+    res.json({
+      success: true,
+      data,
+      message: `Razorpay ${data.mode} keys work. Created test order ${data.orderId}. Webhook secret is optional.`,
+    });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: publicSafeError(error, error?.message || 'Razorpay test failed') });
   }
 });
 

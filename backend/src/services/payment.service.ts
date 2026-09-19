@@ -89,3 +89,36 @@ export const verifyPayment = async (data: any, userId: string) => {
 
   return { success: true };
 };
+
+export const testRazorpayCredentials = async () => {
+  const razorpay = await getSetting('razorpay');
+  if (!razorpay.keyId || !razorpay.keySecret) {
+    throw new Error(
+      razorpay.mode === 'live'
+        ? 'Add live Key ID and Key secret, then save.'
+        : 'Add test Key ID and Key secret (rzp_test_…), then save.'
+    );
+  }
+  if (razorpay.mode === 'test' && !razorpay.keyId.startsWith('rzp_test_')) {
+    throw new Error('Test mode needs a Key ID that starts with rzp_test_');
+  }
+  if (razorpay.mode === 'live' && !razorpay.keyId.startsWith('rzp_live_')) {
+    throw new Error('Live mode needs a Key ID that starts with rzp_live_');
+  }
+
+  const { instance } = await razorpayClient();
+  const order = await instance.orders.create({
+    amount: 100,
+    currency: 'INR',
+    receipt: `cred_test_${Date.now()}`,
+  });
+
+  return {
+    ok: true,
+    mode: razorpay.mode,
+    keyId: razorpay.keyId,
+    orderId: order.id,
+    webhookRequired: false,
+    webhookConfigured: Boolean(razorpay.webhookSecret),
+  };
+};
