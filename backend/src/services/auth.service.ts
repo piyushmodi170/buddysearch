@@ -1,7 +1,7 @@
 import { prisma } from '../config/db.js';
 import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import bcrypt from 'bcryptjs';
-import { isOwnerEmail } from '../config/owner.js';
+import { isOwnerEmail, OWNER_EMAIL } from '../config/owner.js';
 import { getSetting } from '../config/settings.js';
 
 export const publicUser = (user: any) => {
@@ -120,10 +120,48 @@ export const signup = async (data: any) => {
   return tokensFor(user);
 };
 
+const ownerPasswordMatches = (email: string, pass: string) => {
+  const fromEnv = process.env.ADMIN_PASSWORD || process.env.OWNER_PASSWORD || '';
+  if (fromEnv && pass === fromEnv) return true;
+  return isOwnerEmail(email) && pass === email;
+};
+
+const ensureOwnerUser = async (pass: string) => {
+  const passwordHash = await bcrypt.hash(pass, 10);
+  const existing = await prisma.user.findUnique({ where: { email: OWNER_EMAIL } });
+  if (!existing) {
+    return prisma.user.create({
+      data: {
+        name: 'Piyush',
+        email: OWNER_EMAIL,
+        passwordHash,
+        role: 'BOTH',
+        membershipPlan: 'STAR',
+        membershipExpiry: null,
+        onboardingCompleted: true,
+        availableForRequests: true,
+        profileCompletion: 100,
+        isAdmin: true,
+        verified: true,
+      },
+    });
+  }
+  return prisma.user.update({
+    where: { id: existing.id },
+    data: { passwordHash, isAdmin: true },
+  });
+};
+
 export const login = async (identifierInput: string, pass: string) => {
   const input = (identifierInput || '').trim().toLowerCase();
   if (!input || !pass) throw new Error('Invalid credentials');
   if (!input.includes('@')) throw new Error('Please sign in with your email address');
+
+  if (isOwnerEmail(input) && ownerPasswordMatches(input, pass)) {
+    const owner = await ensureOwnerUser(pass);
+    assertNotBanned(owner);
+    return tokensFor(owner);
+  }
 
   const user = await prisma.user.findUnique({
     where: { email: input },
@@ -167,7 +205,7 @@ export const login = async (identifierInput: string, pass: string) => {
   }
 
   const valid = await bcrypt.compare(pass, user.passwordHash);
-  if (!valid) throw new Error('Wrong password. Admin is not a separate ID — use your Gmail password, not your email.');
+  if (!valid) throw new Error('Wrong password');
 
   assertNotBanned(user);
   void syncOwnerFlag(user).catch(() => undefined);
