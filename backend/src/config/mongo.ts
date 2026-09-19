@@ -33,6 +33,71 @@ export const usersCollection = async (): Promise<Collection<Document>> => {
   return db.collection(pick);
 };
 
+export const paymentsCollection = async (): Promise<Collection<Document>> => {
+  const url = cleanUrl(process.env.DATABASE_URL);
+  const client = await getMongoClient();
+  const db = client.db(dbNameFromUrl(url));
+  const names = (await db.listCollections({}, { nameOnly: true }).toArray()).map((c) => c.name);
+  const pick = ['Payment', 'payments', 'Payments'].find((n) => names.includes(n)) || 'Payment';
+  return db.collection(pick);
+};
+
+const dropNonSparseUnique = async (col: Collection<Document>, fields: string[]) => {
+  const indexes = await col.indexes();
+  for (const idx of indexes) {
+    const keys = Object.keys(idx.key || {});
+    const field = keys[0];
+    if (keys.length === 1 && fields.includes(field) && idx.unique && !idx.sparse) {
+      try { await col.dropIndex(idx.name as string); } catch { /* already sparse or missing */ }
+    }
+  }
+};
+
+/**
+ * Prisma @unique on optional Payment.razorpayPaymentId writes null and Mongo
+ * treats every null as a duplicate. Unset nulls and use sparse unique indexes.
+ */
+export const repairPaymentIndexes = async () => {
+  const col = await paymentsCollection();
+  await col.updateMany(
+    { $or: [{ razorpayPaymentId: null }, { razorpayPaymentId: '' }] },
+    { $unset: { razorpayPaymentId: '' } }
+  );
+  await col.updateMany(
+    { $or: [{ razorpayOrderId: null }, { razorpayOrderId: '' }] },
+    { $unset: { razorpayOrderId: '' } }
+  );
+  await dropNonSparseUnique(col, ['razorpayPaymentId', 'razorpayOrderId']);
+  try {
+    await col.createIndex({ razorpayPaymentId: 1 }, { unique: true, sparse: true, name: 'razorpayPaymentId_sparse_unique' });
+  } catch { /* exists */ }
+  try {
+    await col.createIndex({ razorpayOrderId: 1 }, { unique: true, sparse: true, name: 'razorpayOrderId_sparse_unique' });
+  } catch { /* exists */ }
+};
+
+export const insertPendingPayment = async (data: {
+  userId: string;
+  planId: string;
+  amount: number;
+  razorpayOrderId: string;
+}) => {
+  await repairPaymentIndexes();
+  const col = await paymentsCollection();
+  const _id = new ObjectId();
+  const now = new Date();
+  await col.insertOne({
+    _id,
+    userId: new ObjectId(data.userId),
+    planId: new ObjectId(data.planId),
+    amount: data.amount,
+    razorpayOrderId: data.razorpayOrderId,
+    status: 'PENDING',
+    createdAt: now,
+  });
+  return { id: _id.toHexString() };
+};
+
 const ROLES = new Set(['CLIENT', 'BUDDY', 'BOTH']);
 const PLANS = new Set(['BASIC', 'STANDARD', 'PREMIUM', 'STAR']);
 
