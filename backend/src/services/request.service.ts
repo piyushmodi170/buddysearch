@@ -122,11 +122,11 @@ export const getMarketplaceRequestsService = async (filters: any, page: number, 
     let where: any = { status: 'OPEN' };
     
     if (filters.category) where.category = filters.category;
-    if (filters.location) where.location = { contains: filters.location, mode: 'insensitive' };
+    if (filters.location) where.location = { contains: filters.location };
     if (filters.search) {
       where.OR = [
-        { title: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } }
+        { title: { contains: filters.search } },
+        { description: { contains: filters.search } }
       ];
     }
 
@@ -135,9 +135,9 @@ export const getMarketplaceRequestsService = async (filters: any, page: number, 
         prisma.request.findMany({
           where,
           skip,
-          take: limit,
+          take: Math.min(Math.max(limit, 1), 40),
           orderBy: { createdAt: 'desc' },
-          include: { user: { select: { id: true, name: true, avatar: true } } }
+          include: { user: { select: { id: true, name: true, avatar: true, verified: true, membershipPlan: true } } }
         }),
         prisma.request.count({ where })
       ])
