@@ -47,6 +47,8 @@ assert.deepEqual(
   [...PUBLIC_SITEMAP_PATHS].sort(),
   Object.values(PAGE_SEO).filter((p) => p.index).map((p) => p.path).sort(),
 );
+assert.ok(typeof PAGE_SEO['/'].title === 'string');
+assert.equal(typeof pageMetadata('/').title, 'object');
 assert.ok(llmsTxt().includes(SITE.name));
 assert.ok(llmsTxt().includes('GPTBot') === false);
 assert.ok(llmsTxt().includes('/llms.txt'));

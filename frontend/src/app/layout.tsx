@@ -4,7 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '../components/ui/Toast';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { SITE, organizationJsonLd, pageMetadata, websiteJsonLd } from '@/lib/seo';
+import { PAGE_SEO, SITE, organizationJsonLd, pageMetadata, websiteJsonLd } from '@/lib/seo';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -17,7 +17,7 @@ const root = pageMetadata('/');
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: String(root.title),
+    default: PAGE_SEO['/'].title,
     template: '%s | Buddy Search',
   },
   description: root.description,
