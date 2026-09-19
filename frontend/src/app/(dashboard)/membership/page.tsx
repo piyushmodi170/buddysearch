@@ -54,25 +54,25 @@ export default function MembershipPage() {
         // Fallback static plans matching exact screenshot data
         setPlans([
           {
-            id: 'basic', name: 'BASIC', displayName: 'Basic', tagline: 'Get started and explore',
+            id: 'BASIC', name: 'BASIC', displayName: 'Basic', tagline: 'Get started and explore',
             price: 249, originalPrice: 498, discount: 50, durationMonths: 3, postLimit: 5,
             isPopular: false, isOneTime: false,
             features: ['Browse buddy discovery feed', 'View buddy profiles (name, avatar, city, services)', 'Post up to 5 plan requests / month', 'Standard position in discover feed']
           },
           {
-            id: 'standard', name: 'STANDARD', displayName: 'Standard', tagline: 'Great value to get started',
+            id: 'STANDARD', name: 'STANDARD', displayName: 'Standard', tagline: 'Great value to get started',
             price: 349, originalPrice: 998, discount: 65, durationMonths: 6, postLimit: 10,
             isPopular: false, isOneTime: false,
             features: ['Everything in Basic', 'Post up to 10 plan requests / month', 'View user social profile links', 'Priority placement in discover', '"Standard" badge on your profile']
           },
           {
-            id: 'premium', name: 'PREMIUM', displayName: 'Premium', tagline: 'For power users',
+            id: 'PREMIUM', name: 'PREMIUM', displayName: 'Premium', tagline: 'For power users',
             price: 449, originalPrice: 1600, discount: 72, durationMonths: 12, postLimit: 15,
             isPopular: true, isOneTime: false,
             features: ['Everything in Standard', 'Post up to 15 plan requests / month', 'Higher priority in discover (above Standard)', '"Premium" badge on your profile']
           },
           {
-            id: 'star', name: 'STAR', displayName: 'Star Member', tagline: 'Top tier. Pay once, keep forever.',
+            id: 'STAR', name: 'STAR', displayName: 'Star Member', tagline: 'Top tier. Pay once, keep forever.',
             price: 649, originalPrice: 2040, discount: 76, durationMonths: 0, postLimit: -1,
             isPopular: false, isOneTime: true,
             features: ['Everything in Premium', 'Unlimited plan requests', 'Pinned to top of discover', 'Star badge on profile card', 'Featured in "Top Buddies" section', 'Lifetime access — pay once']
@@ -97,8 +97,19 @@ export default function MembershipPage() {
         return;
       }
 
+      if (!order?.id) {
+        toast.error('Payment gateway did not return an order. Check Admin → Razorpay keys.');
+        return;
+      }
+
+      const key = order.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
+      if (!key) {
+        toast.error('Razorpay Key ID is missing. Save Live keys in Admin → Razorpay.');
+        return;
+      }
+
       const options = {
-        key: order.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
+        key,
         amount: order.amount,
         currency: order.currency || 'INR',
         name: 'BuddySearch',
@@ -119,8 +130,8 @@ export default function MembershipPage() {
               if (profile?.data?.data) updateUser(profile.data.data);
             }
             toast.success('Membership upgraded successfully!');
-          } catch {
-            toast.error('Payment verification failed');
+          } catch (verifyErr: any) {
+            toast.error(verifyErr?.response?.data?.message || 'Payment verification failed');
           }
         },
         prefill: {
@@ -130,8 +141,8 @@ export default function MembershipPage() {
       };
 
       openCheckout(options);
-    } catch {
-      toast.error('Failed to create payment order');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to create payment order');
     } finally {
       setLoading(null);
     }

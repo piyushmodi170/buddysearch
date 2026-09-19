@@ -1,7 +1,7 @@
 import { prisma } from '../config/db.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import { activatePlan } from './membership.service.js';
+import { activatePlan, findPlan } from './membership.service.js';
 import { publicUser } from './auth.service.js';
 import { getSetting } from '../config/settings.js';
 import { config } from '../config/index.js';
@@ -17,27 +17,33 @@ const razorpayClient = async () => {
   };
 };
 
+const razorpayErrorMessage = (err: unknown) => {
+  const e = err as { error?: { description?: string; reason?: string }; message?: string };
+  return e?.error?.description || e?.error?.reason || e?.message || 'Failed to create payment order';
+};
+
 export const createOrder = async (userId: string, planId: string) => {
-  const plan = await prisma.membershipPlan.findUnique({ where: { id: planId } });
-  if (!plan) throw new Error('Plan not found');
+  const plan = await findPlan(planId);
 
   const { settings, instance } = await razorpayClient();
 
-  if ((config.nodeEnv === 'development' && !settings.keyId) || !settings.keyId) {
-    if (config.nodeEnv !== 'development') {
-      throw new Error('Razorpay is not configured');
+  if (!settings.keyId || !settings.keySecret) {
+    if (config.nodeEnv === 'development') {
+      const mockOrderId = `order_mock_${Date.now()}`;
+      await prisma.payment.create({
+        data: {
+          userId,
+          planId: plan.id,
+          amount: plan.price,
+          razorpayOrderId: mockOrderId,
+          status: 'PENDING'
+        }
+      });
+      return { id: mockOrderId, amount: plan.price * 100, currency: 'INR', keyId: settings.keyId || '' };
     }
-    const mockOrderId = `order_mock_${Date.now()}`;
-    await prisma.payment.create({
-      data: {
-        userId,
-        planId,
-        amount: plan.price,
-        razorpayOrderId: mockOrderId,
-        status: 'PENDING'
-      }
-    });
-    return { id: mockOrderId, amount: plan.price * 100, currency: 'INR', keyId: settings.keyId || '' };
+    throw new Error(
+      'Razorpay is not configured. Open Admin → Razorpay, save Live Key ID and Live Key secret, then try again.'
+    );
   }
 
   const options = {
@@ -46,12 +52,17 @@ export const createOrder = async (userId: string, planId: string) => {
     receipt: `receipt_${Date.now()}`
   };
 
-  const order = await instance.orders.create(options);
+  let order;
+  try {
+    order = await instance.orders.create(options);
+  } catch (err) {
+    throw new Error(razorpayErrorMessage(err));
+  }
 
   await prisma.payment.create({
     data: {
       userId,
-      planId,
+      planId: plan.id,
       amount: plan.price,
       razorpayOrderId: order.id,
       status: 'PENDING'

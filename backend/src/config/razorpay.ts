@@ -11,7 +11,9 @@ export type RazorpaySettings = {
   liveKeySecret: string;
 };
 
-/** Checkout and verify always use live (rzp_live_) keys. Test-mode keys are ignored. */
+const hasPair = (id: string, secret: string) => Boolean(id && secret);
+
+/** Prefer live keys; fall back to test keys so checkout can still open. */
 export const resolveRazorpaySettings = (raw: Partial<RazorpaySettings> & Record<string, unknown> = {}): RazorpaySettings => {
   const legacyId = String(raw.keyId || '');
   const legacySecret = String(raw.keySecret || '');
@@ -24,14 +26,17 @@ export const resolveRazorpaySettings = (raw: Partial<RazorpaySettings> & Record<
     raw.liveKeySecret || (legacyId.startsWith('rzp_test_') ? '' : legacySecret)
   );
 
+  const useLive = hasPair(liveKeyId, liveKeySecret);
+  const useTest = hasPair(testKeyId, testKeySecret);
+
   return {
-    mode: 'live',
+    mode: useLive ? 'live' : useTest ? 'test' : 'live',
     testKeyId,
     testKeySecret,
     liveKeyId,
     liveKeySecret,
-    keyId: liveKeyId,
-    keySecret: liveKeySecret,
+    keyId: useLive ? liveKeyId : useTest ? testKeyId : liveKeyId,
+    keySecret: useLive ? liveKeySecret : useTest ? testKeySecret : liveKeySecret,
     webhookSecret: String(raw.webhookSecret || ''),
   };
 };

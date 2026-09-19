@@ -11,7 +11,104 @@ export const isPaidPlan = (plan?: string | null, expiry?: Date | string | null) 
   return !Number.isNaN(when.getTime()) && when.getTime() > Date.now();
 };
 
+const PLAN_NAMES: MembershipTier[] = ['BASIC', 'STANDARD', 'PREMIUM', 'STAR'];
+
+const DEFAULT_PLANS = [
+  {
+    name: 'BASIC' as const,
+    displayName: 'Basic',
+    tagline: 'Get started and explore',
+    price: 249,
+    originalPrice: 498,
+    discount: 50,
+    durationMonths: 3,
+    postLimit: 5,
+    isPopular: false,
+    isOneTime: false,
+    sortOrder: 1,
+    features: ['Browse buddy discovery feed', 'View buddy profiles (name, avatar, city, services)', 'Post up to 5 plan requests / month', 'Standard position in discover feed'],
+  },
+  {
+    name: 'STANDARD' as const,
+    displayName: 'Standard',
+    tagline: 'Great value to get started',
+    price: 349,
+    originalPrice: 998,
+    discount: 65,
+    durationMonths: 6,
+    postLimit: 10,
+    isPopular: false,
+    isOneTime: false,
+    sortOrder: 2,
+    features: ['Everything in Basic', 'Post up to 10 plan requests / month', 'View user social profile links', 'Priority placement in discover', '"Standard" badge on your profile'],
+  },
+  {
+    name: 'PREMIUM' as const,
+    displayName: 'Premium',
+    tagline: 'For power users',
+    price: 449,
+    originalPrice: 1600,
+    discount: 72,
+    durationMonths: 12,
+    postLimit: 15,
+    isPopular: true,
+    isOneTime: false,
+    sortOrder: 3,
+    features: ['Everything in Standard', 'Post up to 15 plan requests / month', 'Higher priority in discover (above Standard)', '"Premium" badge on your profile'],
+  },
+  {
+    name: 'STAR' as const,
+    displayName: 'Star Member',
+    tagline: 'Top tier. Pay once, keep forever.',
+    price: 649,
+    originalPrice: 2040,
+    discount: 76,
+    durationMonths: 0,
+    postLimit: -1,
+    isPopular: false,
+    isOneTime: true,
+    sortOrder: 4,
+    features: ['Everything in Premium', 'Unlimited plan requests', 'Pinned to top of discover', 'Star badge on profile card', 'Featured in "Top Buddies" section', 'Lifetime access — pay once'],
+  },
+];
+
+const isObjectId = (value: string) => /^[a-fA-F0-9]{24}$/.test(value);
+
+export const ensureDefaultPlans = async () => {
+  for (const plan of DEFAULT_PLANS) {
+    await prisma.membershipPlan.upsert({
+      where: { name: plan.name },
+      update: {},
+      create: plan,
+    });
+  }
+};
+
+export const findPlan = async (planId: string) => {
+  const raw = String(planId || '').trim();
+  if (!raw) throw new Error('Plan not found');
+
+  if (isObjectId(raw)) {
+    const byId = await prisma.membershipPlan.findUnique({ where: { id: raw } });
+    if (byId) return byId;
+  }
+
+  const name = raw.toUpperCase() as MembershipTier;
+  if (PLAN_NAMES.includes(name)) {
+    await ensureDefaultPlans();
+    const byName = await prisma.membershipPlan.findUnique({ where: { name } });
+    if (byName) return byName;
+  }
+
+  throw new Error('Plan not found');
+};
+
 export const getPlans = async () => {
+  const existing = await prisma.membershipPlan.findMany({
+    orderBy: { sortOrder: 'asc' }
+  });
+  if (existing.length > 0) return existing;
+  await ensureDefaultPlans();
   return prisma.membershipPlan.findMany({
     orderBy: { sortOrder: 'asc' }
   });
@@ -36,8 +133,7 @@ export const getUserPlan = async (userId: string) => {
 };
 
 export const activatePlan = async (userId: string, planId: string) => {
-  const plan = await prisma.membershipPlan.findUnique({ where: { id: planId } });
-  if (!plan) throw new Error('Plan not found');
+  const plan = await findPlan(planId);
 
   const expiry = new Date();
   if (plan.durationMonths > 0) {
