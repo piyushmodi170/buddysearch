@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -27,6 +27,16 @@ export default function AccountMenuPage() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const paid = isPaidMembership(user);
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1024px)');
+    const goDesktop = () => {
+      if (media.matches) router.replace('/profile');
+    };
+    goDesktop();
+    media.addEventListener('change', goDesktop);
+    return () => media.removeEventListener('change', goDesktop);
+  }, [router]);
 
   const community = [
     { href: '/requests', label: 'Requests', icon: List },

@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     typeof window === 'undefined' ? false : useAuthStore.persist.hasHydrated()
   );
   const isMessages = pathname.startsWith('/messages');
-  const isFeed = pathname.startsWith('/hire') || pathname.startsWith('/find') || pathname.startsWith('/account');
+  const isFeed = pathname.startsWith('/hire') || pathname.startsWith('/find') || pathname.startsWith('/account') || pathname.startsWith('/profile');
 
   useEffect(() => {
     const finish = () => setHydrated(true);

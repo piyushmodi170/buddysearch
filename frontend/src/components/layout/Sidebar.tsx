@@ -38,7 +38,7 @@ const SECTIONS = [
   {
     label: 'ACCOUNT',
     items: [
-      { href: '/account', label: 'Profile', icon: User },
+      { href: '/profile', label: 'Profile', icon: User },
       { href: '/membership', label: 'Membership', icon: Star, badge: 'membership' },
       { href: '/help', label: 'Help', icon: HelpCircle },
     ]
@@ -67,7 +67,9 @@ export function Sidebar() {
             </h3>
             <div className="space-y-1">
               {section.items.map((item) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive = item.href === '/profile'
+                  ? pathname.startsWith('/profile') || pathname.startsWith('/account')
+                  : pathname.startsWith(item.href);
                 const Icon = item.icon;
                 
                 return (
