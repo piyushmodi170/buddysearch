@@ -44,14 +44,11 @@ export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
   auth(req, res, () => {
     void (async () => {
       try {
-        if (isOwnerEmail(req.user?.email)) {
-          return next();
-        }
         const user = await prisma.user.findUnique({
           where: { id: req.user!.id },
-          select: { email: true },
+          select: { email: true, banned: true },
         });
-        if (!isOwnerEmail(user?.email)) {
+        if (!user || user.banned || !isOwnerEmail(user.email)) {
           return res.status(403).json({ success: false, message: 'Admin access required' });
         }
         next();

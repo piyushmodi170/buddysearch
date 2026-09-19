@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import { adminAuth } from '../middleware/auth.js';
 import { prisma } from '../config/db.js';
 import { getSetting, setSetting, maskSettings, settingStatus } from '../config/settings.js';
@@ -20,6 +21,19 @@ const asInt = (v: unknown, fallback: number) => {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
 };
 
+const PLAN_NAMES = ['BASIC', 'STANDARD', 'PREMIUM', 'STAR'] as const;
+const isPlanName = (v: unknown): v is typeof PLAN_NAMES[number] =>
+  typeof v === 'string' && (PLAN_NAMES as readonly string[]).includes(v);
+
+const expiryForPlanName = async (name: string) => {
+  if (name === 'BASIC') return null;
+  const plan = await prisma.membershipPlan.findUnique({ where: { name: name as any } });
+  if (!plan) return null;
+  const expiry = new Date();
+  expiry.setMonth(expiry.getMonth() + (plan.durationMonths || 1));
+  return expiry;
+};
+
 /* ------------------------------------------------------------------ stats */
 router.get('/stats', adminAuth, async (req, res) => {
   try {
@@ -31,7 +45,7 @@ router.get('/stats', adminAuth, async (req, res) => {
       totalUsers, verifiedUsers, bannedUsers, pendingVerifications, newToday, onlineNow,
       clients, buddies, both,
       totalRequests, openRequests, totalOffers, totalChats, totalMessages, totalReviews,
-      revenueAll, revenueMonth, successfulPayments, pendingPayments, recentSignups
+      revenueAll, revenueMonth, successfulPayments, pendingPayments, recentSignups, planMix
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { verified: true } }),
@@ -52,7 +66,8 @@ router.get('/stats', adminAuth, async (req, res) => {
       prisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS', createdAt: { gte: monthStart } } }),
       prisma.payment.count({ where: { status: 'SUCCESS' } }),
       prisma.payment.count({ where: { status: 'PENDING' } }),
-      prisma.user.findMany({ take: 8, orderBy: { createdAt: 'desc' }, select: adminUserSelect })
+      prisma.user.findMany({ take: 8, orderBy: { createdAt: 'desc' }, select: adminUserSelect }),
+      prisma.user.groupBy({ by: ['membershipPlan'], _count: { _all: true } })
     ]);
 
     res.json({
@@ -67,7 +82,8 @@ router.get('/stats', adminAuth, async (req, res) => {
           successfulPayments,
           pendingPayments
         },
-        recentSignups
+        recentSignups,
+        plans: Object.fromEntries(planMix.map((p) => [p.membershipPlan, p._count._all]))
       }
     });
   } catch (error: any) {
@@ -394,6 +410,52 @@ router.post('/settings/smtp/test', adminAuth, async (req, res) => {
   }
 });
 
+router.post('/users', adminAuth, async (req, res) => {
+  try {
+    const { name, email, password, role, membershipPlan, city } = req.body || {};
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanName = String(name || '').trim();
+    if (cleanName.length < 2) {
+      return res.status(400).json({ success: false, message: 'Name is required' });
+    }
+    if (!cleanEmail.includes('@')) {
+      return res.status(400).json({ success: false, message: 'Enter a valid email' });
+    }
+    if (!password || String(password).length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+    const nextRole = role || 'CLIENT';
+    if (!['CLIENT', 'BUDDY', 'BOTH'].includes(nextRole)) {
+      return res.status(400).json({ success: false, message: 'Invalid role' });
+    }
+    const plan = membershipPlan || 'BASIC';
+    if (!isPlanName(plan)) {
+      return res.status(400).json({ success: false, message: 'Invalid membership plan' });
+    }
+    const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'An account with this email already exists' });
+    }
+    const passwordHash = await bcrypt.hash(String(password), 10);
+    const data = await prisma.user.create({
+      data: {
+        name: cleanName,
+        email: cleanEmail,
+        passwordHash,
+        role: nextRole,
+        city: city ? String(city) : undefined,
+        membershipPlan: plan,
+        membershipExpiry: await expiryForPlanName(plan),
+        isAdmin: isOwnerEmail(cleanEmail),
+      },
+      select: adminUserSelect
+    });
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
 router.put('/users/:id', adminAuth, async (req, res) => {
   try {
     const { name, email, membershipPlan, banned, verified, role, city } = req.body || {};
@@ -417,10 +479,11 @@ router.put('/users/:id', adminAuth, async (req, res) => {
       patch.role = role;
     }
     if (membershipPlan !== undefined) {
-      if (!['BASIC', 'STANDARD', 'PREMIUM', 'STAR'].includes(membershipPlan)) {
+      if (!isPlanName(membershipPlan)) {
         return res.status(400).json({ success: false, message: 'Invalid membership plan' });
       }
       patch.membershipPlan = membershipPlan;
+      patch.membershipExpiry = await expiryForPlanName(membershipPlan);
     }
 
     const data = await prisma.user.update({
@@ -440,7 +503,7 @@ router.post('/plans', adminAuth, async (req, res) => {
       name, displayName, tagline, price, originalPrice, discount,
       durationMonths, postLimit, features, isPopular, isOneTime, sortOrder
     } = req.body || {};
-    if (!['BASIC', 'STANDARD', 'PREMIUM', 'STAR'].includes(name)) {
+    if (!isPlanName(name)) {
       return res.status(400).json({ success: false, message: 'Plan name must be BASIC, STANDARD, PREMIUM, or STAR' });
     }
     const data = await prisma.membershipPlan.create({

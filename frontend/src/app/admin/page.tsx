@@ -15,6 +15,7 @@ interface Stats {
   activity: { totalRequests: number; openRequests: number; totalOffers: number; totalChats: number; totalMessages: number; totalReviews: number };
   revenue: { total: number; thisMonth: number; successfulPayments: number; pendingPayments: number };
   recentSignups: any[];
+  plans?: Record<string, number>;
 }
 
 export default function AdminDashboard() {
@@ -99,6 +100,9 @@ export default function AdminDashboard() {
             <Row label="Clients" value={stats.roles.clients} total={stats.users.total} />
             <Row label="Buddies" value={stats.roles.buddies} total={stats.users.total} />
             <Row label="Both" value={stats.roles.both} total={stats.users.total} />
+            {['BASIC', 'STANDARD', 'PREMIUM', 'STAR'].map((plan) => (
+              <Row key={plan} label={plan} value={stats.plans?.[plan] || 0} total={stats.users.total} />
+            ))}
           </div>
           <div className="mt-5 pt-4 border-t border-gray-100 text-sm space-y-2">
             <div className="flex justify-between"><span className="text-gray-500">Successful payments</span><span className="font-semibold">{stats.revenue.successfulPayments}</span></div>

@@ -29,6 +29,8 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', membershipPlan: 'BASIC', role: 'CLIENT', city: '' });
   const [editing, setEditing] = useState<AdminUser | null>(null);
   const [editForm, setEditForm] = useState({ name: '', email: '', membershipPlan: 'BASIC', role: 'CLIENT', city: '' });
 
@@ -90,8 +92,11 @@ export default function AdminUsersPage() {
           <h1 className="text-3xl font-bold text-gray-900">Users</h1>
           <p className="text-sm text-gray-500 mt-1">{total.toLocaleString('en-IN')} total</p>
         </div>
-        <div className="w-full sm:w-72">
-          <Input icon={<Search size={18} />} placeholder="Search name, email, city..." value={search} onChange={e => setSearch(e.target.value)} />
+        <div className="flex w-full sm:w-auto items-center gap-3">
+          <div className="w-full sm:w-72">
+            <Input icon={<Search size={18} />} placeholder="Search name, email, city..." value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <Button variant="outline" onClick={() => setCreating(true)}>Create user</Button>
         </div>
       </div>
 
@@ -181,6 +186,49 @@ export default function AdminUsersPage() {
       </Card>
 
       <Pagination page={page} pages={pages} onChange={setPage} />
+
+      <Modal isOpen={creating} onClose={() => setCreating(false)} title="Create user">
+        <form
+          className="p-4 space-y-3"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setBusyId('create');
+            try {
+              await api.post('/api/admin/users', createForm);
+              toast.success('User created');
+              setCreating(false);
+              setCreateForm({ name: '', email: '', password: '', membershipPlan: 'BASIC', role: 'CLIENT', city: '' });
+              await load();
+            } catch (err: any) {
+              toast.error(err.response?.data?.message || 'Create failed');
+            } finally {
+              setBusyId(null);
+            }
+          }}
+        >
+          <Input label="Name" required value={createForm.name} onChange={e => setCreateForm({ ...createForm, name: e.target.value })} />
+          <Input label="Email" type="email" required value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })} />
+          <Input label="Password" type="password" required value={createForm.password} onChange={e => setCreateForm({ ...createForm, password: e.target.value })} />
+          <Input label="City" value={createForm.city} onChange={e => setCreateForm({ ...createForm, city: e.target.value })} />
+          <label className="block text-sm font-medium text-gray-700">Role</label>
+          <select className="w-full h-10 rounded-md border border-gray-300 px-3 text-sm" value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}>
+            <option value="CLIENT">CLIENT</option>
+            <option value="BUDDY">BUDDY</option>
+            <option value="BOTH">BOTH</option>
+          </select>
+          <label className="block text-sm font-medium text-gray-700">Membership</label>
+          <select className="w-full h-10 rounded-md border border-gray-300 px-3 text-sm" value={createForm.membershipPlan} onChange={e => setCreateForm({ ...createForm, membershipPlan: e.target.value })}>
+            <option value="BASIC">BASIC</option>
+            <option value="STANDARD">STANDARD</option>
+            <option value="PREMIUM">PREMIUM</option>
+            <option value="STAR">STAR</option>
+          </select>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
+            <Button type="submit" isLoading={busyId === 'create'}>Create</Button>
+          </div>
+        </form>
+      </Modal>
 
       <Modal isOpen={!!editing} onClose={() => setEditing(null)} title="Edit user">
         {editing && (
