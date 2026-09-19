@@ -1,6 +1,7 @@
 import { prisma } from '../config/db.js';
 import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import bcrypt from 'bcryptjs';
+import { ObjectId } from 'mongodb';
 import { isOwnerEmail, OWNER_EMAIL } from '../config/owner.js';
 import { getSetting } from '../config/settings.js';
 
@@ -141,25 +142,55 @@ const ownerProfileData = (passwordHash: string) => ({
   banned: false,
 });
 
-const repairOwnerDocument = async (extra: Record<string, unknown> = {}) => {
+const ownerEmailFilter = () => ({
+  email: {
+    $regex: `^${OWNER_EMAIL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
+    $options: 'i',
+  },
+});
+
+const firstRawDoc = (raw: unknown) => {
+  const batch = (raw as { cursor?: { firstBatch?: Record<string, unknown>[] } })?.cursor?.firstBatch;
+  return batch?.[0] || null;
+};
+
+const rawDocId = (doc: Record<string, unknown> | null) => {
+  if (!doc) return null;
+  const id = doc._id as { $oid?: string; toHexString?: () => string } | string | undefined;
+  if (!id) return null;
+  if (typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id)) return id;
+  if (typeof id === 'object' && id.$oid) return id.$oid;
+  if (typeof id === 'object' && typeof id.toHexString === 'function') return id.toHexString();
+  return null;
+};
+
+const findOwnerRaw = async () => {
+  const raw = await prisma.$runCommandRaw({
+    find: 'User',
+    filter: ownerEmailFilter(),
+    limit: 1,
+  });
+  return firstRawDoc(raw);
+};
+
+const loadOwnerById = async (id: string) => {
   try {
+    return await prisma.user.findUnique({ where: { id } });
+  } catch (err) {
+    console.error('[owner] find by id failed', (err as any)?.message || err);
     await prisma.$runCommandRaw({
       update: 'User',
       updates: [
         {
-          q: { email: OWNER_EMAIL },
+          q: { _id: { $oid: id } },
           u: {
             $set: {
               role: 'BOTH',
               membershipPlan: 'STAR',
-              isAdmin: true,
+              email: OWNER_EMAIL,
               banned: false,
               verified: true,
               onboardingCompleted: true,
-              availableForRequests: true,
-              email: OWNER_EMAIL,
-              name: 'Piyush',
-              ...extra,
             },
           },
           multi: false,
@@ -167,50 +198,81 @@ const repairOwnerDocument = async (extra: Record<string, unknown> = {}) => {
         },
       ],
     });
-  } catch (err) {
-    console.error('[owner] repair failed', (err as any)?.message || err);
-  }
-};
-
-const readOwner = async () => {
-  try {
-    return await prisma.user.findUnique({ where: { email: OWNER_EMAIL } });
-  } catch (err) {
-    console.error('[owner] findUnique failed', (err as any)?.message || err);
-    await repairOwnerDocument();
-    return prisma.user.findUnique({ where: { email: OWNER_EMAIL } });
+    return prisma.user.findUnique({ where: { id } });
   }
 };
 
 const ensureOwnerUser = async (pass: string) => {
   const passwordHash = await bcrypt.hash(pass, 10);
-  const existing = await readOwner();
-  if (!existing) {
+  const existingId = rawDocId(await findOwnerRaw());
+
+  if (existingId) {
     try {
-      return await prisma.user.create({ data: ownerProfileData(passwordHash) });
+      return await prisma.user.update({
+        where: { id: existingId },
+        data: {
+          passwordHash,
+          email: OWNER_EMAIL,
+          isAdmin: true,
+          role: 'BOTH',
+          membershipPlan: 'STAR',
+          onboardingCompleted: true,
+          verified: true,
+          banned: false,
+        },
+      });
     } catch (err) {
-      console.error('[owner] create failed', (err as any)?.message || err);
+      console.error('[owner] prisma update failed', (err as any)?.message || err);
+      await prisma.$runCommandRaw({
+        update: 'User',
+        updates: [
+          {
+            q: { _id: { $oid: existingId } },
+            u: { $set: ownerProfileData(passwordHash) },
+            multi: false,
+            upsert: false,
+          },
+        ],
+      });
+      const loaded = await loadOwnerById(existingId);
+      if (loaded) return loaded;
+      throw err;
     }
   }
+
   try {
-    return await prisma.user.update({
-      where: { email: OWNER_EMAIL },
-      data: {
-        passwordHash,
-        isAdmin: true,
-        role: 'BOTH',
-        membershipPlan: 'STAR',
-        onboardingCompleted: true,
-        verified: true,
-        banned: false,
-      },
-    });
+    return await prisma.user.create({ data: ownerProfileData(passwordHash) });
   } catch (err) {
-    console.error('[owner] update failed', (err as any)?.message || err);
-    await repairOwnerDocument({ passwordHash });
-    const repaired = await readOwner();
-    if (repaired) return repaired;
-    throw err;
+    console.error('[owner] prisma create failed', (err as any)?.message || err);
+    const retryId = rawDocId(await findOwnerRaw());
+    if (retryId) {
+      try {
+        return await prisma.user.update({
+          where: { id: retryId },
+          data: { passwordHash, isAdmin: true, email: OWNER_EMAIL },
+        });
+      } catch (updateErr) {
+        console.error('[owner] retry update failed', (updateErr as any)?.message || updateErr);
+      }
+      const loaded = await loadOwnerById(retryId);
+      if (loaded) return loaded;
+    }
+    const id = new ObjectId().toHexString();
+    await prisma.$runCommandRaw({
+      insert: 'User',
+      documents: [
+        {
+          _id: { $oid: id },
+          ...ownerProfileData(passwordHash),
+          isOnline: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+    });
+    const created = await loadOwnerById(id);
+    if (created) return created;
+    throw new Error('Could not create the admin account. Try Sign In again.');
   }
 };
 

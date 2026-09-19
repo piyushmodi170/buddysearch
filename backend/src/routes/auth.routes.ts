@@ -58,10 +58,8 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
     const data = await authService.login(req.body.email, req.body.password);
     res.json({ success: true, data });
   } catch (error: any) {
-    if (isDatabaseError(error)) {
-      return res.status(503).json({ success: false, message: authErrorMessage(error, 'Unable to sign in') });
-    }
-    res.status(401).json({ success: false, message: error.message || 'Unable to sign in' });
+    const status = isDatabaseError(error) ? 503 : 401;
+    res.status(status).json({ success: false, message: authErrorMessage(error, 'Unable to sign in') });
   }
 });
 

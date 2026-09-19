@@ -14,8 +14,12 @@ export const publicDatabaseError =
 export const publicAuthError = (err: unknown, fallback: string) => {
   if (isDatabaseError(err)) return publicDatabaseError;
   const text = String((err as { message?: string })?.message || '');
-  if (/Invalid `prisma|Inconsistent column data|was provided invalid/i.test(text)) {
-    return 'This account could not be loaded. Try Continue with Google, or sign in again after the next deploy.';
+  if (
+    /Invalid `prisma|Inconsistent column data|was provided invalid|Record to update not found|P2025/i.test(
+      text
+    )
+  ) {
+    return 'Could not finish signing you in. Please try Sign In again.';
   }
   return text || fallback;
 };
