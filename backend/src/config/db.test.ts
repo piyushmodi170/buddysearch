@@ -17,7 +17,11 @@ assert.equal(
 );
 assert.match(
   publicAuthError({ message: 'Invalid `prisma.user.update()` invocation' }, 'fallback'),
-  /could not be loaded/i
+  /try Sign In again/i
+);
+assert.match(
+  publicAuthError({ message: 'Record to update not found.' }, 'fallback'),
+  /try Sign In again/i
 );
 assert.equal(publicAuthError(new Error('Wrong password'), 'fallback'), 'Wrong password');
 
