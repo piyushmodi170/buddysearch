@@ -130,7 +130,7 @@ export const getMarketplaceRequestsService = async (filters: any, page: number, 
       ];
     }
 
-    const [data, total] = await withTimeout(
+    const [data] = await withTimeout(
       Promise.all([
         prisma.request.findMany({
           where,
@@ -139,10 +139,10 @@ export const getMarketplaceRequestsService = async (filters: any, page: number, 
           orderBy: { createdAt: 'desc' },
           include: { user: { select: { id: true, name: true, avatar: true } } }
         }),
-        prisma.request.count({ where })
-      ])
+      ]),
+      3000
     );
-    return { data, total, page, limit };
+    return { data, total: data.length, page, limit };
   } catch (err) {
     return { data: [], total: 0, page, limit };
   }

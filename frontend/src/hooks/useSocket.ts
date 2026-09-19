@@ -3,7 +3,6 @@ import { getSocket, connectSocket, disconnectSocket } from '../lib/socket';
 import { useAuthStore } from '../store/useAuthStore';
 import { useChatStore } from '../store/useChatStore';
 import { useNotificationStore } from '../store/useNotificationStore';
-import api from '../lib/api';
 
 export function useSocket() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -31,13 +30,6 @@ export function useSocket() {
 
     socket.on('new_message', onMessage);
     socket.on('new_notification', onNotification);
-
-    api.get('/api/chats').then((res) => {
-      const rows = Array.isArray(res.data?.data) ? res.data.data : [];
-      useChatStore.getState().setChats(rows);
-      const live = getSocket();
-      rows.forEach((chat: { id: string }) => live.emit('join_chat', chat.id));
-    }).catch(() => undefined);
 
     return () => {
       socket.off('new_message', onMessage);

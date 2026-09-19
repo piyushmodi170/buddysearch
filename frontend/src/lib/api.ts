@@ -4,7 +4,7 @@ import { getApiBaseUrl } from './publicUrl';
 
 const api = axios.create({
   baseURL: getApiBaseUrl(),
-  timeout: 20000,
+  timeout: 8000,
 });
 
 api.interceptors.request.use(

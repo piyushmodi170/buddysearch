@@ -96,10 +96,12 @@ export const discoverBuddies = async (
     // Fetch a larger pool to score/sort in-memory
     const pool = await prisma.user.findMany({
       where,
-      take: 200,
-      include: {
-        interests: { include: { interest: true } },
-        receivedReviews: { select: { rating: true } },
+      take: 40,
+      select: {
+        id: true, name: true, role: true, city: true, state: true, avatar: true, bio: true,
+        verified: true, isOnline: true, lastSeen: true, membershipPlan: true,
+        availableForRequests: true, createdAt: true, lat: true, lng: true, profileCompletion: true,
+        interests: { include: { interest: { select: { slug: true, label: true } } } },
       },
     });
 
@@ -130,27 +132,19 @@ export const discoverBuddies = async (
         : 30;
       const activityRecency = Math.max(0, 1 - daysSinceActive / 30);
 
-      const avgRating = buddy.receivedReviews.length > 0
-        ? buddy.receivedReviews.reduce((sum, r) => sum + r.rating, 0) / buddy.receivedReviews.length
-        : 3;
-      const ratingBonus = avgRating / 5;
-
       let score: number;
       if (tab === 'near-you') {
-        score = distanceScore; // Pure distance sort
+        score = distanceScore;
       } else {
-        // For You composite score
         score =
-          distanceScore * 0.25 +
-          interestOverlap * 0.25 +
+          distanceScore * 0.3 +
+          interestOverlap * 0.3 +
           onlineBonus * 0.15 +
-          premiumBoost * 0.2 +
-          activityRecency * 0.1 +
-          ratingBonus * 0.05;
+          premiumBoost * 0.15 +
+          activityRecency * 0.1;
       }
 
-      const { receivedReviews, passwordHash, ...buddyData } = buddy as typeof buddy & { passwordHash?: string };
-      return { ...buddyData, _score: score, _distance: distanceScore };
+      return { ...buddy, _score: score, _distance: distanceScore };
     });
 
     scored.sort((a, b) => b._score - a._score);

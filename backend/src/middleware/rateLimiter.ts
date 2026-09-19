@@ -1,22 +1,31 @@
 import rateLimit from 'express-rate-limit';
 
+const skipDevAndSockets = (req: { path?: string; originalUrl?: string }) => {
+  if (process.env.NODE_ENV !== 'production') return true;
+  const url = `${req.path || ''}${req.originalUrl || ''}`;
+  return url.includes('socket.io') || url.startsWith('/health');
+};
+
 export const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 2000,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipDevAndSockets,
 });
 
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30, // Limit each IP to 30 auth requests per window
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipDevAndSockets,
 });
 
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500, // Limit each IP to 500 API requests per window
+  max: 2000,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipDevAndSockets,
 });

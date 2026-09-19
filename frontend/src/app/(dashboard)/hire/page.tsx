@@ -90,7 +90,7 @@ export default function HirePage() {
     (async () => {
       setLoadingPosts(true);
       try {
-        const res = await api.get('/api/requests/marketplace', { params: { limit: 50 } });
+        const res = await api.get('/api/requests/marketplace', { params: { limit: 20 } });
         const rows = res.data?.data?.data || [];
         if (!cancelled) setPosts(rows.map(mapHirePost));
       } catch {

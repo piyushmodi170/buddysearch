@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (!hydrated || !isAuthenticated) return;
     let cancelled = false;
-    api.get('/api/notifications', { params: { limit: 30 } })
+    api.get('/api/notifications', { params: { limit: 8 } })
       .then((res) => {
         if (cancelled) return;
         const rows = res.data?.data?.data || [];

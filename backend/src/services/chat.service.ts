@@ -45,11 +45,19 @@ export const getUserChats = async (userId: string) => {
     orderBy: { lastMessageAt: 'desc' }
   });
 
-  return Promise.all(chats.map(async (chat) => {
-    const unreadCount = await prisma.message.count({
-      where: { chatId: chat.id, senderId: { not: userId }, seen: false }
-    });
-    return { ...chat, unreadCount };
+  const chatIds = chats.map((chat) => chat.id);
+  const unreadRows = chatIds.length
+    ? await prisma.message.groupBy({
+        by: ['chatId'],
+        where: { chatId: { in: chatIds }, senderId: { not: userId }, seen: false },
+        _count: { _all: true },
+      })
+    : [];
+  const unreadMap = Object.fromEntries(unreadRows.map((row) => [row.chatId, row._count._all]));
+
+  return chats.map((chat) => ({
+    ...chat,
+    unreadCount: unreadMap[chat.id] || 0,
   }));
 };
 
