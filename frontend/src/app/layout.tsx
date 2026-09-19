@@ -1,19 +1,18 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Poppins } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { SocketProvider } from '../providers/SocketProvider';
 import { Toaster } from '../components/ui/Toast';
 
-const poppins = Poppins({ 
-  weight: ['400', '500', '600', '700', '800', '900'],
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'BuddySearch - Find Your Perfect Buddy',
-  description: 'A social companionship marketplace',
+  title: 'Buddy Search - India’s #1 Social Companionship hiring Platform',
+  description: 'Buddy Search connects you with real companions for activities, adventures, and everyday moments — friendship-first, always.',
 };
 
 export default function RootLayout({
@@ -23,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={poppins.className}>
+      <body className={inter.className}>
         <SocketProvider>
           {children}
           <Toaster />
