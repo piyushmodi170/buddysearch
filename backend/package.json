@@ -6,13 +6,23 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --exec tsx src/index.ts",
-    "build": "tsc",
+    "build": "npx tsc",
     "start": "node dist/index.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.0.0",
     "@aws-sdk/lib-storage": "^3.0.0",
     "@prisma/client": "^5.0.0",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/compression": "^1.7.2",
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/morgan": "^1.9.4",
+    "@types/multer": "^1.4.7",
+    "@types/node": "^20.0.0",
+    "@types/nodemailer": "^6.4.24",
+    "@types/uuid": "^9.0.1",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -26,26 +36,16 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.10.1",
+    "prisma": "^5.22.0",
     "rate-limit-redis": "^3.0.1",
     "razorpay": "^2.8.6",
     "socket.io": "^4.6.1",
+    "typescript": "^5.0.4",
     "uuid": "^9.0.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.2",
-    "@types/compression": "^1.7.2",
-    "@types/cors": "^2.8.13",
-    "@types/express": "^4.17.17",
-    "@types/jsonwebtoken": "^9.0.2",
-    "@types/morgan": "^1.9.4",
-    "@types/multer": "^1.4.7",
-    "@types/node": "^20.0.0",
-    "@types/nodemailer": "^6.4.24",
-    "@types/uuid": "^9.0.1",
     "nodemon": "^2.0.22",
-    "prisma": "^5.22.0",
-    "tsx": "^3.12.7",
-    "typescript": "^5.0.4"
+    "tsx": "^3.12.7"
   }
 }
