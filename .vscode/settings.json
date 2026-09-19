@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^Set-Location backend; node -e \"require\\('dotenv'\\)\\.config\\(\\); const \\{PrismaClient\\}=require\\('@prisma/client'\\); const p=new PrismaClient\\(\\); p\\.user\\.findFirst\\(\\{where:\\{email:'piyush\\.modi@gmail\\.com'\\},select:\\{id:true,email:true,name:true,isAdmin:true,role:true\\}\\}\\)\\.then\\(u=>\\{console\\.log\\(JSON\\.stringify\\(u\\)\\);\\}\\)\\.catch\\(e=>\\{console\\.error\\(e\\.message\\);process\\.exitCode=1\\}\\)\\.finally\\(\\(\\)=>p\\.\\$disconnect\\(\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

@@ -1,0 +1,171 @@
+'use client';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Search, Loader2, Ban, CheckCircle, Trash2, ShieldCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../../../lib/api';
+import { formatDate, getInitials } from '../../../lib/utils';
+import { useDebounce } from '../../../hooks/useDebounce';
+import { Filter, Pagination, ErrorCard } from '../../../components/admin/AdminControls';
+
+interface AdminUser {
+  id: string; name: string; email: string; phone?: string; role: string; city?: string;
+  avatar?: string; verified: boolean; banned: boolean; isAdmin: boolean;
+  membershipPlan: string; createdAt: string;
+}
+
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [role, setRole] = useState('');
+  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const debouncedSearch = useDebounce(search, 400);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const params: Record<string, string> = { page: String(page), limit: '20' };
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (role) params.role = role;
+      if (status === 'verified') params.verified = 'true';
+      if (status === 'unverified') params.verified = 'false';
+      if (status === 'banned') params.banned = 'true';
+
+      const res = await api.get('/api/admin/users', { params });
+      setUsers(res.data.data.data);
+      setTotal(res.data.data.total);
+      setPages(res.data.data.pages || 1);
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, debouncedSearch, role, status]);
+
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, role, status]);
+
+  const act = async (id: string, fn: () => Promise<any>, okMsg: string) => {
+    setBusyId(id);
+    try {
+      await fn();
+      toast.success(okMsg);
+      await load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Action failed');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const toggleBan = (u: AdminUser) =>
+    act(u.id, () => api.put(`/api/admin/users/${u.id}/ban`, { banned: !u.banned }), u.banned ? 'User unbanned' : 'User banned');
+
+  const toggleVerify = (u: AdminUser) =>
+    act(u.id, () => api.put(`/api/admin/users/${u.id}/verify`, { verified: !u.verified }), u.verified ? 'Verification removed' : 'User verified');
+
+  const remove = (u: AdminUser) => {
+    if (!window.confirm(`Permanently delete ${u.name}? This also removes their requests, chats and payments.`)) return;
+    act(u.id, () => api.delete(`/api/admin/users/${u.id}`), 'User deleted');
+  };
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+          <p className="text-sm text-gray-500 mt-1">{total.toLocaleString('en-IN')} total</p>
+        </div>
+        <div className="w-full sm:w-72">
+          <Input icon={<Search size={18} />} placeholder="Search name, email, phone, city..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Filter options={[['', 'All roles'], ['CLIENT', 'Clients'], ['BUDDY', 'Buddies'], ['BOTH', 'Both']]} value={role} onChange={setRole} />
+        <Filter options={[['', 'All statuses'], ['verified', 'Verified'], ['unverified', 'Unverified'], ['banned', 'Banned']]} value={status} onChange={setStatus} />
+      </div>
+
+      <ErrorCard message={error} />
+
+      <Card padding="none" className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 text-gray-500">
+              <tr>
+                <th className="px-6 py-4 font-medium">User</th>
+                <th className="px-6 py-4 font-medium">Role</th>
+                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium">Plan</th>
+                <th className="px-6 py-4 font-medium">Joined</th>
+                <th className="px-6 py-4 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading && (
+                <tr><td colSpan={6} className="px-6 py-16 text-center"><Loader2 className="animate-spin text-gray-400 mx-auto" size={28} /></td></tr>
+              )}
+              {!loading && users.length === 0 && (
+                <tr><td colSpan={6} className="px-6 py-16 text-center text-gray-400">No users match these filters</td></tr>
+              )}
+              {!loading && users.map(u => (
+                <tr key={u.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      {u.avatar
+                        ? <img src={u.avatar} alt="" className="w-9 h-9 rounded-full object-cover" />
+                        : <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600">{getInitials(u.name)}</div>}
+                      <div className="min-w-0">
+                        <div className="font-medium text-gray-900 flex items-center gap-1.5">
+                          {u.name}
+                          {u.isAdmin && <ShieldCheck size={13} className="text-primary" aria-label="Admin" />}
+                        </div>
+                        <div className="text-gray-500 text-xs truncate">{u.phone || u.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-gray-600">{u.role}</td>
+                  <td className="px-6 py-4">
+                    {u.banned
+                      ? <Badge variant="danger">Banned</Badge>
+                      : u.verified
+                        ? <Badge variant="success">Verified</Badge>
+                        : <Badge variant="warning">Pending</Badge>}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">{u.membershipPlan}</td>
+                  <td className="px-6 py-4 text-gray-500">{formatDate(u.createdAt)}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" disabled={busyId === u.id} onClick={() => toggleVerify(u)}>
+                        <CheckCircle size={14} className="mr-1" />{u.verified ? 'Unverify' : 'Verify'}
+                      </Button>
+                      <Button variant={u.banned ? 'ghost' : 'danger'} size="sm" disabled={busyId === u.id} onClick={() => toggleBan(u)}>
+                        <Ban size={14} className="mr-1" />{u.banned ? 'Unban' : 'Ban'}
+                      </Button>
+                      <Button variant="ghost" size="sm" disabled={busyId === u.id} onClick={() => remove(u)} aria-label={`Delete ${u.name}`}>
+                        <Trash2 size={14} className="text-red-600" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Pagination page={page} pages={pages} onChange={setPage} />
+    </div>
+  );
+}

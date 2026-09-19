@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: buddysearch-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-buddysearch}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-buddysearch_mongo_secret_123}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-buddysearch}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: buddysearch-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: buddysearch-backend
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME:-buddysearch}:${MONGO_INITDB_ROOT_PASSWORD:-buddysearch_mongo_secret_123}@mongo:27017/buddysearch?authSource=admin
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-production_jwt_secret_change_me_12345}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-production_jwt_refresh_secret_change_me_12345}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-mock_key}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-mock_secret}
+    ports:
+      - "4000:4000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: buddysearch-frontend
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/api}
+      NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL:-http://localhost:4000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+  redis_data:
