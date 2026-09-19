@@ -4,6 +4,7 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { postAuthPath } from '@/lib/utils';
 
 declare global {
   interface Window {
@@ -49,8 +50,7 @@ export function GoogleSignIn({
         if (!data?.user || !data?.token) throw new Error('Google sign-in failed');
         login(data.user, data.token);
         toast.success('Signed in with Google');
-        const needsOnboarding = data.user.onboardingCompleted === false && !data.user.isAdmin;
-        router.replace(needsOnboarding ? '/onboarding' : '/hire');
+        router.replace(postAuthPath(data.user));
       } catch (error: any) {
         toast.error(error.response?.data?.message || error.message || 'Google sign-in failed');
       }

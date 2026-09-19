@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { postAuthPath } from '@/lib/utils';
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -26,7 +27,8 @@ function VerifyEmailForm() {
       const next = res.data.data?.user;
       if (next) updateUser(next);
       toast.success('Email verified');
-      router.replace(user?.onboardingCompleted === false && !user?.isAdmin ? '/onboarding' : '/hire');
+      const nextUser = next || { ...user, emailVerified: true };
+      router.replace(postAuthPath(nextUser as any));
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Could not verify email');
     } finally {
@@ -62,7 +64,7 @@ function VerifyEmailForm() {
           {resending ? 'Sending…' : 'Resend code'}
         </button>
         <p className="mt-6 text-sm text-gray-500">
-          <Link href="/onboarding" className="font-semibold text-gray-800">Skip for now</Link>
+          Check spam if you do not see the email. You must verify this inbox to continue.
         </p>
       </div>
     </div>

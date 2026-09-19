@@ -53,6 +53,33 @@ export function planDisplayLabel(user?: {
   return (user?.membershipPlan || user?.membership || 'Paid').toString();
 }
 
+export function needsEmailVerification(user?: {
+  email?: string | null;
+  emailVerified?: boolean;
+  googleId?: string | null;
+  isAdmin?: boolean;
+} | null) {
+  if (!user) return false;
+  if (user.isAdmin) return false;
+  if (user.googleId) return false;
+  return user.emailVerified === false;
+}
+
+export function postAuthPath(user?: {
+  email?: string | null;
+  emailVerified?: boolean;
+  googleId?: string | null;
+  isAdmin?: boolean;
+  onboardingCompleted?: boolean;
+} | null) {
+  if (!user) return '/login';
+  if (needsEmailVerification(user)) {
+    return `/verify-email?email=${encodeURIComponent(user.email || '')}`;
+  }
+  if (user.onboardingCompleted === false && !user.isAdmin) return '/onboarding';
+  return '/hire';
+}
+
 export function getInitials(name: string) {
   if (!name) return '?';
   const parts = name.split(' ');

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { GoogleSignIn } from '@/components/auth/GoogleSignIn';
+import { postAuthPath } from '@/lib/utils';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,9 +23,11 @@ export default function LoginPage() {
     password: '',
   });
 
+  const user = useAuthStore(state => state.user);
+
   useEffect(() => {
-    if (isAuthenticated) router.replace('/hire');
-  }, [isAuthenticated, router]);
+    if (isAuthenticated) router.replace(postAuthPath(user));
+  }, [isAuthenticated, user, router]);
 
   const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +53,7 @@ export default function LoginPage() {
         throw new Error('Invalid response');
       }
       toast.success('Signed in successfully!');
-      const needsOnboarding = data.user && data.user.onboardingCompleted === false && !data.user.isAdmin;
-      router.replace(needsOnboarding ? '/onboarding' : '/hire');
+      router.replace(postAuthPath(data.user));
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || 'Unable to sign in. Please check your credentials.');
     } finally {
