@@ -55,7 +55,7 @@ const envDefaults: SettingsMap = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
   },
   app: {
-    url: process.env.FRONTEND_URL || config.frontendUrl || 'https://buddysearch.in',
+    url: process.env.FRONTEND_URL || config.frontendUrl || 'https://buddysearch.online',
   },
 };
 

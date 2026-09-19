@@ -18,7 +18,7 @@ export default function AdminSettingsPage() {
         group="app"
         title="App settings"
         description="Public site URL used in emails and OAuth notes. Other product keys live in Razorpay, SMTP, and Google login."
-        fields={[{ name: 'url', label: 'App / frontend URL', placeholder: 'https://buddysearch.in' }]}
+        fields={[{ name: 'url', label: 'App / frontend URL', placeholder: 'https://buddysearch.online' }]}
       />
       {status && (
         <Card>
