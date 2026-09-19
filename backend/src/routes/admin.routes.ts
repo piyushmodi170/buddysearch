@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { adminAuth } from '../middleware/auth.js';
 import { prisma } from '../config/db.js';
+import { publicSafeError } from '../config/db-errors.js';
+import { repairBrokenUsers } from '../config/mongo.js';
 import { getSetting, setSetting, maskSettings, settingStatus } from '../config/settings.js';
 import { sendTestEmail } from '../services/mail.service.js';
 import { isOwnerEmail } from '../config/owner.js';
@@ -20,44 +22,55 @@ const asInt = (v: unknown, fallback: number) => {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
 };
 
-/* ------------------------------------------------------------------ stats */
-router.get('/stats', adminAuth, async (req, res) => {
+const withRepairedUsers = async <T>(run: () => Promise<T>) => {
   try {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return await run();
+  } catch (err) {
+    await repairBrokenUsers();
+    return run();
+  }
+};
 
-    const [
-      totalUsers, verifiedUsers, bannedUsers, pendingVerifications, newToday, onlineNow,
-      clients, buddies, both,
-      totalRequests, openRequests, totalOffers, totalChats, totalMessages, totalReviews,
-      revenueAll, revenueMonth, successfulPayments, pendingPayments, recentSignups
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({ where: { verified: true } }),
-      prisma.user.count({ where: { banned: true } }),
-      prisma.user.count({ where: { aadhaarUrl: { not: null }, verified: false } }),
-      prisma.user.count({ where: { createdAt: { gte: dayStart } } }),
-      prisma.user.count({ where: { isOnline: true } }),
-      prisma.user.count({ where: { role: 'CLIENT' } }),
-      prisma.user.count({ where: { role: 'BUDDY' } }),
-      prisma.user.count({ where: { role: 'BOTH' } }),
-      prisma.request.count(),
-      prisma.request.count({ where: { status: 'OPEN' } }),
-      prisma.requestOffer.count(),
-      prisma.chat.count(),
-      prisma.message.count(),
-      prisma.review.count(),
-      prisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS' } }),
-      prisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS', createdAt: { gte: monthStart } } }),
-      prisma.payment.count({ where: { status: 'SUCCESS' } }),
-      prisma.payment.count({ where: { status: 'PENDING' } }),
-      prisma.user.findMany({ take: 8, orderBy: { createdAt: 'desc' }, select: adminUserSelect })
-    ]);
+const adminFail = (res: any, error: unknown, fallback: string, status = 500) =>
+  res.status(status).json({ success: false, message: publicSafeError(error, fallback) });
 
-    res.json({
-      success: true,
-      data: {
+/* ------------------------------------------------------------------ stats */
+router.get('/stats', adminAuth, async (_req, res) => {
+  try {
+    const data = await withRepairedUsers(async () => {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      const [
+        totalUsers, verifiedUsers, bannedUsers, pendingVerifications, newToday, onlineNow,
+        clients, buddies, both,
+        totalRequests, openRequests, totalOffers, totalChats, totalMessages, totalReviews,
+        revenueAll, revenueMonth, successfulPayments, pendingPayments, recentSignups
+      ] = await Promise.all([
+        prisma.user.count(),
+        prisma.user.count({ where: { verified: true } }),
+        prisma.user.count({ where: { banned: true } }),
+        prisma.user.count({ where: { aadhaarUrl: { not: null }, verified: false } }),
+        prisma.user.count({ where: { createdAt: { gte: dayStart } } }),
+        prisma.user.count({ where: { isOnline: true } }),
+        prisma.user.count({ where: { role: 'CLIENT' } }),
+        prisma.user.count({ where: { role: 'BUDDY' } }),
+        prisma.user.count({ where: { role: 'BOTH' } }),
+        prisma.request.count(),
+        prisma.request.count({ where: { status: 'OPEN' } }),
+        prisma.requestOffer.count(),
+        prisma.chat.count(),
+        prisma.message.count(),
+        prisma.review.count(),
+        prisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS' } }),
+        prisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS', createdAt: { gte: monthStart } } }),
+        prisma.payment.count({ where: { status: 'SUCCESS' } }),
+        prisma.payment.count({ where: { status: 'PENDING' } }),
+        prisma.user.findMany({ take: 8, orderBy: { createdAt: 'desc' }, select: adminUserSelect })
+      ]);
+
+      return {
         users: { total: totalUsers, verified: verifiedUsers, banned: bannedUsers, pendingVerifications, newToday, onlineNow },
         roles: { clients, buddies, both },
         activity: { totalRequests, openRequests, totalOffers, totalChats, totalMessages, totalReviews },
@@ -68,10 +81,11 @@ router.get('/stats', adminAuth, async (req, res) => {
           pendingPayments
         },
         recentSignups
-      }
+      };
     });
+    res.json({ success: true, data });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    adminFail(res, error, 'Could not load dashboard');
   }
 });
 
@@ -96,7 +110,7 @@ router.get('/users', adminAuth, async (req, res) => {
     if (verified === 'true' || verified === 'false') where.verified = verified === 'true';
     if (banned === 'true' || banned === 'false') where.banned = banned === 'true';
 
-    const [data, total] = await Promise.all([
+    const [data, total] = await withRepairedUsers(() => Promise.all([
       prisma.user.findMany({
         where,
         skip: (page - 1) * limit,
@@ -105,11 +119,11 @@ router.get('/users', adminAuth, async (req, res) => {
         select: adminUserSelect
       }),
       prisma.user.count({ where })
-    ]);
+    ]));
 
     res.json({ success: true, data: { data, total, page, limit, pages: Math.ceil(total / limit) } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    adminFail(res, error, 'Could not load users');
   }
 });
 
@@ -128,7 +142,7 @@ router.get('/users/:id', adminAuth, async (req, res) => {
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, data: user });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -141,7 +155,7 @@ router.put('/users/:id/verify', adminAuth, async (req, res) => {
     });
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -158,7 +172,7 @@ router.put('/users/:id/ban', adminAuth, async (req, res) => {
     });
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -171,7 +185,7 @@ router.put('/users/:id/role', adminAuth, async (req, res) => {
     const data = await prisma.user.update({ where: { id: req.params.id }, data: { role }, select: adminUserSelect });
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -183,7 +197,7 @@ router.delete('/users/:id', adminAuth, async (req, res) => {
     await prisma.user.delete({ where: { id: req.params.id } });
     res.json({ success: true, message: 'User deleted' });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -200,7 +214,7 @@ router.get('/verifications', adminAuth, async (req, res) => {
     ]);
     res.json({ success: true, data: { data, total, page, limit, pages: Math.ceil(total / limit) } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -236,7 +250,7 @@ router.get('/requests', adminAuth, async (req, res) => {
     ]);
     res.json({ success: true, data: { data, total, page, limit, pages: Math.ceil(total / limit) } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -245,7 +259,7 @@ router.delete('/requests/:id', adminAuth, async (req, res) => {
     await prisma.request.delete({ where: { id: req.params.id } });
     res.json({ success: true, message: 'Request deleted' });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -274,7 +288,7 @@ router.get('/payments', adminAuth, async (req, res) => {
     ]);
     res.json({ success: true, data: { data, total, page, limit, pages: Math.ceil(total / limit), revenue: sum._sum.amount || 0 } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -284,7 +298,7 @@ router.get('/plans', adminAuth, async (req, res) => {
     const data = await prisma.membershipPlan.findMany({ orderBy: { sortOrder: 'asc' } });
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -311,7 +325,7 @@ router.put('/plans/:id', adminAuth, async (req, res) => {
     const data = await prisma.membershipPlan.update({ where: { id: req.params.id }, data: patch });
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -334,7 +348,7 @@ router.get('/reviews', adminAuth, async (req, res) => {
     ]);
     res.json({ success: true, data: { data, total, page, limit, pages: Math.ceil(total / limit) } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -343,7 +357,7 @@ router.delete('/reviews/:id', adminAuth, async (req, res) => {
     await prisma.review.delete({ where: { id: req.params.id } });
     res.json({ success: true, message: 'Review deleted' });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -354,7 +368,7 @@ router.get('/settings/status', adminAuth, async (_req, res) => {
     const data = await settingStatus();
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -367,7 +381,7 @@ router.get('/settings/:key', adminAuth, async (req, res) => {
     const value = await getSetting(key);
     res.json({ success: true, data: maskSettings(key, value) });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -380,7 +394,7 @@ router.put('/settings/:key', adminAuth, async (req, res) => {
     const value = await setSetting(key, req.body || {});
     res.json({ success: true, data: maskSettings(key, value) });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -390,7 +404,7 @@ router.post('/settings/smtp/test', adminAuth, async (req, res) => {
     const data = await sendTestEmail(to);
     res.json({ success: true, data, message: `Test email sent to ${data.to}` });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -430,7 +444,7 @@ router.put('/users/:id', adminAuth, async (req, res) => {
     });
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
@@ -463,7 +477,7 @@ router.post('/plans', adminAuth, async (req, res) => {
     });
     res.json({ success: true, data });
   } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
 
