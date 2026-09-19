@@ -21,5 +21,8 @@ export const publicAuthError = (err: unknown, fallback: string) => {
   ) {
     return 'Could not finish signing you in. Please try Sign In again.';
   }
+  if (/E11000|duplicate key/i.test(text)) {
+    return 'Could not finish signing you in. Please try Sign In again.';
+  }
   return text || fallback;
 };
