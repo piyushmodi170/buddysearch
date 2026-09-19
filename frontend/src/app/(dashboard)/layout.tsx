@@ -12,34 +12,43 @@ import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, user } = useAuthStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const needsOnboarding = useAuthStore(
+    (s) => s.user?.onboardingCompleted === false && !s.user?.isAdmin
+  );
   const setNotifications = useNotificationStore((state) => state.setNotifications);
   const router = useRouter();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(() =>
+    typeof window === 'undefined' ? false : useAuthStore.persist.hasHydrated()
+  );
   const isMessages = pathname.startsWith('/messages');
   const isFeed = pathname.startsWith('/hire') || pathname.startsWith('/find') || pathname.startsWith('/account');
 
   useEffect(() => {
-    setMounted(true);
-    if (!useAuthStore.getState().isAuthenticated) {
-      const timer = setTimeout(() => {
-        if (!useAuthStore.getState().isAuthenticated) {
-          router.push('/login');
-        }
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-    const auth = useAuthStore.getState();
-    if (auth.isAuthenticated && auth.user?.onboardingCompleted === false && !auth.user?.isAdmin) {
-      router.replace('/onboarding');
-    }
-  }, [isAuthenticated, user, router]);
+    const finish = () => setHydrated(true);
+    const unsub = useAuthStore.persist.onFinishHydration(finish);
+    if (useAuthStore.persist.hasHydrated()) finish();
+    return unsub;
+  }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!hydrated) return;
+    if (!isAuthenticated) {
+      router.replace('/login');
+      return;
+    }
+    if (needsOnboarding) {
+      router.replace('/onboarding');
+    }
+  }, [hydrated, isAuthenticated, needsOnboarding, router]);
+
+  useEffect(() => {
+    if (!hydrated || !isAuthenticated) return;
+    let cancelled = false;
     api.get('/api/notifications', { params: { limit: 30 } })
       .then((res) => {
+        if (cancelled) return;
         const rows = res.data?.data?.data || [];
         setNotifications(rows.map((row: any) => ({
           id: row.id,
@@ -50,10 +59,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           read: row.read,
         })));
       })
-      .catch(() => setNotifications([]));
-  }, [isAuthenticated, setNotifications]);
+      .catch(() => {
+        if (!cancelled) setNotifications([]);
+      });
+    return () => { cancelled = true; };
+  }, [hydrated, isAuthenticated, setNotifications]);
 
-  if (!mounted) {
+  if (!hydrated) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -61,22 +73,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || needsOnboarding) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-        <p className="text-sm font-medium text-gray-600 mb-2">Redirecting to login...</p>
-        <a href="/login" className="text-xs text-primary underline">Click here if not redirected automatically</a>
-      </div>
-    );
-  }
-
-  if (user?.onboardingCompleted === false && !user?.isAdmin) {
-    return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-        <p className="text-sm font-medium text-gray-600 mb-2">Finish your profile to continue...</p>
-        <a href="/onboarding" className="text-xs text-primary underline">Open onboarding</a>
+        <p className="text-sm font-medium text-gray-600 mb-2">
+          {needsOnboarding ? 'Finish your profile to continue...' : 'Redirecting to login...'}
+        </p>
       </div>
     );
   }

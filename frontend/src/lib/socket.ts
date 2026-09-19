@@ -11,7 +11,9 @@ export const getSocket = () => {
       auth: { token },
       autoConnect: false,
       reconnection: true,
-      transports: ['polling', 'websocket'],
+      reconnectionAttempts: 8,
+      timeout: 8000,
+      transports: ['websocket', 'polling'],
       withCredentials: true,
     });
   }
@@ -20,6 +22,8 @@ export const getSocket = () => {
 
 export const connectSocket = () => {
   const s = getSocket();
+  const token = useAuthStore.getState().token;
+  s.auth = { token };
   if (!s.connected) {
     s.connect();
   }

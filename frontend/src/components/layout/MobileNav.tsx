@@ -28,6 +28,8 @@ export function MobileNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              prefetch
+              scroll={false}
               className={cn(
                 'flex flex-col items-center justify-center flex-1 h-full space-y-0.5',
                 active ? 'text-primary' : 'text-gray-500'
@@ -43,6 +45,8 @@ export function MobileNav() {
           <Link
             href="/posts"
             aria-label="Post"
+            prefetch
+            scroll={false}
             className={cn(
               'absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-4 border-white',
               postActive ? 'bg-primary' : 'bg-[#F04438] hover:bg-[#D92D20]'
@@ -59,6 +63,8 @@ export function MobileNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              prefetch
+              scroll={false}
               className={cn(
                 'flex flex-col items-center justify-center flex-1 h-full space-y-0.5',
                 active ? 'text-primary' : 'text-gray-500'
