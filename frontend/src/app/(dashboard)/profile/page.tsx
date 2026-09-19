@@ -3,13 +3,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Bell,
-  Briefcase,
   Camera,
   Car,
   Check,
   ClipboardList,
   Coffee,
   Cpu,
+  Dumbbell,
   FileText,
   Film,
   Gamepad2,
@@ -77,7 +77,7 @@ const INTEREST_STYLE: Record<string, { icon: typeof Music; idle: string; active:
   'cafe-buddy': { icon: Coffee, idle: 'bg-orange-50 text-orange-500 border-orange-100', active: 'bg-white text-orange-600 border-orange-400 ring-2 ring-orange-200' },
   'clubbing-buddy': { icon: Star, idle: 'bg-fuchsia-50 text-fuchsia-500 border-fuchsia-100', active: 'bg-white text-fuchsia-700 border-fuchsia-500 ring-2 ring-fuchsia-200' },
   'gaming-buddy': { icon: Gamepad2, idle: 'bg-sky-50 text-sky-500 border-sky-100', active: 'bg-white text-sky-700 border-sky-400 ring-2 ring-sky-200' },
-  'gym-buddy': { icon: Briefcase, idle: 'bg-rose-50 text-rose-500 border-rose-100', active: 'bg-white text-rose-600 border-rose-400 ring-2 ring-rose-200' },
+  'gym-buddy': { icon: Dumbbell, idle: 'bg-rose-50 text-rose-500 border-rose-100', active: 'bg-white text-rose-600 border-rose-400 ring-2 ring-rose-200' },
   'movie-buddy': { icon: Film, idle: 'bg-amber-50 text-amber-500 border-amber-100', active: 'bg-white text-amber-600 border-amber-400 ring-2 ring-amber-200' },
   'photography-buddy': { icon: Camera, idle: 'bg-yellow-50 text-yellow-600 border-yellow-100', active: 'bg-white text-yellow-700 border-yellow-400 ring-2 ring-yellow-200' },
   'travel-buddy': { icon: Plane, idle: 'bg-green-50 text-green-600 border-green-100', active: 'bg-white text-green-700 border-green-500 ring-2 ring-green-200' },
@@ -412,7 +412,7 @@ export default function ProfilePage() {
               )}
             </button>
             <div>
-              <h2 className="text-xl font-bold text-white lowercase first-letter:uppercase">{user?.name || 'Member'}</h2>
+              <h2 className="text-xl font-bold text-white lowercase">{user?.name || 'Member'}</h2>
               <span className="inline-flex mt-1 text-[11px] font-bold tracking-wide text-white/95 bg-white/15 border border-white/25 rounded-full px-2.5 py-0.5">
                 {roles.identity}
               </span>
@@ -593,7 +593,7 @@ export default function ProfilePage() {
           <div className="absolute -right-8 -bottom-10 text-[140px] font-black text-white/10 leading-none select-none">B</div>
           <p className="text-xs font-semibold tracking-[0.18em] uppercase text-white/90">{getGreeting()} 👋</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h2 className="text-4xl font-black lowercase first-letter:uppercase">{firstName}!</h2>
+            <h2 className="text-4xl font-black lowercase">{firstName}!</h2>
             <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-white/15 border border-white/25 rounded-full px-2.5 py-1">
               + {roles.hero}
             </span>
@@ -609,13 +609,13 @@ export default function ProfilePage() {
             <Link href="/hire" className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white text-[#F04438] text-sm font-semibold shadow-sm">
               <span>📡</span> Browse Client Requests
             </Link>
-            <Link href="/find" className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/15 border border-white/40 text-white text-sm font-semibold">
-              <Search size={16} /> Discover Buddies
+            <Link href="/find" className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white text-gray-800 text-sm font-semibold shadow-sm">
+              <Search size={16} className="text-[#F04438]" /> Discover Buddies
             </Link>
           </div>
         </section>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
           {[
             { icon: List, value: stats.requests, label: 'My Requests' },
             { icon: Check, value: stats.open, label: 'Open Now' },
