@@ -255,3 +255,13 @@ model OTP {
 
   @@index([phone, code])
 }
+
+// Runtime product config (Razorpay, SMTP, Google OAuth, app URL).
+// Secrets live here so the owner can configure them from /admin without redeploying.
+model AppSetting {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}

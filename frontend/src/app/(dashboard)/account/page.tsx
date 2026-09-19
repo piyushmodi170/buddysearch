@@ -8,11 +8,13 @@ import {
   HelpCircle,
   List,
   LogOut,
+  ShieldCheck,
   Star,
   User,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { getInitials, isPaidMembership } from '@/lib/utils';
+import { isOwnerEmail } from '@/lib/owner';
 
 function roleLabel(role?: string) {
   if (role === 'BOTH') return 'Client & Buddy';
@@ -109,6 +111,23 @@ export default function AccountMenuPage() {
           );
         })}
       </section>
+
+      {isOwnerEmail(user?.email) && (
+        <section className="bg-white rounded-2xl overflow-hidden mb-4">
+          <Link
+            href="/admin"
+            className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50"
+          >
+            <span className="flex items-center gap-3 text-sm font-medium text-gray-800">
+              <span className="w-9 h-9 rounded-xl bg-rose-50 text-[#F04438] flex items-center justify-center">
+                <ShieldCheck size={18} />
+              </span>
+              Admin panel
+            </span>
+            <ChevronRight size={16} className="text-gray-300" />
+          </Link>
+        </section>
+      )}
 
       <div className="h-px bg-gray-200 my-2" />
 

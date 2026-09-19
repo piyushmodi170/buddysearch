@@ -1,28 +1,15 @@
 import { z } from 'zod';
 
-const phoneSchema = z.string()
-  .transform(val => val.replace(/\D/g, '').slice(-10))
-  .refine(val => val.length === 10, 'Phone must contain at least 10 digits');
-
 export const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: phoneSchema,
+  email: z.string().email('Enter a valid email address').transform((val) => val.toLowerCase().trim()),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   role: z.enum(['CLIENT', 'BUDDY', 'BOTH']).optional().default('CLIENT'),
 });
 
 export const loginSchema = z.object({
-  phone: phoneSchema,
-  password: z.string(),
-});
-
-export const otpSendSchema = z.object({
-  phone: phoneSchema,
-});
-
-export const otpVerifySchema = z.object({
-  phone: phoneSchema,
-  code: z.string().length(6, 'Code must be 6 digits'),
+  email: z.string().email('Enter a valid email address').transform((val) => val.toLowerCase().trim()),
+  password: z.string().min(1, 'Password is required'),
 });
 
 export const updateProfileSchema = z.object({

@@ -4,7 +4,7 @@ import { validate } from '../middleware/validate.js';
 import { createOrderSchema, verifyPaymentSchema } from '../utils/validators.js';
 import * as paymentService from '../services/payment.service.js';
 import crypto from 'crypto';
-import { config } from '../config/index.js';
+import { getSetting } from '../config/settings.js';
 
 const router = Router();
 
@@ -28,7 +28,8 @@ router.post('/verify', auth, validate(verifyPaymentSchema), async (req, res, nex
 
 router.post('/webhook', async (req, res, next) => {
   try {
-    const secret = config.razorpay.webhookSecret;
+    const razorpay = await getSetting('razorpay');
+    const secret = razorpay.webhookSecret;
     const signature = req.headers['x-razorpay-signature'] as string;
 
     if (!secret || !signature) {

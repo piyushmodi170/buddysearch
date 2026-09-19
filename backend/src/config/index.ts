@@ -5,7 +5,7 @@ export const config = {
   port: process.env.PORT || 3000,
   nodeEnv: process.env.NODE_ENV || 'development',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
-  adminEmails: (process.env.ADMIN_EMAILS || '').split(',').map(email => email.trim().toLowerCase()).filter(Boolean),
+  adminEmails: ['piyushmodi170@gmail.com'],
   jwt: {
     secret: process.env.JWT_SECRET || 'supersecret',
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'supersecretrefresh',
@@ -35,6 +35,7 @@ export const config = {
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || ''
   },
   google: {
-    clientId: process.env.GOOGLE_CLIENT_ID || ''
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || ''
   }
 };

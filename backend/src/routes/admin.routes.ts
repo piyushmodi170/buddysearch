@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { adminAuth } from '../middleware/auth.js';
 import { prisma } from '../config/db.js';
+import { getSetting, setSetting, maskSettings, settingStatus } from '../config/settings.js';
+import { sendTestEmail } from '../services/mail.service.js';
+import { isOwnerEmail } from '../config/owner.js';
 
 const router = Router();
 
@@ -287,7 +290,7 @@ router.get('/plans', adminAuth, async (req, res) => {
 
 router.put('/plans/:id', adminAuth, async (req, res) => {
   try {
-    const { displayName, tagline, price, originalPrice, discount, durationMonths, postLimit, features, isPopular, sortOrder } = req.body;
+    const { displayName, tagline, price, originalPrice, discount, durationMonths, postLimit, features, isPopular, isOneTime, sortOrder } = req.body;
     const patch: any = {};
     if (displayName !== undefined) patch.displayName = String(displayName);
     if (tagline !== undefined) patch.tagline = String(tagline);
@@ -296,8 +299,13 @@ router.put('/plans/:id', adminAuth, async (req, res) => {
     if (discount !== undefined) patch.discount = Number(discount);
     if (durationMonths !== undefined) patch.durationMonths = Number(durationMonths);
     if (postLimit !== undefined) patch.postLimit = Number(postLimit);
-    if (features !== undefined) patch.features = features;
+    if (features !== undefined) {
+      patch.features = Array.isArray(features)
+        ? features
+        : String(features).split('\n').map((s: string) => s.trim()).filter(Boolean);
+    }
     if (isPopular !== undefined) patch.isPopular = Boolean(isPopular);
+    if (isOneTime !== undefined) patch.isOneTime = Boolean(isOneTime);
     if (sortOrder !== undefined) patch.sortOrder = Number(sortOrder);
 
     const data = await prisma.membershipPlan.update({ where: { id: req.params.id }, data: patch });
@@ -334,6 +342,126 @@ router.delete('/reviews/:id', adminAuth, async (req, res) => {
   try {
     await prisma.review.delete({ where: { id: req.params.id } });
     res.json({ success: true, message: 'Review deleted' });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+/* --------------------------------------------------------------- settings */
+
+router.get('/settings/status', adminAuth, async (_req, res) => {
+  try {
+    const data = await settingStatus();
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.get('/settings/:key', adminAuth, async (req, res) => {
+  try {
+    const key = req.params.key as 'razorpay' | 'smtp' | 'google' | 'app';
+    if (!['razorpay', 'smtp', 'google', 'app'].includes(key)) {
+      return res.status(400).json({ success: false, message: 'Unknown settings group' });
+    }
+    const value = await getSetting(key);
+    res.json({ success: true, data: maskSettings(key, value) });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.put('/settings/:key', adminAuth, async (req, res) => {
+  try {
+    const key = req.params.key as 'razorpay' | 'smtp' | 'google' | 'app';
+    if (!['razorpay', 'smtp', 'google', 'app'].includes(key)) {
+      return res.status(400).json({ success: false, message: 'Unknown settings group' });
+    }
+    const value = await setSetting(key, req.body || {});
+    res.json({ success: true, data: maskSettings(key, value) });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/settings/smtp/test', adminAuth, async (req, res) => {
+  try {
+    const to = req.body?.to || req.user?.email;
+    const data = await sendTestEmail(to);
+    res.json({ success: true, data, message: `Test email sent to ${data.to}` });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.put('/users/:id', adminAuth, async (req, res) => {
+  try {
+    const { name, email, membershipPlan, banned, verified, role, city } = req.body || {};
+    const patch: Record<string, unknown> = {};
+    if (name !== undefined) patch.name = String(name).trim();
+    if (email !== undefined) {
+      const nextEmail = String(email).trim().toLowerCase();
+      if (!nextEmail.includes('@')) {
+        return res.status(400).json({ success: false, message: 'Enter a valid email' });
+      }
+      patch.email = nextEmail;
+      patch.isAdmin = isOwnerEmail(nextEmail);
+    }
+    if (city !== undefined) patch.city = String(city);
+    if (banned !== undefined) patch.banned = Boolean(banned);
+    if (verified !== undefined) patch.verified = Boolean(verified);
+    if (role !== undefined) {
+      if (!['CLIENT', 'BUDDY', 'BOTH'].includes(role)) {
+        return res.status(400).json({ success: false, message: 'Invalid role' });
+      }
+      patch.role = role;
+    }
+    if (membershipPlan !== undefined) {
+      if (!['BASIC', 'STANDARD', 'PREMIUM', 'STAR'].includes(membershipPlan)) {
+        return res.status(400).json({ success: false, message: 'Invalid membership plan' });
+      }
+      patch.membershipPlan = membershipPlan;
+    }
+
+    const data = await prisma.user.update({
+      where: { id: req.params.id },
+      data: patch,
+      select: adminUserSelect
+    });
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/plans', adminAuth, async (req, res) => {
+  try {
+    const {
+      name, displayName, tagline, price, originalPrice, discount,
+      durationMonths, postLimit, features, isPopular, isOneTime, sortOrder
+    } = req.body || {};
+    if (!['BASIC', 'STANDARD', 'PREMIUM', 'STAR'].includes(name)) {
+      return res.status(400).json({ success: false, message: 'Plan name must be BASIC, STANDARD, PREMIUM, or STAR' });
+    }
+    const data = await prisma.membershipPlan.create({
+      data: {
+        name,
+        displayName: displayName || name,
+        tagline: tagline || '',
+        price: Number(price) || 0,
+        originalPrice: Number(originalPrice) || Number(price) || 0,
+        discount: Number(discount) || 0,
+        durationMonths: Number(durationMonths) || 1,
+        postLimit: Number(postLimit) || 0,
+        features: Array.isArray(features)
+          ? features
+          : String(features || '').split('\n').map((s: string) => s.trim()).filter(Boolean),
+        isPopular: Boolean(isPopular),
+        isOneTime: Boolean(isOneTime),
+        sortOrder: Number(sortOrder) || 99,
+      }
+    });
+    res.json({ success: true, data });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }

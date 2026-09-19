@@ -2,7 +2,8 @@ import { Request } from 'express';
 
 export interface UserPayload {
   id: string;
-  phone: string;
+  email?: string;
+  phone?: string;
   role: string;
   isAdmin: boolean;
 }
