@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/admin/AdminControls';
 import { useAuthStore } from '@/store/useAuthStore';
+import { TemplateEditor, type EmailTemplateDraft } from '@/components/admin/TemplateEditor';
 
 type SmtpForm = {
   host: string;
@@ -23,16 +24,7 @@ type SmtpForm = {
   secure: boolean;
 };
 
-type Template = {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  kind: 'SYSTEM' | 'MARKETING';
-  subject: string;
-  body: string;
-  active: boolean;
-};
+type Template = EmailTemplateDraft;
 
 const emptySmtp: SmtpForm = {
   host: '', port: '587', user: '', password: '', from: '', fromName: 'BuddySearch', secure: false,
@@ -356,42 +348,6 @@ function TemplateRow({
           </button>
         )}
       </div>
-    </div>
-  );
-}
-
-function TemplateEditor({
-  tpl, creating, onClose, onSave,
-}: {
-  tpl: Template;
-  creating: boolean;
-  onClose: () => void;
-  onSave: (tpl: Template) => void;
-}) {
-  const [draft, setDraft] = useState(tpl);
-  return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-end md:items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-bold mb-4">{creating ? 'New template' : 'Edit template'}</h3>
-        <div className="space-y-3">
-          <Input label="Name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
-          <Input label="Description" value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
-          <Input label="Subject" value={draft.subject} onChange={(e) => setDraft({ ...draft, subject: e.target.value })} />
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Body (HTML, variables like {'{{name}}'})</label>
-            <textarea
-              className="w-full min-h-[200px] rounded-md border border-gray-300 p-3 text-sm"
-              value={draft.body}
-              onChange={(e) => setDraft({ ...draft, body: e.target.value })}
-            />
-            <p className="text-xs text-gray-400 mt-1">Variables: {'{{name}}'} {'{{email}}'} {'{{otp}}'} {'{{appName}}'} {'{{appUrl}}'} {'{{plan}}'} {'{{amount}}'}</p>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 mt-5">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => onSave(draft)}>Save template</Button>
-        </div>
-      </Card>
     </div>
   );
 }

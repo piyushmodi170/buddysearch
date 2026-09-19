@@ -41,6 +41,20 @@ router.delete('/email/templates/:id', adminAuth, async (req, res) => {
   }
 });
 
+router.post('/email/templates/test', adminAuth, async (req, res) => {
+  try {
+    const data = await mail.sendTemplatePreview({
+      to: req.body?.to,
+      subject: req.body?.subject,
+      body: req.body?.body,
+      slug: req.body?.slug,
+    });
+    res.json({ success: true, data, message: `Preview sent to ${data.to}` });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: publicSafeError(error, error?.message || 'Could not send test') });
+  }
+});
+
 router.post('/email/smtp/verify', adminAuth, async (_req, res) => {
   try {
     const data = await mail.verifySmtpConnection();

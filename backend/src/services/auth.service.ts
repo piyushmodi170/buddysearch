@@ -173,9 +173,14 @@ export const signup = async (data: any) => {
     if (!user) throw new Error('Unable to create your account. Please try again.');
     void syncOwnerFlag(user).catch(() => undefined);
     if (!isOwnerEmail(email)) {
-      void sendSignupEmails({ name: user.name, email: user.email }).catch((err) => {
+      try {
+        await Promise.race([
+          sendSignupEmails({ name: user.name, email: user.email }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Verification email timed out')), 14000)),
+        ]);
+      } catch (err: any) {
         console.error('[mail] signup', err?.message || err);
-      });
+      }
     }
     return tokensFor(user);
   } catch (err: any) {
