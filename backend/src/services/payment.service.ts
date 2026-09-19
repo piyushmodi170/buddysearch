@@ -92,21 +92,16 @@ export const verifyPayment = async (data: any, userId: string) => {
 
 export const testRazorpayCredentials = async () => {
   const razorpay = await getSetting('razorpay');
-  if (!razorpay.keyId || !razorpay.keySecret) {
-    throw new Error(
-      razorpay.mode === 'live'
-        ? 'Add live Key ID and Key secret, then save.'
-        : 'Add test Key ID and Key secret (rzp_test_…), then save.'
-    );
+  const keyId = razorpay.liveKeyId || razorpay.keyId;
+  const keySecret = razorpay.liveKeySecret || razorpay.keySecret;
+  if (!keyId || !keySecret) {
+    throw new Error('Add Live Key ID and Live Key secret, then save.');
   }
-  if (razorpay.mode === 'test' && !razorpay.keyId.startsWith('rzp_test_')) {
-    throw new Error('Test mode needs a Key ID that starts with rzp_test_');
-  }
-  if (razorpay.mode === 'live' && !razorpay.keyId.startsWith('rzp_live_')) {
-    throw new Error('Live mode needs a Key ID that starts with rzp_live_');
+  if (!keyId.startsWith('rzp_live_')) {
+    throw new Error('Use the Live Key ID from Razorpay (starts with rzp_live_), not the Test Key ID.');
   }
 
-  const { instance } = await razorpayClient();
+  const instance = new Razorpay({ key_id: keyId, key_secret: keySecret });
   const order = await instance.orders.create({
     amount: 100,
     currency: 'INR',
@@ -115,8 +110,8 @@ export const testRazorpayCredentials = async () => {
 
   return {
     ok: true,
-    mode: razorpay.mode,
-    keyId: razorpay.keyId,
+    mode: 'live' as const,
+    keyId,
     orderId: order.id,
     webhookRequired: false,
     webhookConfigured: Boolean(razorpay.webhookSecret),

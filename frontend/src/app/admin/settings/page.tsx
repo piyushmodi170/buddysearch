@@ -27,7 +27,7 @@ export default function AdminSettingsPage() {
             <StatusRow
               label="Razorpay"
               ok={status.razorpay?.configured}
-              extra={status.razorpay?.mode ? `${status.razorpay.mode} mode${status.razorpay.webhookConfigured ? ', webhook set' : ', webhook optional'}` : undefined}
+              extra={status.razorpay?.configured ? `live keys${status.razorpay.webhookConfigured ? ', webhook set' : ''}` : 'live keys required'}
             />
             <StatusRow label="SMTP" ok={status.smtp?.configured} />
             <StatusRow label="Google login" ok={status.google?.configured} />

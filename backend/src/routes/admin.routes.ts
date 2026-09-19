@@ -405,7 +405,7 @@ router.post('/settings/razorpay/test', adminAuth, async (_req, res) => {
     res.json({
       success: true,
       data,
-      message: `Razorpay ${data.mode} keys work. Created test order ${data.orderId}. Webhook secret is optional.`,
+      message: `Live Razorpay keys work. Created order ${data.orderId}. Webhook secret is optional.`,
     });
   } catch (error: any) {
     res.status(400).json({ success: false, message: publicSafeError(error, error?.message || 'Razorpay test failed') });
