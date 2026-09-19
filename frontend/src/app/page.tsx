@@ -1,45 +1,47 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import IndiaMap from '@/components/IndiaMap';
+import './landing.css';
 import { 
-  Search, MapPin, ArrowRight, Coffee, Film, Dumbbell, ShoppingBag, 
-  Compass, Plane, ShieldCheck, DollarSign, Star, MessageSquare, 
-  Users, CheckCircle2, Calendar, Sparkles, ChevronRight
+  Search, MapPin, ArrowRight, ShoppingBag, 
+  ShieldCheck, DollarSign, Star, MessageSquare, 
+  Users, CheckCircle2, Sparkles
 } from 'lucide-react';
 
-const INDIAN_STATES = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 
-  'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 
-  'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 
-  'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 
-  'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 
-  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 
-  'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+const CATEGORIES = [
+  { icon: '🌙', name: 'Nightout Buddy', price: '₹2000/Hour', desc: 'Safe, fun company for your night out' },
+  { icon: '🎬', name: 'Movie Buddy', price: '₹1000/Hour', desc: 'Enjoy films with great company' },
+  { icon: '🛍️', name: 'Shopping Buddy', price: '₹1000/Hour', desc: 'Personal assist for a smarter shop' },
+  { icon: '💃', name: 'Clubbing Buddy', price: '₹2000/Hour', desc: 'Your go-to partner for a great night' },
+  { icon: '✈️', name: 'Travel Buddy', price: '₹1500/Hour', desc: 'A trusted companion for every journey' },
+  { icon: '🎮', name: 'Gaming Buddy', price: '₹1000/Hour', desc: 'Level up with a skilled gaming partner' },
+  { icon: '💃', name: 'Dance Buddy', price: '₹1000/Hour', desc: 'Move to the beat with a dance partner' },
+  { icon: '🏋️', name: 'Fitness Buddy', price: '₹1000/Hour', desc: 'Expert motivation for your fitness goals' },
+  { icon: '🚗', name: 'Driving Buddy', price: '₹1000/Hour', desc: 'Reliable, safe driving whenever you need' },
+  { icon: '🗣️', name: 'Language Buddy', price: '₹1000/Hour', desc: 'Practice and learn languages together' },
+  { icon: '📸', name: 'Photography Buddy', price: '₹2000/Hour', desc: 'Capture perfect moments with a photo partner' },
+  { icon: '🧭', name: 'City Explorer Buddy', price: '₹1000/Hour', desc: 'Discover hidden gems and local spots with a city-savvy guide' },
+  { icon: '📋', name: 'Intern Buddy', price: '₹300/Hour', desc: 'Learn, grow, and gain real-world experience alongside a mentor' },
+  { icon: '🎤', name: 'Interview Buddy', price: '₹500/Hour', desc: 'Ace your next interview with mock sessions and expert feedback' },
+  { icon: '☕', name: 'Cafe Buddy', price: '₹500/Hour', desc: 'Great conversations over coffee with a friendly companion' },
+  { icon: '🚙', name: 'Car Pooling Buddy', price: '₹300/Trip', desc: 'Share rides, split costs, and travel with trusted companions' },
 ];
 
-const CATEGORIES = [
-  { icon: '🌙', name: 'Nightout Buddy', price: '₹500/hr', desc: 'Safe, fun companion for your night out', color: 'bg-purple-100 text-purple-600' },
-  { icon: '🎬', name: 'Movie Buddy', price: '₹400/hr', desc: 'Share the popcorn and company', color: 'bg-red-100 text-red-600' },
-  { icon: '🛍️', name: 'Shopping Buddy', price: '₹400/hr', desc: 'Personal stylist for a window shop', color: 'bg-pink-100 text-pink-600' },
-  { icon: '💃', name: 'Clubbing Buddy', price: '₹600/hr', desc: 'Your go-to partner for a great night', color: 'bg-indigo-100 text-indigo-600' },
-  { icon: '🎒', name: 'Event Buddy', price: '₹500/hr', desc: 'A trusted companion for every event', color: 'bg-green-100 text-green-600' },
-  { icon: '🎮', name: 'Gaming Buddy', price: '₹300/hr', desc: 'Level up with a skilled gaming partner', color: 'bg-blue-100 text-blue-600' },
-  { icon: '🍽️', name: 'Dinner Buddy', price: '₹500/hr', desc: 'Dine in the best with a flavor', color: 'bg-rose-100 text-rose-600' },
-  { icon: '🏋️', name: 'Fitness Buddy', price: '₹500/hr', desc: 'Expert motivation for your fitness goals', color: 'bg-emerald-100 text-emerald-600' },
-  { icon: '🚗', name: 'Driving Buddy', price: '₹300/hr', desc: 'Smooth, calm driving wherever you need', color: 'bg-teal-100 text-teal-600' },
-  { icon: '🗣️', name: 'Language Buddy', price: '₹300/hr', desc: 'Practice and learn languages together', color: 'bg-cyan-100 text-cyan-600' },
-  { icon: '📸', name: 'Photography Buddy', price: '₹500/hr', desc: 'Capture perfect memories with a photo partner', color: 'bg-yellow-100 text-yellow-600' },
-  { icon: '🧭', name: 'City Explorer Buddy', price: '₹400/hr', desc: 'Unearth hidden gems and local spots with a city-savvy guide', color: 'bg-orange-100 text-orange-600' },
-  { icon: '🤝', name: 'Event Buddy', price: '₹300/hr', desc: 'Listen, grow, and gain real-world experience alongside a mentor', color: 'bg-violet-100 text-violet-600' },
-  { icon: '💼', name: 'Interview Buddy', price: '₹300/hr', desc: 'Ace your next interview with mock conversations and feedback', color: 'bg-slate-100 text-slate-600' },
-  { icon: '☕', name: 'Cafe Buddy', price: '₹300/hr', desc: 'Good conversations over coffee with a friendly companion', color: 'bg-amber-100 text-amber-600' },
-  { icon: '🚗', name: 'Car Pooling Buddy', price: '₹300/hr', desc: 'Share rides, split costs, and travel with trusted companions', color: 'bg-fuchsia-100 text-fuchsia-600' },
+const TESTIMONIALS = [
+  { name: 'Meera Kapoor', role: 'Client – Movie Buddy · Mumbai', quote: 'I never had anyone to catch the latest releases with. Found a Movie Buddy on BuddySearch and we have watched six films together already. It feels like going with an old friend every single time.', img: 11 },
+  { name: 'Rahul Sinha', role: 'Client – Gaming Buddy · Bangalore', quote: "Been gaming solo for years and it gets boring fast. Found a Gaming Buddy on BuddySearch and we've been grinding ranked matches every weekend since. Finally have someone to strategise with — no toxicity, just good vibes.", img: 12 },
+  { name: 'Divya Nair', role: 'Client – Shopping Buddy · Delhi', quote: "I needed help picking out an outfit for my sister's wedding. My Shopping Buddy had incredible taste and kept me from overspending. Matched within 10 minutes, worth every rupee.", img: 13 },
+  { name: 'Arjun Mehta', role: 'Buddy – Gym Trainer · Pune', quote: "I was freelancing as a personal trainer but struggling to find consistent clients. Since joining BuddySearch as a Gym Buddy, I'm fully booked on weekends. The Pro plan's visibility boost made all the difference.", img: 14 },
+  { name: 'Sneha Pillai', role: 'Client – Travel Buddy · Hyderabad', quote: 'Travelling solo felt daunting until I found a Travel Buddy on BuddySearch. She knew all the hidden spots in Coorg and made the whole trip feel like going with a friend. Will definitely book again.', img: 15 },
+  { name: 'Kavya Das', role: 'Buddy – Dance & Nightout · Chennai', quote: 'I offer both Dance and Nightout Buddy services. The chat request system is seamless — clients describe what they need, I accept, and we sort the rest in the chat. My calendar stays full every week.', img: 16 },
+  { name: 'Priya Sharma', role: 'Client – Cafe Buddy · Mumbai', quote: 'I used to dread going to new cafes alone. Found a Cafe Buddy in 5 minutes and we spent hours chatting. Now I do it every weekend. BuddySearch has genuinely changed how I explore my own city.', img: 20 },
+  { name: 'Ananya Roy', role: 'Buddy – Dance Instructor · Kolkata', quote: 'Teaching dance was always my passion but finding students was hard. BuddySearch brought consistent bookings every week. The platform handles everything so I can just focus on dancing.', img: 21 },
 ];
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen font-sans text-gray-900 overflow-x-hidden bg-[#fff9f9]">
+    <div className="landing-page min-h-screen overflow-x-hidden bg-white">
       
       {/* 1. NAVBAR */}
       <nav className="relative z-50 bg-white/80 backdrop-blur-md sticky top-0 border-b border-gray-100">
@@ -169,45 +171,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. MAP SECTION */}
-      <section className="py-20 bg-[#374151] text-white">
-        <div className="max-w-7xl mx-auto px-6 text-center space-y-4 mb-12">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 rounded-full px-4 py-1.5 text-[10px] font-bold tracking-widest uppercase">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            2,422 BUDDIES ONLINE RIGHT NOW
-          </div>
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight">
-            Your Next Buddy <span className="text-[#ff5a5f]">Is Already Here.</span>
-          </h2>
-          <p className="text-gray-400 text-sm max-w-3xl mx-auto leading-relaxed">
-            Post what you're up for a coffee meet, shopping, movie plan, and real, verified buddies nearby who are online reply in minutes. Our nationwide network spans major cities - find a buddy near you, no matter where you are.
-          </p>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-12 items-center">
-          <div className="md:col-span-5 flex flex-col items-center relative">
-            <div className="w-full max-w-[300px] opacity-90"><IndiaMap /></div>
-            <div className="flex items-center gap-6 mt-6 text-xs font-bold text-gray-400">
-              <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span><span>Active City</span></div>
-              <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#F04438]"></span><span>Trending City</span></div>
-            </div>
-          </div>
-          <div className="md:col-span-7">
-            <div className="text-center md:text-left mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">Buddies Across India</h3>
-              <p className="text-gray-400 text-xs">From metropolitan hubs to emerging cities, BuddySearch connects you with verified companions wherever life takes you. Our network is growing every day.</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {INDIAN_STATES.map((state, idx) => (
-                <div key={idx} className="bg-[#4b5563] border border-gray-600/50 p-2.5 rounded-xl flex items-center gap-2 shadow-sm cursor-pointer hover:bg-[#ff5a5f] hover:border-[#ff5a5f] transition-all group">
-                  <div className="w-4 h-4 rounded-full bg-gray-500/50 text-white flex items-center justify-center shrink-0 group-hover:bg-white/20"><MapPin size={10} /></div>
-                  <span className="text-[10px] font-semibold text-gray-200 group-hover:text-white truncate">{state}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <IndiaMap />
 
       {/* 4. HOW IT WORKS */}
       <section id="how-it-works" className="py-24 bg-white">
@@ -279,8 +243,8 @@ export default function LandingPage() {
           {CATEGORIES.map((cat, idx) => (
             <div key={idx} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-200 transition-all group">
               <div className="flex justify-between items-start mb-4">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${cat.color}`}>{cat.icon}</div>
-                <div className="bg-gray-50 text-[#ff5a5f] text-[10px] font-bold px-2 py-1 rounded-full border border-gray-100">{cat.price}</div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-red-50">{cat.icon}</div>
+                <div className="bg-gray-50 text-[#F96566] text-[10px] font-bold px-2 py-1 rounded-full border border-gray-100">{cat.price}</div>
               </div>
               <h4 className="font-bold text-gray-800 text-sm mb-1">{cat.name}</h4>
               <p className="text-[11px] text-gray-500 mb-4 line-clamp-2">{cat.desc}</p>
@@ -322,42 +286,43 @@ export default function LandingPage() {
       </section>
 
       {/* 7. INCOME / CALCULATOR */}
-      <section className="py-24 bg-[#374151]">
+      <section className="py-24 bg-[#3D4550]">
         <div className="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <span className="text-[10px] font-bold text-white bg-white/20 border border-white/10 rounded-full px-4 py-1 uppercase tracking-wider inline-block">EARN AS A BUDDY</span>
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Turn your free time <br/>into <span className="text-[#ff5a5f]">real income</span></h2>
-            <p className="text-sm text-gray-400 leading-relaxed">India's fastest growing social platform. Set your own rules, choose your activities, and earn up to ₹2,000/hr - on your terms.</p>
+            <span className="text-[10px] font-bold text-white bg-white/20 border border-white/10 rounded-full px-4 py-1 uppercase tracking-wider inline-block">💸 For Buddies</span>
+            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Turn your free time <br/>into <span className="text-[#F96566]">real income</span></h2>
+            <p className="text-sm text-gray-400 leading-relaxed">India's fastest-growing social platform. Set your own rates, choose your activities, and earn up to ₹2,000/hr - on your terms.</p>
             
             <div className="flex gap-8 pt-4">
-              <div><h4 className="text-2xl font-bold text-white">₹2K/hr</h4><p className="text-[10px] text-gray-400">Top Earners</p></div>
-              <div><h4 className="text-2xl font-bold text-white">200+</h4><p className="text-[10px] text-gray-400">Active Cities in India</p></div>
-              <div className="bg-[#ff5a5f] rounded-xl p-3"><h4 className="text-xl font-bold text-white">₹240</h4><p className="text-[9px] text-red-100">Avg Earn</p></div>
+              <div><h4 className="text-2xl font-bold text-white">₹2K/hr</h4><p className="text-[10px] text-gray-400">Per Hour</p></div>
+              <div><h4 className="text-2xl font-bold text-white">200+</h4><p className="text-[10px] text-gray-400">Cities Across India</p></div>
+              <div className="bg-[#F96566] rounded-xl p-3"><h4 className="text-sm font-bold text-white">50% OFF</h4><p className="text-[9px] text-red-100">Join From ₹249</p></div>
             </div>
             
-            <Link href="/signup" className="px-6 py-3 bg-[#ff5a5f] hover:bg-[#ff4449] text-white rounded-full text-xs font-bold inline-flex items-center gap-2 mt-4">
+            <Link href="/signup" className="px-6 py-3 bg-[#F96566] hover:bg-[#ff4449] text-white rounded-full text-xs font-bold inline-flex items-center gap-2 mt-4">
               Start Earning Today <ArrowRight size={14} />
             </Link>
           </div>
           
-          <div className="bg-[#4b5563] p-6 rounded-[2rem] border border-gray-600 shadow-2xl relative">
-             <div className="flex items-center justify-between border-b border-gray-500 pb-4 mb-4">
-                <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-white"><Star size={16}/></div>
-                   <div><h4 className="text-sm font-bold text-white">Hangout & Companionship</h4><p className="text-[10px] text-gray-400">Top earning category</p></div>
+          <div className="bg-[#2e3540] p-6 rounded-[2rem] border border-white/10 shadow-2xl relative space-y-4">
+             <h4 className="text-sm font-bold text-white">How Buddies Earn</h4>
+             <div className="bg-[#3D4550] rounded-xl p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-xs font-bold text-white">Hangout & Companionship</p>
+                  <p className="text-[10px] text-gray-400">10 hrs → ₹5K–₹15K</p>
                 </div>
-                <div className="text-right">
-                   <h4 className="text-sm font-bold text-white">Income & Earnings</h4><p className="text-[10px] text-gray-400">10 hrs/wk = ₹20,000/mo</p>
+                <p className="text-sm font-bold text-[#F96566]">₹500 – ₹1,500/hr</p>
+             </div>
+             <div className="bg-[#3D4550] rounded-xl p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-xs font-bold text-white">Events & Outings</p>
+                  <p className="text-[10px] text-gray-400">10 hrs → ₹10K–₹20K</p>
                 </div>
+                <p className="text-sm font-bold text-[#F96566]">₹1,000 – ₹2,000/hr</p>
              </div>
-             <div className="bg-[#374151] rounded-xl p-4 mb-4">
-                <h4 className="text-xs font-bold text-white mb-2">Set Your Own Rates</h4>
-                <div className="h-2 bg-gray-600 rounded-full w-full overflow-hidden"><div className="h-full bg-[#ff5a5f] w-[60%]"></div></div>
-                <p className="text-[9px] text-gray-400 mt-2">You decide what to charge.</p>
-             </div>
-             <div className="flex justify-between text-[10px] text-gray-300 font-semibold">
+             <div className="flex justify-between text-[10px] text-gray-300 font-semibold pt-2">
                 <span className="flex items-center gap-1"><CheckCircle2 size={12} className="text-green-400"/> Verified profiles</span>
-                <span className="flex items-center gap-1"><CheckCircle2 size={12} className="text-green-400"/> Secure payments</span>
+                <span className="flex items-center gap-1"><CheckCircle2 size={12} className="text-green-400"/> Direct payments</span>
                 <span className="flex items-center gap-1"><CheckCircle2 size={12} className="text-green-400"/> Flexible hours</span>
              </div>
           </div>
@@ -375,20 +340,21 @@ export default function LandingPage() {
 
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { name: 'BASIC', price: '₹249', period: '/month', desc: 'Billed ₹2988 for 12 months', features: ['Browse buddy directories', 'Send up to 5 requests /mo', 'Public profile (limited)', 'Access to basic filters', 'Basic search visibility'], color: 'text-blue-500', btn: 'Start Basic', active: false },
-            { name: 'STANDARD', price: '₹349', period: '/month', desc: 'Billed ₹4188 for 12 months', features: ['Everything in Basic', 'Send up to 15 requests /mo', 'Premium profile placement', '"Verified" badge on profile', 'Higher search placement'], color: 'text-green-500', btn: 'Get Standard', active: false },
-            { name: 'PREMIUM', price: '₹449', period: '/month', desc: 'Billed ₹5388 for 12 months', features: ['Everything in Standard', 'Unlimited requests', 'Highest profile placement in search', 'Premium support & assistance', 'Exclusive invites to local events'], color: 'text-[#ff5a5f]', btn: 'Go Premium', active: true },
-            { name: 'VIP / PLATINUM', price: '₹849', period: '/month', desc: 'Billed ₹10188 for 12 months', features: ['Everything in Premium', 'Priority 24/7 support', '"VIP" badge on profile', 'Featured in "Top Buddies" section', 'Zero platform fees on earnings'], color: 'text-purple-500', btn: 'Become a VIP', active: false },
+            { name: 'Basic', price: '₹249', original: '₹498', off: '50% OFF', period: '₹83/month · billed for 3 months', features: ['Browse buddy discovery feed', 'View buddy profiles (name, avatar, city, services)', 'Post up to 5 plan requests / month', 'Standard position in discover feed'], color: 'text-blue-500', btn: 'Start Basic', active: false },
+            { name: 'Standard', price: '₹349', original: '₹998', off: '65% OFF', period: '₹58/month · billed for 6 months', features: ['Everything in Basic', 'Post up to 10 plan requests / month', 'View user social profile links', 'Priority placement in discover'], color: 'text-green-500', btn: 'Get Standard', active: false },
+            { name: 'Premium', price: '₹449', original: '₹1600', off: '72% OFF', period: '₹37/month · billed for 12 months', features: ['Everything in Standard', 'Post up to 15 plan requests / month', 'Higher priority placement in feed', '"Premium" badge on your profile'], color: 'text-[#F96566]', btn: 'Go Premium', active: true },
+            { name: 'Star Member', price: '₹649', original: '₹2949', off: '78% OFF', period: 'one-time payment · lifetime access', features: ['Everything in Premium', 'Unlimited plan requests', 'Pinned to top of discover', '"Star" badge on your profile', 'Lifetime access — pay once'], color: 'text-purple-500', btn: 'Become a Star', active: false },
           ].map((plan, i) => (
-            <div key={i} className={`bg-white rounded-3xl p-6 border ${plan.active ? 'border-[#ff5a5f] shadow-xl shadow-red-100 relative scale-105 z-10' : 'border-gray-100 shadow-sm'} flex flex-col`}>
-              {plan.active && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#ff5a5f] text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase">Most Popular</div>}
+            <div key={i} className={`bg-white rounded-3xl p-6 border ${plan.active ? 'border-[#F96566] shadow-xl shadow-red-100 relative scale-105 z-10' : 'border-gray-100 shadow-sm'} flex flex-col`}>
+              {plan.active && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#F96566] text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase">Most Popular</div>}
               <div className={`w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mb-4 ${plan.color}`}><Star size={14}/></div>
               <h3 className="text-xs font-bold text-gray-800 mb-1">{plan.name}</h3>
-              <div className="flex items-end gap-1 mb-1">
+              <div className="flex items-end gap-2 mb-1">
                 <span className="text-3xl font-black text-gray-900">{plan.price}</span>
-                <span className="text-[10px] text-gray-500 font-bold mb-1.5">{plan.period}</span>
+                <span className="text-[10px] text-gray-400 line-through mb-1.5">{plan.original}</span>
+                <span className="text-[9px] font-bold text-[#F96566] mb-1.5">{plan.off}</span>
               </div>
-              <p className="text-[9px] text-gray-400 mb-6">{plan.desc}</p>
+              <p className="text-[9px] text-gray-400 mb-6">{plan.period}</p>
               
               <ul className="space-y-3 mb-8 flex-1">
                 {plan.features.map((f, j) => (
@@ -417,18 +383,18 @@ export default function LandingPage() {
         {/* Marquee effect container */}
         <div className="relative w-full flex gap-4 px-6 pb-4 overflow-x-hidden">
            {/* Duplicate the array to create a scrolling effect */}
-           <div className="flex gap-4 animate-[marquee_40s_linear_infinite] whitespace-nowrap">
-             {[1,2,3,4,5,6,7].map((i) => (
+           <div className="flex gap-4 animate-[marquee_40s_linear_infinite]">
+             {TESTIMONIALS.concat(TESTIMONIALS).map((t, i) => (
                <div key={i} className="inline-block w-[300px] bg-[#fff9f9] border border-red-50 p-5 rounded-2xl whitespace-normal shrink-0">
                   <div className="flex items-center gap-3 mb-3">
-                     <img src={`https://i.pravatar.cc/150?img=${i+10}`} alt="User" className="w-10 h-10 rounded-full object-cover"/>
+                     <img src={`https://i.pravatar.cc/150?img=${t.img}`} alt={t.name} className="w-10 h-10 rounded-full object-cover"/>
                      <div>
-                        <h4 className="text-xs font-bold text-gray-800">Priya Sharma</h4>
-                        <p className="text-[9px] text-gray-500">Travel Buddy - Mumbai</p>
-                        <div className="flex text-[#ff5a5f] mt-0.5"><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/></div>
+                        <h4 className="text-xs font-bold text-gray-800">{t.name}</h4>
+                        <p className="text-[9px] text-gray-500">{t.role}</p>
+                        <div className="flex text-[#F96566] mt-0.5"><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/></div>
                      </div>
                   </div>
-                  <p className="text-[11px] text-gray-600 leading-relaxed italic">"I was hesitant at first, but hiring a city buddy for my solo trip to Mumbai was the best decision! My buddy was verified, extremely polite, and showed me spots I'd never find alone."</p>
+                  <p className="text-[11px] text-gray-600 leading-relaxed italic">“{t.quote}”</p>
                </div>
              ))}
            </div>
@@ -439,13 +405,15 @@ export default function LandingPage() {
       </section>
 
       {/* 10. CTA BANNER */}
-      <section className="bg-[#ff5a5f] py-20 text-center text-white px-6">
-        <h2 className="text-3xl md:text-4xl font-black mb-4">Your next adventure <br/>needs a Buddy.</h2>
-        <p className="text-sm text-red-100 max-w-lg mx-auto mb-8">Join over 100,000 people who are already finding companions for every plan, every activity, every day.</p>
+      <section className="bg-[#F96566] py-20 text-center text-white px-6">
+        <p className="text-xs font-bold tracking-widest uppercase mb-3 text-red-100">Trusted By Lakhs across India</p>
+        <h2 className="text-3xl md:text-4xl font-black mb-4">Your next adventure<br/>needs a Buddy.</h2>
+        <p className="text-sm text-red-100 max-w-lg mx-auto mb-8">Connect, explore, belong. Lakhs of people across India are already finding companions for every plan, every activity, every day.</p>
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-           <Link href="/find" className="px-8 py-3 bg-white text-[#ff5a5f] rounded-full text-xs font-bold shadow-lg shadow-red-900/20">Find a Buddy Now</Link>
+           <Link href="/find" className="px-8 py-3 bg-white text-[#F96566] rounded-full text-xs font-bold shadow-lg shadow-red-900/20">Hire a Buddy Now</Link>
            <Link href="/signup" className="px-8 py-3 bg-transparent border border-white text-white rounded-full text-xs font-bold hover:bg-white/10">Become a Buddy -&gt;</Link>
         </div>
+        <p className="text-[10px] text-red-100 mt-6">Free to join. No credit card required.</p>
       </section>
 
       {/* 11. FOOTER */}
