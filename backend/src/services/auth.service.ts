@@ -157,10 +157,17 @@ export const login = async (identifierInput: string, pass: string) => {
     }
   });
 
-  if (!user || !user.passwordHash) throw new Error('Invalid credentials');
+  if (!user) throw new Error('Invalid credentials');
+  if (!user.passwordHash) {
+    throw new Error(
+      user.googleId
+        ? 'This account uses Google Sign-In. Click Continue with Google.'
+        : 'No password is set for this account. Use Google Sign-In or create a password with Sign up if this is a new email.'
+    );
+  }
 
   const valid = await bcrypt.compare(pass, user.passwordHash);
-  if (!valid) throw new Error('Invalid credentials');
+  if (!valid) throw new Error('Wrong password. Admin is not a separate ID — use your Gmail password, not your email.');
 
   assertNotBanned(user);
   void syncOwnerFlag(user).catch(() => undefined);

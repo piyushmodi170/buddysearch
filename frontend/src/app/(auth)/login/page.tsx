@@ -69,7 +69,9 @@ export default function LoginPage() {
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
-          <p className="text-gray-500 mb-6">Sign in with Google or your Gmail address and password.</p>
+          <p className="text-gray-500 mb-6">
+            Sign in with Google or your Gmail address and password. Admin is the same Gmail account — there is no separate admin ID.
+          </p>
 
           <GoogleSignIn label="Continue with Google" />
 
