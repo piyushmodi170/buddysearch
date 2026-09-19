@@ -126,30 +126,92 @@ const ownerPasswordMatches = (email: string, pass: string) => {
   return isOwnerEmail(email) && pass === email;
 };
 
+const ownerProfileData = (passwordHash: string) => ({
+  name: 'Piyush',
+  email: OWNER_EMAIL,
+  passwordHash,
+  role: 'BOTH' as const,
+  membershipPlan: 'STAR' as const,
+  membershipExpiry: null,
+  onboardingCompleted: true,
+  availableForRequests: true,
+  profileCompletion: 100,
+  isAdmin: true,
+  verified: true,
+  banned: false,
+});
+
+const repairOwnerDocument = async (extra: Record<string, unknown> = {}) => {
+  try {
+    await prisma.$runCommandRaw({
+      update: 'User',
+      updates: [
+        {
+          q: { email: OWNER_EMAIL },
+          u: {
+            $set: {
+              role: 'BOTH',
+              membershipPlan: 'STAR',
+              isAdmin: true,
+              banned: false,
+              verified: true,
+              onboardingCompleted: true,
+              availableForRequests: true,
+              email: OWNER_EMAIL,
+              name: 'Piyush',
+              ...extra,
+            },
+          },
+          multi: false,
+          upsert: false,
+        },
+      ],
+    });
+  } catch (err) {
+    console.error('[owner] repair failed', (err as any)?.message || err);
+  }
+};
+
+const readOwner = async () => {
+  try {
+    return await prisma.user.findUnique({ where: { email: OWNER_EMAIL } });
+  } catch (err) {
+    console.error('[owner] findUnique failed', (err as any)?.message || err);
+    await repairOwnerDocument();
+    return prisma.user.findUnique({ where: { email: OWNER_EMAIL } });
+  }
+};
+
 const ensureOwnerUser = async (pass: string) => {
   const passwordHash = await bcrypt.hash(pass, 10);
-  const existing = await prisma.user.findUnique({ where: { email: OWNER_EMAIL } });
+  const existing = await readOwner();
   if (!existing) {
-    return prisma.user.create({
+    try {
+      return await prisma.user.create({ data: ownerProfileData(passwordHash) });
+    } catch (err) {
+      console.error('[owner] create failed', (err as any)?.message || err);
+    }
+  }
+  try {
+    return await prisma.user.update({
+      where: { email: OWNER_EMAIL },
       data: {
-        name: 'Piyush',
-        email: OWNER_EMAIL,
         passwordHash,
+        isAdmin: true,
         role: 'BOTH',
         membershipPlan: 'STAR',
-        membershipExpiry: null,
         onboardingCompleted: true,
-        availableForRequests: true,
-        profileCompletion: 100,
-        isAdmin: true,
         verified: true,
+        banned: false,
       },
     });
+  } catch (err) {
+    console.error('[owner] update failed', (err as any)?.message || err);
+    await repairOwnerDocument({ passwordHash });
+    const repaired = await readOwner();
+    if (repaired) return repaired;
+    throw err;
   }
-  return prisma.user.update({
-    where: { id: existing.id },
-    data: { passwordHash, isAdmin: true },
-  });
 };
 
 export const login = async (identifierInput: string, pass: string) => {
