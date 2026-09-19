@@ -89,6 +89,22 @@ export const ensureDemoListings = async () => {
       user = await prisma.user.update({ where: { id: user.id }, data: { avatar } });
     }
 
+    const slug = item.category.toLowerCase().replace(/\s+/g, '-');
+    try {
+      const interest = await prisma.interest.upsert({
+        where: { slug },
+        update: { label: item.category },
+        create: { slug, label: item.category },
+      });
+      await prisma.userInterest.upsert({
+        where: { userId_interestId: { userId: user.id, interestId: interest.id } },
+        create: { userId: user.id, interestId: interest.id },
+        update: {},
+      });
+    } catch (err) {
+      console.error('[demo-listings] interest link failed', slug, (err as any)?.message || err);
+    }
+
     const existing = await prisma.request.count({ where: { userId: user.id } });
     if (existing > 0) continue;
 

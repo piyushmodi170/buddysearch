@@ -75,10 +75,19 @@ router.post('/onboarding', auth, validate(completeOnboardingSchema), async (req,
 
 router.get('/discover', auth, async (req, res, next) => {
   try {
-    const { tab = 'for-you', page = 1, limit = 20, city, search } = req.query;
+    const { tab = 'for-you', page = 1, limit = 40, city, search, interest } = req.query;
     const filterCity = typeof city === 'string' ? city : undefined;
     const filterSearch = typeof search === 'string' ? search : undefined;
-    const data = await matchingService.discoverBuddies(req.user!.id, { city: filterCity, search: filterSearch }, tab as string, Number(page), Number(limit));
+    const interestSlugs = typeof interest === 'string' && interest && interest !== 'all'
+      ? [interest]
+      : undefined;
+    const data = await matchingService.discoverBuddies(
+      req.user!.id,
+      { city: filterCity, search: filterSearch, interestSlugs },
+      tab as string,
+      Number(page),
+      Number(limit)
+    );
     res.json({ success: true, data });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });

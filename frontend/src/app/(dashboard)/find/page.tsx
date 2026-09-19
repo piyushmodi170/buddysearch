@@ -6,7 +6,6 @@ import {
   Star, 
   MessageCircle, 
   CheckCircle2, 
-  ChevronDown, 
   X, 
   Loader2, 
   Globe
@@ -62,19 +61,33 @@ function mapBuddy(user: any): Buddy {
   };
 }
 
-const LOCATIONS_LIST = ['All Locations', 'Mumbai', 'Pune', 'Navi Mumbai', 'Bangalore', 'Delhi', 'Hyderabad', 'Kolkata', 'Guwahati', 'Coimbatore', 'Baramati', 'Nashik'];
-const INTERESTS_LIST = ['All Interests', 'Movies', 'Fitness', 'Travel', 'Photography', 'Food', 'Events', 'Gaming', 'Art', 'Nightlife', 'Shopping', 'Tech', 'Music'];
+const LOCATIONS_LIST = ['All Locations', 'Mumbai', 'Pune', 'Navi Mumbai', 'Bengaluru', 'Bangalore', 'Delhi', 'Hyderabad', 'Chennai', 'Kolkata', 'Jaipur', 'Ahmedabad', 'Goa', 'Gurgaon', 'Noida', 'Lucknow', 'Chandigarh', 'Kochi', 'Indore', 'Nagpur', 'Coimbatore', 'Bhopal', 'Bhubaneswar', 'Thiruvananthapuram', 'Surat'];
+const INTEREST_OPTIONS = [
+  { label: 'All Interests', slug: '' },
+  { label: 'Cafe Buddy', slug: 'cafe-buddy' },
+  { label: 'Travel Buddy', slug: 'travel-buddy' },
+  { label: 'Gym Buddy', slug: 'gym-buddy' },
+  { label: 'Movie Buddy', slug: 'movie-buddy' },
+  { label: 'City Explorer', slug: 'city-explorer-buddy' },
+  { label: 'Language Buddy', slug: 'language-buddy' },
+  { label: 'Nightout Buddy', slug: 'nightout-buddy' },
+  { label: 'Photography Buddy', slug: 'photography-buddy' },
+  { label: 'Interview Buddy', slug: 'interview-buddy' },
+  { label: 'Shopping Buddy', slug: 'shopping-buddy' },
+  { label: 'Driving Buddy', slug: 'driving-buddy' },
+  { label: 'Gaming Buddy', slug: 'gaming-buddy' },
+  { label: 'Dance Buddy', slug: 'dance-buddy' },
+  { label: 'Chat Buddy', slug: 'chat-buddy' },
+  { label: 'Intern Buddy', slug: 'intern-buddy' },
+  { label: 'Car Pooling', slug: 'car-pooling-buddy' },
+];
 
 export default function FindPage() {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<string>('for-you');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('All Locations');
-  const [selectedInterest, setSelectedInterest] = useState<string>('All Interests');
-  
-  // Dropdown UI Toggles
-  const [showLocDropdown, setShowLocDropdown] = useState(false);
-  const [showIntDropdown, setShowIntDropdown] = useState(false);
+  const [selectedInterest, setSelectedInterest] = useState<string>('');
 
   // Selected Buddy Modal State
   const [selectedBuddy, setSelectedBuddy] = useState<Buddy | null>(null);
@@ -92,10 +105,9 @@ export default function FindPage() {
     { id: 'all-india', label: 'All India' },
   ];
 
-  // Fetch API Data whenever tab or filter changes
   useEffect(() => {
     fetchBuddiesFromApi();
-  }, [activeTab, selectedLocation, selectedInterest]);
+  }, [activeTab, selectedLocation, selectedInterest, searchQuery]);
 
   const fetchBuddiesFromApi = async () => {
     setLoading(true);
@@ -108,7 +120,9 @@ export default function FindPage() {
         params: {
           tab,
           search: searchQuery || undefined,
-          city: cityFilter
+          city: cityFilter,
+          interest: selectedInterest || undefined,
+          limit: 40,
         }
       });
       setApiBuddies((res.data?.data?.data || []).map(mapBuddy));
@@ -141,8 +155,11 @@ export default function FindPage() {
     }
 
     // Filter by Selected Interest Dropdown
-    if (selectedInterest !== 'All Interests') {
-      dataset = dataset.filter(b => b.interests && b.interests.includes(selectedInterest));
+    if (selectedInterest) {
+      const needle = selectedInterest.toLowerCase();
+      dataset = dataset.filter((b) =>
+        (b.interests || []).some((i) => i.toLowerCase().includes(needle.replace(/-buddy$/, '').replace(/-/g, ' ')) || i.toLowerCase().includes(needle))
+      );
     }
 
     // Filter by Active Tab
@@ -232,128 +249,70 @@ export default function FindPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-16">
       
-      {/* Top Search & Filter Bar */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-4 items-center justify-between">
-        {/* Search Input Bar */}
+      <div className="relative z-20 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
         <div className="relative w-full lg:w-96">
           <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
             <Search size={18} />
           </span>
           <input 
-            type="text" 
+            type="search" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, interest or location..." 
-            className="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white text-gray-800 placeholder-gray-400 font-medium"
+            className="w-full min-h-11 pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white text-gray-800 placeholder-gray-400 font-medium touch-manipulation"
           />
           {searchQuery && (
             <button 
+              type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 min-w-11"
             >
               <X size={16} />
             </button>
           )}
         </div>
 
-        {/* Dropdown Filters & Actions */}
-        <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0 scrollbar-hide">
-          
-          {/* Location Dropdown */}
-          <div className="relative">
-            <button 
-              onClick={() => {
-                setShowLocDropdown(!showLocDropdown);
-                setShowIntDropdown(false);
-              }}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold border rounded-xl transition-all ${
-                selectedLocation !== 'All Locations' ? 'bg-red-50 border-red-300 text-red-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700'
-              }`}
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto overflow-visible">
+          <label className="flex items-center gap-2 min-h-11 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-700">
+            <MapPin size={14} className="text-red-500 shrink-0" />
+            <span className="sr-only">Location</span>
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="bg-transparent text-xs font-bold text-gray-800 outline-none min-h-11 min-w-[9rem] touch-manipulation cursor-pointer"
             >
-              <MapPin size={14} className="text-red-500" />
-              <div className="text-left">
-                <span className="text-[9px] text-gray-400 block uppercase font-bold leading-none">Location</span>
-                <span className="text-xs font-bold text-gray-800">{selectedLocation}</span>
-              </div>
-              <ChevronDown size={14} className="text-gray-400 ml-1" />
-            </button>
+              {LOCATIONS_LIST.map((loc) => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
+          </label>
 
-            {/* Location Dropdown Menu */}
-            {showLocDropdown && (
-              <div className="absolute top-full mt-2 left-0 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-1 max-h-60 overflow-y-auto">
-                {LOCATIONS_LIST.map(loc => (
-                  <button
-                    key={loc}
-                    onClick={() => {
-                      setSelectedLocation(loc);
-                      setShowLocDropdown(false);
-                      toast.success(`Filter applied: ${loc}`);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
-                      selectedLocation === loc ? 'bg-red-50 text-red-600 font-bold' : 'text-gray-700'
-                    }`}
-                  >
-                    {loc}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Interests Dropdown */}
-          <div className="relative">
-            <button 
-              onClick={() => {
-                setShowIntDropdown(!showIntDropdown);
-                setShowLocDropdown(false);
-              }}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold border rounded-xl transition-all ${
-                selectedInterest !== 'All Interests' ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700'
-              }`}
+          <label className="flex items-center gap-2 min-h-11 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-700">
+            <Star size={14} className="text-amber-500 shrink-0" />
+            <span className="sr-only">Interests</span>
+            <select
+              value={selectedInterest}
+              onChange={(e) => setSelectedInterest(e.target.value)}
+              className="bg-transparent text-xs font-bold text-gray-800 outline-none min-h-11 min-w-[9rem] touch-manipulation cursor-pointer"
             >
-              <Star size={14} className="text-amber-500" />
-              <div className="text-left">
-                <span className="text-[9px] text-gray-400 block uppercase font-bold leading-none">Interests</span>
-                <span className="text-xs font-bold text-gray-800">{selectedInterest}</span>
-              </div>
-              <ChevronDown size={14} className="text-gray-400 ml-1" />
-            </button>
+              {INTEREST_OPTIONS.map((opt) => (
+                <option key={opt.slug || 'all'} value={opt.slug}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
 
-            {/* Interests Dropdown Menu */}
-            {showIntDropdown && (
-              <div className="absolute top-full mt-2 left-0 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-1 max-h-60 overflow-y-auto">
-                {INTERESTS_LIST.map(interest => (
-                  <button
-                    key={interest}
-                    onClick={() => {
-                      setSelectedInterest(interest);
-                      setShowIntDropdown(false);
-                      toast.success(`Filter applied: ${interest}`);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-amber-50 hover:text-amber-700 transition-colors ${
-                      selectedInterest === interest ? 'bg-amber-50 text-amber-700 font-bold' : 'text-gray-700'
-                    }`}
-                  >
-                    {interest}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Reset / View All Button */}
           <Button 
+            type="button"
             variant="outline" 
             onClick={() => {
               setSelectedLocation('All Locations');
-              setSelectedInterest('All Interests');
+              setSelectedInterest('');
               setSearchQuery('');
-              setActiveTab('for-you');
-              toast.success('Filters reset');
+              setActiveTab('all-india');
             }}
-            className="border-red-400 text-red-500 hover:bg-red-50 text-xs font-bold shrink-0 rounded-xl"
+            className="border-red-400 text-red-500 hover:bg-red-50 text-xs font-bold shrink-0 rounded-xl min-h-11 touch-manipulation"
           >
-            View All &gt;
+            View All
           </Button>
         </div>
       </div>
@@ -367,7 +326,7 @@ export default function FindPage() {
               setActiveTab(tab.id);
               toast.success(`Showing ${tab.label}`);
             }}
-            className={`px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm shrink-0 border ${
+            className={`px-4 py-2.5 min-h-11 rounded-full text-xs font-bold transition-all shadow-sm shrink-0 border touch-manipulation ${
               activeTab === tab.id
                 ? 'bg-red-500 text-white border-red-500 ring-2 ring-red-400/30'
                 : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
@@ -392,7 +351,7 @@ export default function FindPage() {
             size="sm"
             onClick={() => {
               setSelectedLocation('All Locations');
-              setSelectedInterest('All Interests');
+              setSelectedInterest('');
               setSearchQuery('');
             }}
           >
