@@ -4,6 +4,9 @@ dist
 .git
 .env
 .env.local
+dump.rdb
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.md
+!README.md
