@@ -144,9 +144,9 @@ export default function LoginPage() {
           </p>
           <div className="flex items-center gap-4 text-sm font-medium">
             <div className="flex -space-x-2">
-              {['/logo.png', '/buddy_search_red_white.png', '/favicon.png', '/buddy_search_white_grey.png'].map((src) => (
-                <div key={src} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-white">
-                  <img src={src} alt="" className="w-full h-full object-cover" />
+              {['/avatars/user-1.jpg', '/avatars/user-2.jpg', '/avatars/user-3.jpg', '/avatars/user-4.jpg'].map((src) => (
+                <div key={src} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-white shrink-0">
+                  <img src={src} alt="" className="w-full h-full object-cover object-top" />
                 </div>
               ))}
             </div>
