@@ -11,7 +11,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { Loader2 } from 'lucide-react';
 import api from '@/lib/api';
-import { cn, isPaidMembership } from '@/lib/utils';
+import { cn, isPaidMembership, needsEmailVerification, postAuthPath } from '@/lib/utils';
 import { isOwnerEmail } from '@/lib/owner';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -43,10 +43,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace('/login');
       return;
     }
+    if (needsEmailVerification(user)) {
+      router.replace(postAuthPath(user));
+      return;
+    }
     if (needsOnboarding) {
       router.replace('/onboarding');
     }
-  }, [hydrated, isAuthenticated, needsOnboarding, router]);
+  }, [hydrated, isAuthenticated, needsOnboarding, user, router]);
 
   useEffect(() => {
     if (!hydrated || !isAuthenticated) return;
@@ -78,12 +82,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!isAuthenticated || needsOnboarding) {
+  if (!isAuthenticated || needsEmailVerification(user) || needsOnboarding) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
         <p className="text-sm font-medium text-gray-600 mb-2">
-          {needsOnboarding ? 'Finish your profile to continue...' : 'Redirecting to login...'}
+          {needsEmailVerification(user)
+            ? 'Verify your email to continue...'
+            : needsOnboarding
+              ? 'Finish your profile to continue...'
+              : 'Redirecting to login...'}
         </p>
       </div>
     );
@@ -110,15 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 : 'max-w-7xl mx-auto p-4 sm:p-6 lg:p-8'
           )}
         >
-          <MembersOnlyGate>
-            {user && user.emailVerified === false && !user.isAdmin && (
-              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <span>Verify your email to keep your account recoverable.</span>
-                <a href={`/verify-email?email=${encodeURIComponent(user.email || '')}`} className="font-semibold text-amber-950 underline">Enter code</a>
-              </div>
-            )}
-            {children}
-          </MembersOnlyGate>
+          <MembersOnlyGate>{children}</MembersOnlyGate>
         </div>
       </main>
 

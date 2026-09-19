@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import { needsEmailVerification, postAuthPath } from '@/lib/utils';
 import '../onboarding.css';
 
 const STATES = [
@@ -59,6 +60,10 @@ export default function OnboardingPage() {
     if (!hydrated) return;
     if (!isAuthenticated) {
       router.replace('/login');
+      return;
+    }
+    if (needsEmailVerification(user)) {
+      router.replace(postAuthPath(user));
       return;
     }
     if (user?.onboardingCompleted || user?.isAdmin) {
