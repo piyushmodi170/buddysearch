@@ -24,7 +24,11 @@ export default function AdminSettingsPage() {
         <Card>
           <h2 className="font-bold text-gray-900 mb-3">Configuration status</h2>
           <ul className="text-sm space-y-2">
-            <StatusRow label="Razorpay" ok={status.razorpay?.configured} extra={status.razorpay?.webhookConfigured ? 'webhook set' : 'webhook missing'} />
+            <StatusRow
+              label="Razorpay"
+              ok={status.razorpay?.configured}
+              extra={status.razorpay?.mode ? `${status.razorpay.mode} mode${status.razorpay.webhookConfigured ? ', webhook set' : ', webhook optional'}` : undefined}
+            />
             <StatusRow label="SMTP" ok={status.smtp?.configured} />
             <StatusRow label="Google login" ok={status.google?.configured} />
           </ul>

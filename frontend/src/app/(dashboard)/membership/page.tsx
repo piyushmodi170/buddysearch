@@ -89,7 +89,7 @@ export default function MembershipPage() {
     setLoading(planId);
     try {
       const res = await api.post('/api/payment/create-order', { planId });
-      const order = res.data;
+      const order = res.data.data || res.data;
 
       const ok = await loadRazorpayScript();
       if (!ok) {

@@ -32,8 +32,13 @@ router.post('/webhook', async (req, res, next) => {
     const secret = razorpay.webhookSecret;
     const signature = req.headers['x-razorpay-signature'] as string;
 
-    if (!secret || !signature) {
-      return res.status(400).json({ success: false, message: 'Webhook signing is not configured' });
+    // Checkout is verified with the key secret on /verify. Webhook secret is optional.
+    if (!secret) {
+      return res.json({ success: true, ignored: true, reason: 'webhook secret not set' });
+    }
+
+    if (!signature) {
+      return res.status(400).json({ success: false, message: 'Missing webhook signature' });
     }
 
     const shasum = crypto.createHmac('sha256', secret);
