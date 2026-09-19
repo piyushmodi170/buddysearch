@@ -323,7 +323,7 @@ export default function FindPage() {
     setLoading(true);
     try {
       const cityFilter = selectedLocation !== 'All Locations' ? selectedLocation : (activeTab === 'near-you' ? 'Mumbai' : undefined);
-      const res = await api.get('/api/user/discover', {
+      const res = await api.get('/api/users/discover', {
         params: {
           tab: activeTab,
           search: searchQuery || undefined,

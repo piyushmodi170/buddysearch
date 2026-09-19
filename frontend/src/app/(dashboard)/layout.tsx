@@ -11,22 +11,23 @@ import { Loader2 } from 'lucide-react';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    // Timeout safeguard for redirect
-    if (!useAuthStore.getState().isAuthenticated) {
-      const timer = setTimeout(() => {
-        if (!useAuthStore.getState().isAuthenticated) {
-          router.push('/login');
-        }
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated, router]);
+    const finish = () => setHydrated(true);
+    const unsub = useAuthStore.persist.onFinishHydration(finish);
+    if (useAuthStore.persist.hasHydrated()) finish();
+    return unsub;
+  }, []);
 
-  if (!mounted) {
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!useAuthStore.getState().isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [hydrated, isAuthenticated, router]);
+
+  if (!hydrated) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

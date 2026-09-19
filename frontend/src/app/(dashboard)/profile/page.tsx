@@ -127,7 +127,7 @@ export default function ProfilePage() {
         const formData = new FormData();
         formData.append('avatar', file);
         
-        const res = await api.post('/api/user/avatar', formData, {
+        const res = await api.post('/api/users/avatar', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         
@@ -162,7 +162,7 @@ export default function ProfilePage() {
         twitter
       };
 
-      await api.put('/api/user/profile', payload);
+      await api.put('/api/users/profile', payload);
       updateUser(payload);
       toast.success('Personal & social information saved successfully!');
     } catch (err: any) {
@@ -182,7 +182,7 @@ export default function ProfilePage() {
         availableForRequests: isAvailable
       };
 
-      await api.put('/api/user/profile', payload);
+      await api.put('/api/users/profile', payload);
       updateUser(payload);
       toast.success('Buddy profile saved!');
     } catch (err: any) {
@@ -208,7 +208,7 @@ export default function ProfilePage() {
 
   const handleSaveInterests = async () => {
     try {
-      await api.put('/api/user/interests', { interestIds: selectedInterests });
+      await api.put('/api/users/interests', { interestIds: selectedInterests });
       toast.success('Interests updated!');
     } catch (err) {
       toast.success('Interests saved!');
@@ -236,7 +236,7 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append('aadhaar', aadhaarFile);
 
-      await api.post('/api/user/aadhaar', formData, {
+      await api.post('/api/users/aadhaar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       

@@ -53,7 +53,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await api.post('/api/auth/login', {
+        identifier: formData.identifier,
         phone: formData.identifier,
+        email: formData.identifier,
         password: formData.password
       });
       const data = res.data.data || res.data;
@@ -65,7 +67,8 @@ export default function LoginPage() {
       toast.success('Signed in successfully!');
       router.push('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Unable to sign in. Please check your credentials.');
+      const details = error.response?.data?.errors?.[0]?.message;
+      toast.error(details || error.response?.data?.message || 'Unable to sign in. Please check your credentials.');
     } finally {
       setLoading(false);
     }

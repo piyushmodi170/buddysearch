@@ -23,10 +23,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
 
-  // The store is persisted to localStorage, so on the very first client render
-  // it is still empty. Wait for hydration before deciding to redirect.
   const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  useEffect(() => {
+    const finish = () => setHydrated(true);
+    const unsub = useAuthStore.persist.onFinishHydration(finish);
+    if (useAuthStore.persist.hasHydrated()) finish();
+    return unsub;
+  }, []);
 
   useEffect(() => {
     if (hydrated && (!isAuthenticated || !user?.isAdmin)) {

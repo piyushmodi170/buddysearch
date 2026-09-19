@@ -99,27 +99,19 @@ export const signup = async (data: any) => {
   });
   
   if (user) {
-    const hashedPassword = data.password ? await bcrypt.hash(data.password, 10) : user.passwordHash;
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        name: data.name || user.name,
-        passwordHash: hashedPassword,
-        role: data.role || user.role,
-      }
-    });
-  } else {
-    const hashedPassword = data.password ? await bcrypt.hash(data.password, 10) : undefined;
-    user = await prisma.user.create({
-      data: {
-        name: data.name,
-        email,
-        phone: phone || undefined,
-        passwordHash: hashedPassword,
-        role: data.role || 'CLIENT',
-      }
-    });
+    throw new Error('An account with this email or phone already exists. Please sign in.');
   }
+
+  const hashedPassword = data.password ? await bcrypt.hash(data.password, 10) : undefined;
+  user = await prisma.user.create({
+    data: {
+      name: data.name,
+      email,
+      phone: phone || undefined,
+      passwordHash: hashedPassword,
+      role: data.role || 'CLIENT',
+    }
+  });
 
   const payload = { id: user.id, phone: user.phone || '', role: user.role, isAdmin: user.isAdmin };
   return {
@@ -131,11 +123,12 @@ export const signup = async (data: any) => {
 
 export const login = async (identifierInput: string, pass: string) => {
   const input = (identifierInput || '').trim();
-  if (!input || !pass) throw new Error('Invalid credentials');
+  const password = (pass || '').trim();
+  if (!input || !password) throw new Error('Invalid credentials');
 
   const isEmail = input.includes('@');
   const phone = sanitizePhone(input);
-  const cleanEmail = isEmail ? input.toLowerCase() : phone + '@buddysearch.in';
+  const cleanEmail = isEmail ? input.toLowerCase() : `${phone}@buddysearch.in`;
 
   const user = await prisma.user.findFirst({
     where: {
@@ -151,7 +144,7 @@ export const login = async (identifierInput: string, pass: string) => {
   // so this endpoint cannot be used to enumerate which accounts exist.
   if (!user || !user.passwordHash) throw new Error('Invalid credentials');
 
-  const valid = await bcrypt.compare(pass, user.passwordHash);
+  const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) throw new Error('Invalid credentials');
 
   const adminUser = await promoteConfiguredAdmin(user);

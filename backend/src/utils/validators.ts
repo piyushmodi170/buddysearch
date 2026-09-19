@@ -4,16 +4,46 @@ const phoneSchema = z.string()
   .transform(val => val.replace(/\D/g, '').slice(-10))
   .refine(val => val.length === 10, 'Phone must contain at least 10 digits');
 
+const optionalEmail = z.preprocess(
+  (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+  z.string().email('Enter a valid email address').optional()
+);
+
 export const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: phoneSchema,
+  phone: z.string().optional(),
+  email: optionalEmail,
   password: z.string().min(6, 'Password must be at least 6 characters'),
   role: z.enum(['CLIENT', 'BUDDY', 'BOTH']).optional().default('CLIENT'),
+}).superRefine((data, ctx) => {
+  const digits = (data.phone || '').replace(/\D/g, '');
+  const hasPhone = digits.length >= 10;
+  const hasEmail = Boolean(data.email);
+  if (!hasPhone && !hasEmail) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Provide an email address or a 10-digit phone number',
+      path: ['identifier'],
+    });
+  }
 });
 
 export const loginSchema = z.object({
-  phone: phoneSchema,
-  password: z.string(),
+  password: z.string().min(1, 'Password is required'),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  identifier: z.string().optional(),
+}).transform((data) => ({
+  password: data.password,
+  identifier: (data.identifier || data.email || data.phone || '').trim(),
+})).superRefine((data, ctx) => {
+  if (!data.identifier) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Email or phone is required',
+      path: ['identifier'],
+    });
+  }
 });
 
 export const otpSendSchema = z.object({

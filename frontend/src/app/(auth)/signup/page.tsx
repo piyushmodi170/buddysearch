@@ -68,7 +68,7 @@ export default function SignupPage() {
       toast.success('Account created successfully!');
       router.push('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Unable to create your account. Please try again.');
+      toast.error(error.response?.data?.errors?.[0]?.message || error.response?.data?.message || 'Unable to create your account. Please try again.');
     } finally {
       setLoading(false);
     }

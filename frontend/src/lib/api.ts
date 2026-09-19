@@ -1,8 +1,14 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
+/** NEXT_PUBLIC_API_URL is often set to http://host:4000/api while callers already prefix /api/... */
+const resolveApiBaseUrl = () => {
+  const raw = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  return raw.replace(/\/api\/?$/, '');
+};
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  baseURL: resolveApiBaseUrl(),
 });
 
 api.interceptors.request.use(
@@ -19,8 +25,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      console.warn('API authentication note:', error.config?.url);
+    const url = String(error.config?.url || '');
+    const isAuthAttempt = /\/auth\/(login|signup|otp)/.test(url);
+    if (error.response?.status === 401 && !isAuthAttempt) {
+      console.warn('API authentication note:', url);
     }
     return Promise.reject(error);
   }

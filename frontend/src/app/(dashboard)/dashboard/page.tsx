@@ -42,7 +42,7 @@ export default function DashboardOverview() {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const res = await api.post('/api/user/avatar', formData, {
+      const res = await api.post('/api/users/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 

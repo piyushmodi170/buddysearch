@@ -57,7 +57,7 @@ export default function PostRequestPage() {
 
     setLoading(true);
     try {
-      await api.post('/api/request', {
+      await api.post('/api/requests', {
         type: tab === 'need' ? 'NEED_BUDDY' : 'AM_BUDDY',
         category: formData.category,
         title: formData.title,
