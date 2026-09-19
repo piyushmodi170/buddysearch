@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { repairBrokenUsers } from './mongo.js';
+import { repairBrokenUsers, repairPaymentIndexes } from './mongo.js';
 
 const cleanDatabaseUrl = (url?: string) => {
   if (!url) return url;
@@ -58,6 +58,7 @@ export const connectDatabase = async () => {
       try {
         const repaired = await repairBrokenUsers();
         if (repaired) console.log(`[database] repaired ${repaired} user document(s)`);
+        await repairPaymentIndexes();
       } catch (repairErr) {
         console.error('[database] user repair failed', (repairErr as any)?.message || repairErr);
       }

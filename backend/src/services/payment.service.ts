@@ -5,6 +5,7 @@ import { activatePlan, findPlan } from './membership.service.js';
 import { publicUser } from './auth.service.js';
 import { getSetting } from '../config/settings.js';
 import { config } from '../config/index.js';
+import { insertPendingPayment } from '../config/mongo.js';
 import { sendTransactional } from './mail.service.js';
 
 const razorpayClient = async () => {
@@ -31,14 +32,11 @@ export const createOrder = async (userId: string, planId: string) => {
   if (!settings.keyId || !settings.keySecret) {
     if (config.nodeEnv === 'development') {
       const mockOrderId = `order_mock_${Date.now()}`;
-      await prisma.payment.create({
-        data: {
-          userId,
-          planId: plan.id,
-          amount: plan.price,
-          razorpayOrderId: mockOrderId,
-          status: 'PENDING'
-        }
+      await insertPendingPayment({
+        userId,
+        planId: plan.id,
+        amount: plan.price,
+        razorpayOrderId: mockOrderId,
       });
       return { id: mockOrderId, amount: plan.price * 100, currency: 'INR', keyId: settings.keyId || '' };
     }
@@ -60,15 +58,20 @@ export const createOrder = async (userId: string, planId: string) => {
     throw new Error(razorpayErrorMessage(err));
   }
 
-  await prisma.payment.create({
-    data: {
+  try {
+    await insertPendingPayment({
       userId,
       planId: plan.id,
       amount: plan.price,
       razorpayOrderId: order.id,
-      status: 'PENDING'
+    });
+  } catch (err: any) {
+    const text = String(err?.message || '');
+    if (/E11000|duplicate|unique constraint/i.test(text)) {
+      throw new Error('Could not save the payment. Refresh the page and try Get Premium again.');
     }
-  });
+    throw err;
+  }
 
   return { ...order, keyId: settings.keyId };
 };
