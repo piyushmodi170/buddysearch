@@ -2,6 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BrandLogo } from '@/components/BrandLogo';
 import { 
   Users, Search, MessageSquare, Bell, List, 
   FileText, User, Star, HelpCircle, LogOut, ShieldCheck
@@ -55,12 +56,7 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 w-60 bg-white border-r border-gray-200 hidden lg:flex flex-col">
       <div className="flex items-center px-6 h-16 border-b border-gray-100">
-        <Link href="/hire" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#F04438] rounded-full flex items-center justify-center text-white">
-            <Users size={18} />
-          </div>
-          <span className="font-bold text-xl tracking-tight text-gray-900">BuddySearch</span>
-        </Link>
+        <BrandLogo />
       </div>
 
       <div className="flex-1 overflow-y-auto py-4 scrollbar-custom">

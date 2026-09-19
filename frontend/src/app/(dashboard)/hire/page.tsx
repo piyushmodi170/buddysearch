@@ -49,6 +49,8 @@ function mapHirePost(req: any): HirePost {
     userId: req.userId || req.user?.id,
     name: req.user?.name || 'Member',
     avatar: req.user?.avatar || '',
+    isStar: req.user?.membershipPlan === 'STAR' || req.user?.membershipPlan === 'PREMIUM',
+    isVerified: Boolean(req.user?.verified),
     location: req.location || 'India',
     date: created.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
     type: req.type === 'AM_BUDDY' ? "I'm a buddy" : 'I need a buddy',
@@ -90,7 +92,7 @@ export default function HirePage() {
     (async () => {
       setLoadingPosts(true);
       try {
-        const res = await api.get('/api/requests/marketplace', { params: { limit: 24 } });
+        const res = await api.get('/api/requests/marketplace', { params: { limit: 40 } });
         const rows = res.data?.data?.data || [];
         if (!cancelled) setPosts(rows.map(mapHirePost));
       } catch {
@@ -425,8 +427,8 @@ export default function HirePage() {
           <div className="w-80 bg-white border border-gray-200 shadow-2xl rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-5">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center shadow-md font-extrabold text-lg shrink-0">
-                  🔍
+                <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-gray-200 shrink-0">
+                  <img src="/logo.png" alt="BuddySearch" className="w-full h-full object-contain p-1" />
                 </div>
                 <div>
                   <h5 className="font-bold text-gray-900 text-xs">Add BuddySearch to your Home Screen</h5>

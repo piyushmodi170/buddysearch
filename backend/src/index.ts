@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 
 import { config } from './config/index.js';
 import { prisma, connectDatabase, databaseUrlInfo, lookupOutboundIp } from './config/db.js';
+import { ensureDemoListings } from './config/demo-listings.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { initializeSocket } from './socket/index.js';
 
@@ -134,7 +135,12 @@ process.on('SIGTERM', shutdown('SIGTERM'));
 process.on('SIGINT', shutdown('SIGINT'));
 
 void connectDatabase()
-  .then(() => console.log('Database connected'))
+  .then(() => {
+    console.log('Database connected');
+    void ensureDemoListings().catch((err: any) => {
+      console.error('[demo-listings]', err?.message || err);
+    });
+  })
   .catch((err: any) => console.error('[database]', err?.message || err))
   .finally(() => {
     httpServer.listen(config.port, '0.0.0.0', () => {

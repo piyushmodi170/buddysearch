@@ -61,8 +61,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <aside className="w-64 bg-gray-900 text-white flex-col hidden md:flex fixed h-full">
-        <div className="h-16 flex items-center px-6 bg-gray-950 font-bold text-xl shrink-0">
-          Admin Panel
+        <div className="h-16 flex items-center gap-2 px-6 bg-gray-950 shrink-0">
+          <img src="/buddy_search_white_grey.png" alt="BuddySearch" className="h-8 w-auto" />
         </div>
         <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
           {NAV.map(item => {
