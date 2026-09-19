@@ -1,28 +1,30 @@
 # syntax=docker/dockerfile:1
-# Coolify: Build pack = Dockerfile, Port = 3000, Base directory empty, Branch = master.
+# Coolify: Build pack = Dockerfile, Port = 3000, Base directory empty.
+# JWT/DATABASE_URL must be Runtime only (uncheck "Available at Buildtime").
 
 FROM node:20-alpine AS backend-builder
 RUN apk add --no-cache libc6-compat openssl
-WORKDIR /app
-COPY backend/package.json backend/package-lock.json ./backend/
 WORKDIR /app/backend
-RUN npm ci
+ENV NPM_CONFIG_PRODUCTION=false
+COPY backend/package.json backend/package-lock.json ./
+RUN npm ci --include=dev
 COPY database /app/database
 COPY backend /app/backend
 ENV DATABASE_URL="mongodb://127.0.0.1:27017/buddysearch"
 RUN npx prisma generate --schema=/app/database/prisma/schema.prisma
-RUN npm run build
+RUN npx tsc
 
 FROM node:20-alpine AS frontend-builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
+ENV NPM_CONFIG_PRODUCTION=false
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN npm ci --include=dev
 COPY frontend ./
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV BACKEND_INTERNAL_URL=http://127.0.0.1:4000
-RUN npm run build
+RUN npx next build
 
 FROM node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat openssl
