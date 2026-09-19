@@ -11,34 +11,27 @@ export type RazorpaySettings = {
   liveKeySecret: string;
 };
 
-const asMode = (value: unknown): RazorpayMode => (value === 'live' ? 'live' : 'test');
-
+/** Checkout and verify always use live (rzp_live_) keys. Test-mode keys are ignored. */
 export const resolveRazorpaySettings = (raw: Partial<RazorpaySettings> & Record<string, unknown> = {}): RazorpaySettings => {
   const legacyId = String(raw.keyId || '');
   const legacySecret = String(raw.keySecret || '');
   const testKeyId = String(raw.testKeyId || (legacyId.startsWith('rzp_test_') ? legacyId : ''));
   const testKeySecret = String(raw.testKeySecret || (legacyId.startsWith('rzp_test_') ? legacySecret : ''));
-  const liveKeyId = String(raw.liveKeyId || (legacyId.startsWith('rzp_live_') ? legacyId : ''));
-  const liveKeySecret = String(raw.liveKeySecret || (legacyId.startsWith('rzp_live_') ? legacySecret : ''));
-
-  let mode = asMode(raw.mode);
-  if (!raw.mode) {
-    if (liveKeyId && !testKeyId) mode = 'live';
-    else if (legacyId.startsWith('rzp_live_')) mode = 'live';
-    else mode = 'test';
-  }
-
-  const keyId = mode === 'live' ? liveKeyId : testKeyId;
-  const keySecret = mode === 'live' ? liveKeySecret : testKeySecret;
+  const liveKeyId = String(
+    raw.liveKeyId || (legacyId.startsWith('rzp_live_') ? legacyId : !legacyId.startsWith('rzp_test_') ? legacyId : '')
+  );
+  const liveKeySecret = String(
+    raw.liveKeySecret || (legacyId.startsWith('rzp_test_') ? '' : legacySecret)
+  );
 
   return {
-    mode,
+    mode: 'live',
     testKeyId,
     testKeySecret,
     liveKeyId,
     liveKeySecret,
-    keyId,
-    keySecret,
+    keyId: liveKeyId,
+    keySecret: liveKeySecret,
     webhookSecret: String(raw.webhookSecret || ''),
   };
 };
