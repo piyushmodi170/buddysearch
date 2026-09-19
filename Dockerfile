@@ -46,6 +46,7 @@ COPY --from=frontend-builder /app/.next/standalone ./web
 COPY --from=frontend-builder /app/public ./web/public
 COPY --from=frontend-builder /app/.next/static ./web/.next/static
 COPY docker/start.sh /app/start.sh
+COPY docker/gateway.js /app/gateway.js
 RUN chmod +x /app/start.sh
 
 EXPOSE 3000

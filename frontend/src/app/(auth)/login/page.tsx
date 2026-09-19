@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Users, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -42,7 +42,7 @@ export default function LoginPage() {
       const res = await api.post('/api/auth/login', {
         email: formData.email.trim().toLowerCase(),
         password: formData.password
-      }, { timeout: 8000 });
+      }, { timeout: 12000 });
       const data = res.data.data || res.data;
       if (data && data.user && data.token) {
         login(data.user, data.token);
@@ -65,10 +65,7 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
         <div className="w-full max-w-md">
           <Link href="/" className="flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white">
-              <Users size={18} />
-            </div>
-            <span className="font-bold text-xl tracking-tight text-gray-900">BuddySearch</span>
+            <img src="/logo.png" alt="BuddySearch" className="h-9 w-auto" />
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
@@ -147,13 +144,9 @@ export default function LoginPage() {
           </p>
           <div className="flex items-center gap-4 text-sm font-medium">
             <div className="flex -space-x-2">
-              {['#fecaca', '#fed7aa', '#bbf7d0', '#bfdbfe'].map((bg, i) => (
-                <div
-                  key={bg}
-                  className="w-10 h-10 rounded-full border-2 border-primary flex items-center justify-center text-xs font-bold text-primary-dark"
-                  style={{ background: bg }}
-                >
-                  {['A', 'R', 'K', 'S'][i]}
+              {['/logo.png', '/buddy_search_red_white.png', '/favicon.png', '/buddy_search_white_grey.png'].map((src) => (
+                <div key={src} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-white">
+                  <img src={src} alt="" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
