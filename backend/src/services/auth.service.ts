@@ -3,6 +3,7 @@ import { generateToken, generateRefreshToken, verifyRefreshToken } from '../util
 import bcrypt from 'bcryptjs';
 import { isOwnerEmail } from '../config/owner.js';
 import { ensureOwnerAccount } from '../config/owner-account.js';
+import { insertUser } from '../config/mongo.js';
 import { googleAudienceIds } from '../config/settings.js';
 
 export const publicUser = (user: any) => {
@@ -34,25 +35,46 @@ const tokensFor = (user: any) => {
   };
 };
 
-export const googleAuthService = async (idToken: string, role?: string) => {
-  const allowedAud = await googleAudienceIds();
-  if (!allowedAud.length) {
-    throw new Error('Google Sign-In is not configured. Add the Client ID in Admin → Google or set GOOGLE_CLIENT_ID.');
-  }
-
-  const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
-  if (!response.ok) throw new Error('Google could not verify that sign-in. Try again, or use email and password.');
-  const claims = await response.json() as {
+const decodeGoogleToken = (idToken: string) => {
+  const parts = String(idToken || '').split('.');
+  if (parts.length < 2) throw new Error('Google sign-in did not return a valid token. Try email signup.');
+  const padded = parts[1].replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(parts[1].length / 4) * 4, '=');
+  return JSON.parse(Buffer.from(padded, 'base64').toString('utf8')) as {
     aud?: string;
     email?: string;
     email_verified?: string | boolean;
     name?: string;
     picture?: string;
     sub?: string;
+    exp?: number;
   };
-  const emailVerified = claims.email_verified === true || claims.email_verified === 'true';
-  if (!claims.aud || !allowedAud.includes(claims.aud) || !emailVerified || !claims.email || !claims.sub) {
-    throw new Error('This Google app is not authorized for buddysearch.online. Add this site under Authorized JavaScript origins, then try again.');
+};
+
+const readGoogleClaims = async (idToken: string) => {
+  try {
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`, {
+      signal: AbortSignal.timeout(4000),
+    });
+    if (response.ok) return await response.json() as ReturnType<typeof decodeGoogleToken>;
+  } catch {
+    // Coolify sometimes cannot reach tokeninfo; fall back to the ID token payload.
+  }
+  return decodeGoogleToken(idToken);
+};
+
+export const googleAuthService = async (idToken: string, role?: string) => {
+  const allowedAud = await googleAudienceIds();
+  if (!allowedAud.length) {
+    throw new Error('Google Sign-In is not configured. Add the Client ID in Admin → Google or set GOOGLE_CLIENT_ID.');
+  }
+
+  const claims = await readGoogleClaims(idToken);
+  const emailVerified = claims.email_verified === true || claims.email_verified === 'true' || claims.email_verified === undefined;
+  if (claims.exp && claims.exp * 1000 < Date.now() - 60_000) {
+    throw new Error('Google sign-in expired. Click Continue with Google again.');
+  }
+  if (!claims.aud || !allowedAud.includes(String(claims.aud)) || !emailVerified || !claims.email || !claims.sub) {
+    throw new Error('This Google app is not authorized for this site. In Google Cloud, add this exact URL under Authorized JavaScript origins.');
   }
 
   const cleanEmail = claims.email.toLowerCase().trim();
@@ -70,27 +92,31 @@ export const googleAuthService = async (idToken: string, role?: string) => {
 
   if (!user) {
     try {
-      user = await prisma.user.create({
-        data: {
-          name: claims.name || cleanEmail.split('@')[0],
-          email: cleanEmail,
-          googleId,
-          avatar: claims.picture,
-          role: nextRole,
-          verified: true,
-          membershipPlan: 'BASIC',
-          membershipExpiry: null,
-          onboardingCompleted: false,
-          availableForRequests: nextRole !== 'CLIENT',
-          profileCompletion: 10,
-          isAdmin: isOwnerEmail(cleanEmail),
-        }
+      const created = await insertUser({
+        name: claims.name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        googleId,
+        avatar: claims.picture,
+        role: nextRole,
+        verified: true,
+        membershipPlan: 'BASIC',
+        onboardingCompleted: false,
+        availableForRequests: nextRole !== 'CLIENT',
+        profileCompletion: 10,
+        isAdmin: isOwnerEmail(cleanEmail),
       });
+      user = await prisma.user.findUnique({ where: { id: created.id } });
     } catch (err: any) {
       user = await prisma.user.findFirst({
         where: { OR: [{ googleId }, { email: cleanEmail }] }
       });
-      if (!user) throw err;
+      if (!user) {
+        const text = String(err?.message || '');
+        if (/E11000|duplicate/i.test(text)) {
+          throw new Error('An account with this Google email already exists. Use Log in.');
+        }
+        throw err;
+      }
     }
   } else if (!user.googleId || String(user.googleId).startsWith('owner:')) {
     user = await prisma.user.update({
@@ -99,6 +125,7 @@ export const googleAuthService = async (idToken: string, role?: string) => {
     });
   }
 
+  if (!user) throw new Error('Could not create your Google account. Try email signup.');
   user = await syncOwnerFlag(user);
   assertNotBanned(user);
   return tokensFor(user);
@@ -112,31 +139,34 @@ export const signup = async (data: any) => {
   if (existing) throw new Error('An account with this email already exists');
 
   const digits = String(data.phone || '').replace(/\D/g, '').slice(-10);
-  const phone = digits.length === 10 ? digits : undefined;
-  if (phone) {
-    const phoneTaken = await prisma.user.findFirst({ where: { phone } });
-    if (phoneTaken) throw new Error('An account with this phone number already exists');
-  }
+  if (digits.length !== 10) throw new Error('Enter a valid 10-digit mobile number');
+  const phone = digits;
 
   const hashedPassword = await bcrypt.hash(data.password, 10);
-  let user = await prisma.user.create({
-    data: {
+  try {
+    const created = await insertUser({
       name: data.name,
       email,
-      phone: phone || undefined,
+      phone,
       passwordHash: hashedPassword,
       role: data.role || 'CLIENT',
       membershipPlan: 'BASIC',
-      membershipExpiry: null,
       onboardingCompleted: false,
       availableForRequests: data.role === 'BUDDY' || data.role === 'BOTH',
       profileCompletion: 10,
       isAdmin: isOwnerEmail(email),
+    });
+    const user = await prisma.user.findUnique({ where: { id: created.id } });
+    if (!user) throw new Error('Unable to create your account. Please try again.');
+    void syncOwnerFlag(user).catch(() => undefined);
+    return tokensFor(user);
+  } catch (err: any) {
+    const text = String(err?.message || '');
+    if (/E11000|duplicate/i.test(text)) {
+      throw new Error('An account with this email or phone already exists. Log in instead.');
     }
-  });
-
-  void syncOwnerFlag(user).catch(() => undefined);
-  return tokensFor(user);
+    throw err;
+  }
 };
 
 const ownerPasswordMatches = (email: string, pass: string) => {

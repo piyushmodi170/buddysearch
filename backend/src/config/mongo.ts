@@ -78,5 +78,48 @@ export const repairBrokenUsers = async () => {
     await col.updateOne({ _id: doc._id }, { $set: set });
   }
 
+  await col.updateMany({ $or: [{ phone: null }, { phone: '' }] }, { $unset: { phone: '' } });
+  await col.updateMany({ $or: [{ googleId: null }, { googleId: '' }] }, { $unset: { googleId: '' } });
+
+  const indexes = await col.indexes();
+  for (const idx of indexes) {
+    const keys = Object.keys(idx.key || {});
+    const field = keys[0];
+    if (keys.length === 1 && (field === 'phone' || field === 'googleId') && idx.unique && !idx.sparse) {
+      try { await col.dropIndex(idx.name as string); } catch { /* already sparse or missing */ }
+    }
+  }
+  try { await col.createIndex({ phone: 1 }, { unique: true, sparse: true, name: 'phone_sparse_unique' }); } catch { /* exists */ }
+  try { await col.createIndex({ googleId: 1 }, { unique: true, sparse: true, name: 'googleId_sparse_unique' }); } catch { /* exists */ }
+
   return broken.length;
+};
+
+export const insertUser = async (doc: Record<string, unknown>) => {
+  const col = await usersCollection();
+  const now = new Date();
+  const _id = new ObjectId();
+  const payload: Document = {
+    _id,
+    name: String(doc.name || '').trim(),
+    email: String(doc.email || '').toLowerCase().trim(),
+    role: ROLES.has(String(doc.role)) ? doc.role : 'CLIENT',
+    membershipPlan: PLANS.has(String(doc.membershipPlan)) ? doc.membershipPlan : 'BASIC',
+    membershipExpiry: doc.membershipExpiry || null,
+    onboardingCompleted: Boolean(doc.onboardingCompleted),
+    availableForRequests: Boolean(doc.availableForRequests),
+    profileCompletion: Number(doc.profileCompletion || 10),
+    isAdmin: Boolean(doc.isAdmin),
+    verified: Boolean(doc.verified),
+    banned: false,
+    isOnline: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+  if (doc.phone) payload.phone = String(doc.phone);
+  if (doc.googleId) payload.googleId = String(doc.googleId);
+  if (doc.passwordHash) payload.passwordHash = String(doc.passwordHash);
+  if (doc.avatar) payload.avatar = String(doc.avatar);
+  await col.insertOne(payload);
+  return { ...payload, id: _id.toHexString() };
 };
