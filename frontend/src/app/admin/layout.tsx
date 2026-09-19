@@ -19,7 +19,7 @@ const NAV = [
   { href: '/admin/plans', label: 'Plans', icon: Tag },
   { href: '/admin/reviews', label: 'Reviews', icon: Star },
   { href: '/admin/razorpay', label: 'Razorpay', icon: CreditCard },
-  { href: '/admin/smtp', label: 'SMTP', icon: Mail },
+  { href: '/admin/email', label: 'Email', icon: Mail },
   { href: '/admin/google', label: 'Google login', icon: KeyRound },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
@@ -66,7 +66,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
           {NAV.map(item => {
-            const isActive = pathname === item.href;
+            const isActive = item.href === '/admin'
+              ? pathname === '/admin'
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
             return (
               <Link key={item.href} href={item.href} className={cn(

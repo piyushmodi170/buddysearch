@@ -82,8 +82,8 @@ export default function SignupPage() {
       const data = res.data.data || res.data;
       if (!data?.user || !data?.token) throw new Error('Unable to create your account');
       login(data.user, data.token);
-      toast.success('Account created. Complete your profile to continue.');
-      router.replace('/onboarding');
+      toast.success(data.user?.emailVerified ? 'Account created.' : 'Account created. Check your email for a verification code.');
+      router.replace(data.user?.emailVerified ? '/onboarding' : `/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || 'Unable to create your account. Please try again.');
     } finally {

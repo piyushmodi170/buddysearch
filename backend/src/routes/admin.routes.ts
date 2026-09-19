@@ -5,6 +5,7 @@ import { publicSafeError } from '../config/db-errors.js';
 import { repairBrokenUsers } from '../config/mongo.js';
 import { getSetting, setSetting, maskSettings, settingStatus } from '../config/settings.js';
 import { sendTestEmail } from '../services/mail.service.js';
+import adminEmailRoutes from './admin-email.routes.js';
 import * as paymentService from '../services/payment.service.js';
 import { isOwnerEmail } from '../config/owner.js';
 
@@ -494,5 +495,7 @@ router.post('/plans', adminAuth, async (req, res) => {
     res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
 });
+
+router.use(adminEmailRoutes);
 
 export default router;

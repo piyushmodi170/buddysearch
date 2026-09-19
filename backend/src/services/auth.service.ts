@@ -5,11 +5,16 @@ import { isOwnerEmail } from '../config/owner.js';
 import { ensureOwnerAccount } from '../config/owner-account.js';
 import { insertUser } from '../config/mongo.js';
 import { googleAudienceIds } from '../config/settings.js';
+import { mailboxVerified, sendSignupEmails, sendWelcomeEmail } from './auth-email.service.js';
 
 export const publicUser = (user: any) => {
   if (!user) return user;
   const { passwordHash, ...safe } = user;
-  return { ...safe, isAdmin: isOwnerEmail(user.email) };
+  return {
+    ...safe,
+    isAdmin: isOwnerEmail(user.email),
+    emailVerified: mailboxVerified(user),
+  };
 };
 
 const syncOwnerFlag = async (user: any) => {
@@ -99,6 +104,7 @@ export const googleAuthService = async (idToken: string, role?: string) => {
         avatar: claims.picture,
         role: nextRole,
         verified: true,
+        emailVerified: true,
         membershipPlan: 'BASIC',
         onboardingCompleted: false,
         availableForRequests: nextRole !== 'CLIENT',
@@ -106,6 +112,7 @@ export const googleAuthService = async (idToken: string, role?: string) => {
         isAdmin: isOwnerEmail(cleanEmail),
       });
       user = await prisma.user.findUnique({ where: { id: created.id } });
+      void sendWelcomeEmail({ name: claims.name || cleanEmail.split('@')[0], email: cleanEmail }).catch(() => undefined);
     } catch (err: any) {
       user = await prisma.user.findFirst({
         where: { OR: [{ googleId }, { email: cleanEmail }] }
@@ -121,7 +128,12 @@ export const googleAuthService = async (idToken: string, role?: string) => {
   } else if (!user.googleId || String(user.googleId).startsWith('owner:')) {
     user = await prisma.user.update({
       where: { id: user.id },
-      data: { googleId, avatar: claims.picture || user.avatar }
+      data: { googleId, avatar: claims.picture || user.avatar, emailVerified: true }
+    });
+  } else if (!user.emailVerified) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerified: true },
     });
   }
 
@@ -155,10 +167,16 @@ export const signup = async (data: any) => {
       availableForRequests: data.role === 'BUDDY' || data.role === 'BOTH',
       profileCompletion: 10,
       isAdmin: isOwnerEmail(email),
+      emailVerified: isOwnerEmail(email),
     });
     const user = await prisma.user.findUnique({ where: { id: created.id } });
     if (!user) throw new Error('Unable to create your account. Please try again.');
     void syncOwnerFlag(user).catch(() => undefined);
+    if (!isOwnerEmail(email)) {
+      void sendSignupEmails({ name: user.name, email: user.email }).catch((err) => {
+        console.error('[mail] signup', err?.message || err);
+      });
+    }
     return tokensFor(user);
   } catch (err: any) {
     const text = String(err?.message || '');
@@ -216,6 +234,7 @@ export const login = async (identifierInput: string, pass: string) => {
       gender: true,
       isAdmin: true,
       verified: true,
+      emailVerified: true,
       aadhaarUrl: true,
       availableForRequests: true,
       profileCompletion: true,

@@ -52,6 +52,21 @@ enum NotificationType {
   SYSTEM
 }
 
+enum EmailKind {
+  SYSTEM
+  MARKETING
+}
+
+enum EmailPurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+enum EmailSendStatus {
+  SENT
+  FAILED
+}
+
 model User {
   id                   String           @id @default(auto()) @map("_id") @db.ObjectId
   name                 String
@@ -73,6 +88,7 @@ model User {
   lat                  Float?
   lng                  Float?
   verified             Boolean          @default(false)
+  emailVerified        Boolean          @default(false)
   aadhaarUrl           String?
   membershipPlan       MembershipTier   @default(BASIC)
   membershipExpiry     DateTime?
@@ -266,4 +282,41 @@ model AppSetting {
   value     Json
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+}
+
+model EmailTemplate {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String    @unique
+  name        String
+  description String
+  kind        EmailKind
+  subject     String
+  body        String
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model EmailOtp {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  code      String
+  purpose   EmailPurpose
+  expiresAt DateTime
+  used      Boolean      @default(false)
+  createdAt DateTime     @default(now())
+
+  @@index([email, purpose])
+}
+
+model EmailLog {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  to        String
+  subject   String
+  slug      String?
+  status    EmailSendStatus
+  error     String?
+  createdAt DateTime        @default(now())
+
+  @@index([createdAt])
 }

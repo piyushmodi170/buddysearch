@@ -110,7 +110,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 : 'max-w-7xl mx-auto p-4 sm:p-6 lg:p-8'
           )}
         >
-          <MembersOnlyGate>{children}</MembersOnlyGate>
+          <MembersOnlyGate>
+            {user && user.emailVerified === false && !user.isAdmin && (
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <span>Verify your email to keep your account recoverable.</span>
+                <a href={`/verify-email?email=${encodeURIComponent(user.email || '')}`} className="font-semibold text-amber-950 underline">Enter code</a>
+              </div>
+            )}
+            {children}
+          </MembersOnlyGate>
         </div>
       </main>
 

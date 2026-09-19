@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
 import { prisma, connectDatabase, databaseUrlInfo, lookupOutboundIp } from './config/db.js';
 import { ensureDemoListings } from './config/demo-listings.js';
+import { ensureDefaultTemplates } from './services/mail.service.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { initializeSocket } from './socket/index.js';
 
@@ -139,6 +140,9 @@ void connectDatabase()
     console.log('Database connected');
     void ensureDemoListings().catch((err: any) => {
       console.error('[demo-listings]', err?.message || err);
+    });
+    void ensureDefaultTemplates().catch((err: any) => {
+      console.error('[email-templates]', err?.message || err);
     });
   })
   .catch((err: any) => console.error('[database]', err?.message || err))
