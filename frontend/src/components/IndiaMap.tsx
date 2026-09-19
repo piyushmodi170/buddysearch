@@ -128,12 +128,20 @@ export default function IndiaMap() {
               <div className="ab-india__svg-wrap">
                 <ComposableMap
                   projection="geoMercator"
-                  projectionConfig={{ scale: 950, center: [82.8, 22.5] }}
+                  projectionConfig={{ scale: 800, center: [82.8, 22.0] }}
                   width={560}
                   height={540}
-                  style={{ width: '100%', height: 'auto' }}
+                  preserveAspectRatio="xMidYMid meet"
+                  style={{ width: '100%', height: '100%', display: 'block' }}
                 >
-                  <Geographies geography={indiaTopo}>
+                  <Geographies
+                    geography={{
+                      type: 'Topology',
+                      objects: { india: indiaTopo.objects.india },
+                      arcs: indiaTopo.arcs,
+                      transform: indiaTopo.transform,
+                    }}
+                  >
                     {({ geographies }) =>
                       geographies.map((geo) => {
                         const key = normalize(geo.properties?.name);
@@ -143,6 +151,8 @@ export default function IndiaMap() {
                           <Geography
                             key={geo.rsmKey}
                             geography={geo}
+                            tabIndex={-1}
+                            focusable={false}
                             fill={selected ? '#F96566' : '#F9EFEF'}
                             stroke={selected ? '#F96566' : '#EE9CA0'}
                             strokeWidth={selected ? 1 : 0.5}
