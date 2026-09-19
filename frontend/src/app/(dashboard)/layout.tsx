@@ -12,7 +12,7 @@ import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const setNotifications = useNotificationStore((state) => state.setNotifications);
   const router = useRouter();
   const pathname = usePathname();
@@ -30,7 +30,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, router]);
+    const auth = useAuthStore.getState();
+    if (auth.isAuthenticated && auth.user?.onboardingCompleted === false && !auth.user?.isAdmin) {
+      router.replace('/onboarding');
+    }
+  }, [isAuthenticated, user, router]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -63,6 +67,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
         <p className="text-sm font-medium text-gray-600 mb-2">Redirecting to login...</p>
         <a href="/login" className="text-xs text-primary underline">Click here if not redirected automatically</a>
+      </div>
+    );
+  }
+
+  if (user?.onboardingCompleted === false && !user?.isAdmin) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
+        <p className="text-sm font-medium text-gray-600 mb-2">Finish your profile to continue...</p>
+        <a href="/onboarding" className="text-xs text-primary underline">Open onboarding</a>
       </div>
     );
   }

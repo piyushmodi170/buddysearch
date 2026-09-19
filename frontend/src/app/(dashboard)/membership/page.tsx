@@ -165,7 +165,7 @@ export default function MembershipPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {plans.map((plan) => {
           const Icon = PLAN_ICONS[plan.name] || Shield;
-          const isCurrent = plan.name === currentPlan;
+          const isCurrent = plan.name === currentPlan && (plan.name !== 'BASIC' || Boolean(user?.membershipExpiry));
           const colorClass = PLAN_COLORS[plan.name] || 'bg-gray-50 text-gray-500';
 
           return (

@@ -65,7 +65,7 @@ export default function ProfilePage() {
 
   // Buddy Profile
   const [bio, setBio] = useState(user?.bio || '');
-  const [isAvailable, setIsAvailable] = useState(user?.availableForRequests ?? true);
+  const [isAvailable, setIsAvailable] = useState(user?.availableForRequests ?? false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   // File Upload State
@@ -225,10 +225,10 @@ export default function ProfilePage() {
     if (selectedInterests.includes(interestName)) {
       setSelectedInterests(selectedInterests.filter(i => i !== interestName));
     } else {
-      if (selectedInterests.length < 5) {
+      if (selectedInterests.length < 4) {
         setSelectedInterests([...selectedInterests, interestName]);
       } else {
-        toast.error('You can select up to 5 interests');
+        toast.error('You can select up to 4 services');
       }
     }
   };

@@ -19,7 +19,9 @@ export interface User {
   twitter?: string;
   membership?: string;
   membershipPlan?: string;
-  membershipExpiry?: string | Date;
+  membershipExpiry?: string | Date | null;
+  onboardingCompleted?: boolean;
+  gender?: string;
   isAdmin?: boolean;
   verified?: boolean;
   aadhaarUrl?: string;
