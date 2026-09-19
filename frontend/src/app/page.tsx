@@ -1,8 +1,13 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import IndiaMap from '@/components/IndiaMap';
+import dynamic from 'next/dynamic';
 import './landing.css';
+
+const IndiaMap = dynamic(() => import('@/components/IndiaMap'), {
+  ssr: false,
+  loading: () => <section className="active-buddies" aria-hidden="true" style={{ minHeight: 520 }} />,
+});
 import {
   Search, MapPin, ArrowRight, ShieldCheck, DollarSign, Star,
   MessageSquare, Users, CheckCircle2, Sparkles, Briefcase, Heart,
@@ -146,7 +151,9 @@ function TestimonialCard({ t }: { t: (typeof TESTIMONIALS)[number] }) {
   return (
     <article className="tm-card">
       <div className="tm-card__avatar-wrap">
-        <img className="tm-card__avatar" src={`https://i.pravatar.cc/150?img=${t.img}`} alt={t.name} />
+        <div className="tm-card__avatar" aria-hidden="true">
+          {t.name.split(' ').map((p) => p[0]).join('').slice(0, 2)}
+        </div>
       </div>
       <div className="tm-card__body">
         <div className="tm-card__author-info">
@@ -476,14 +483,14 @@ export default function LandingPage() {
         </div>
         <div className="tm-marquee">
           <div className="tm-marquee__track tm-marquee__track--fwd">
-            {[...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
+            {[...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
               <TestimonialCard key={`fwd-${i}`} t={t} />
             ))}
           </div>
         </div>
         <div className="tm-marquee tm-marquee--rev">
           <div className="tm-marquee__track tm-marquee__track--rev">
-            {[...TESTIMONIALS.slice().reverse(), ...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
+            {[...TESTIMONIALS].reverse().concat(TESTIMONIALS).map((t, i) => (
               <TestimonialCard key={`rev-${i}`} t={t} />
             ))}
           </div>

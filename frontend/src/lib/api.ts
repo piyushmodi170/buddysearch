@@ -1,18 +1,17 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
-
-/** NEXT_PUBLIC_API_URL is often set to http://host:4000/api while callers already prefix /api/... */
-const resolveApiBaseUrl = () => {
-  const raw = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-  return raw.replace(/\/api\/?$/, '');
-};
+import { getApiBaseUrl } from './publicUrl';
 
 const api = axios.create({
-  baseURL: resolveApiBaseUrl(),
+  baseURL: getApiBaseUrl(),
+  timeout: 20000,
 });
 
 api.interceptors.request.use(
   (config) => {
+    if (!config.baseURL) {
+      config.baseURL = getApiBaseUrl();
+    }
     const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
