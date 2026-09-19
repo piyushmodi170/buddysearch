@@ -3,8 +3,11 @@ import { z } from 'zod';
 export const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Enter a valid email address').transform((val) => val.toLowerCase().trim()),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  phone: z.string().max(15).optional(),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Za-z]/, 'Password must include a letter')
+    .regex(/\d/, 'Password must include a number'),
+  phone: z.string().regex(/^\d{10}$/, 'Enter a valid 10-digit mobile number'),
   role: z.enum(['CLIENT', 'BUDDY', 'BOTH']).optional().default('CLIENT'),
 });
 
