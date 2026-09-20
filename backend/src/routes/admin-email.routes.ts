@@ -82,6 +82,24 @@ router.post('/email/remind-incomplete', adminAuth, async (_req, res) => {
   }
 });
 
+router.get('/email/unpaid-count', adminAuth, async (_req, res) => {
+  try {
+    const count = await mail.unpaidMembershipCount();
+    res.json({ success: true, data: { count } });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Could not count users') });
+  }
+});
+
+router.post('/email/remind-unpaid', adminAuth, async (_req, res) => {
+  try {
+    const data = await mail.sendUnpaidReminders();
+    res.json({ success: true, data, message: `Sent ${data.sent} reminder${data.sent === 1 ? '' : 's'}` });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Could not send reminders') });
+  }
+});
+
 router.get('/email/audience-count', adminAuth, async (req, res) => {
   try {
     const audience = String(req.query.audience || 'active') as mail.CampaignAudience;

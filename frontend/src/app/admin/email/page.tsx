@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  Mail, Save, Send, Plus, Pencil, Trash2, Megaphone, AlertTriangle, Check, X
+  Mail, Save, Send, Plus, Pencil, Trash2, Megaphone, AlertTriangle, Check, X, Sparkles
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
@@ -40,7 +40,9 @@ export default function AdminEmailPage() {
   const [testTo, setTestTo] = useState(adminEmail);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [incomplete, setIncomplete] = useState(0);
+  const [unpaid, setUnpaid] = useState(0);
   const [reminding, setReminding] = useState(false);
+  const [remindingUnpaid, setRemindingUnpaid] = useState(false);
   const [editing, setEditing] = useState<Template | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -48,10 +50,11 @@ export default function AdminEmailPage() {
 
   const load = async () => {
     try {
-      const [smtpRes, tplRes, countRes] = await Promise.all([
+      const [smtpRes, tplRes, countRes, unpaidRes] = await Promise.all([
         api.get('/api/admin/settings/smtp'),
         api.get('/api/admin/email/templates'),
         api.get('/api/admin/email/incomplete-count'),
+        api.get('/api/admin/email/unpaid-count'),
       ]);
       const s = smtpRes.data.data || {};
       setSmtp({
@@ -65,6 +68,7 @@ export default function AdminEmailPage() {
       });
       setTemplates(tplRes.data.data || []);
       setIncomplete(countRes.data.data?.count || 0);
+      setUnpaid(unpaidRes.data.data?.count || 0);
       if (!testTo && adminEmail) setTestTo(adminEmail);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Could not load email settings');
@@ -139,6 +143,18 @@ export default function AdminEmailPage() {
       toast.error(err.response?.data?.message || 'Could not send reminders');
     } finally {
       setReminding(false);
+    }
+  };
+
+  const remindUnpaid = async () => {
+    setRemindingUnpaid(true);
+    try {
+      const res = await api.post('/api/admin/email/remind-unpaid', {}, { timeout: 120000 });
+      toast.success(res.data.message || 'Reminders sent');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not send reminders');
+    } finally {
+      setRemindingUnpaid(false);
     }
   };
 
@@ -247,6 +263,28 @@ export default function AdminEmailPage() {
             </div>
           </div>
           <Button variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-50" isLoading={reminding} onClick={remind}>
+            Send Reminder
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-rose-50 text-[#F96566] flex items-center justify-center shrink-0">
+              <Sparkles size={18} />
+            </div>
+            <div>
+              <h2 className="font-bold text-gray-900">No Subscription Reminder</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Send a branded membership email to people who created an account but have not purchased a plan.
+              </p>
+              <p className="text-sm text-gray-700 mt-2">
+                Currently <strong>{unpaid}</strong> user{unpaid === 1 ? '' : 's'} with no purchased membership
+              </p>
+            </div>
+          </div>
+          <Button variant="outline" className="border-[#F96566] text-[#F96566] hover:bg-rose-50" isLoading={remindingUnpaid} onClick={remindUnpaid}>
             Send Reminder
           </Button>
         </div>

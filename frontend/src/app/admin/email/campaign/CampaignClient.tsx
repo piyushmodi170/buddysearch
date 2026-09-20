@@ -22,7 +22,7 @@ const AUDIENCES = [
   { value: 'active', label: 'Active users only' },
   { value: 'all', label: 'All users' },
   { value: 'incomplete', label: 'Incomplete profiles' },
-  { value: 'unpaid', label: 'Unpaid / expired' },
+  { value: 'unpaid', label: 'No membership yet' },
   { value: 'paid', label: 'Paid members' },
 ];
 
