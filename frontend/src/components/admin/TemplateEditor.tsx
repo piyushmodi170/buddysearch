@@ -26,9 +26,10 @@ const CHIPS: Record<string, string[]> = {
   'payment-confirmation': ['name', 'plan', 'amount', 'appUrl'],
   'purchase-thanks': ['name', 'plan', 'appName'],
   'incomplete-profile': ['name', 'appName', 'appUrl'],
+  'unpaid-membership': ['name', 'appName', 'appUrl', 'logoUrl'],
 };
 
-const ALL_CHIPS = ['name', 'code', 'minutes', 'email', 'appName', 'appUrl', 'plan', 'amount'];
+const ALL_CHIPS = ['name', 'code', 'minutes', 'email', 'appName', 'appUrl', 'logoUrl', 'plan', 'amount'];
 
 export function TemplateEditor({
   tpl,

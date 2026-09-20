@@ -106,12 +106,16 @@ export const sendRawEmail = async (opts: { to: string; subject: string; html: st
   const to = String(opts.to || '').trim().toLowerCase();
   if (!to.includes('@')) throw new Error('Enter a valid recipient email');
   const ctx = await appContext();
-  const vars: MailVars = { ...ctx, ...(opts.vars || {}) };
+  const vars: MailVars = {
+    ...ctx,
+    logoUrl: `${ctx.appUrl}/logo.png`,
+    ...(opts.vars || {}),
+  };
   const subject = renderVars(opts.subject, vars);
   const inner = renderVars(opts.html, vars);
   const looksHtml = /<[a-z][\s\S]*>/i.test(inner);
   const htmlInner = looksHtml ? inner : inner.split('\n').map((line) => `<p>${line || '&nbsp;'}</p>`).join('');
-  const html = /<html/i.test(inner) ? inner : wrapEmailHtml(htmlInner, ctx.appName);
+  const html = /<html/i.test(inner) ? inner : wrapEmailHtml(htmlInner, ctx.appName, ctx.appUrl);
   const text = stripHtml(inner);
   const { transport, from } = await loadTransport();
   try {
@@ -172,11 +176,9 @@ const audienceWhere = (audience: CampaignAudience) => {
   if (audience === 'unpaid') {
     return {
       banned: false,
+      isAdmin: false,
       membershipPlan: { not: 'STAR' as const },
-      OR: [
-        { membershipExpiry: null },
-        { membershipExpiry: { lte: new Date() } },
-      ],
+      membershipExpiry: null,
     };
   }
   if (audience === 'paid') {
@@ -201,6 +203,9 @@ export const countAudience = async (audience: CampaignAudience, emails?: string[
 
 export const incompleteProfileCount = async () =>
   prisma.user.count({ where: audienceWhere('incomplete') });
+
+export const unpaidMembershipCount = async () =>
+  prisma.user.count({ where: audienceWhere('unpaid') });
 
 const recipientsFor = async (audience: CampaignAudience, emails?: string[]) => {
   if (audience === 'custom') {
@@ -268,6 +273,17 @@ export const sendIncompleteReminders = async () => {
     subject: tpl.subject,
     body: tpl.body,
     slug: 'incomplete-profile',
+  });
+};
+
+export const sendUnpaidReminders = async () => {
+  const tpl = await getTemplateBySlug('unpaid-membership');
+  if (!tpl?.active) throw new Error('No-subscription template is disabled');
+  return sendCampaign({
+    audience: 'unpaid',
+    subject: tpl.subject,
+    body: tpl.body,
+    slug: 'unpaid-membership',
   });
 };
 
