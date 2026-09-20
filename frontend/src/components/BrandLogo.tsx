@@ -14,14 +14,7 @@ export function BrandLogo({
 }) {
   return (
     <Link href={href} className={cn('flex items-center', className)}>
-      <img
-        src="/logo-nav.webp"
-        alt="BuddySearch"
-        className={imgClassName}
-        width={437}
-        height={80}
-        decoding="async"
-      />
+      <img src="/logo.png" alt="BuddySearch" className={imgClassName} width={1743} height={319} />
     </Link>
   );
 }

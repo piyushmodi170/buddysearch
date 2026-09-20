@@ -31,13 +31,12 @@ export default function LandingNav() {
       <div className="container navbar__inner">
         <Link href="/" className="navbar__logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <img
-            src="/logo-nav.webp"
+            src="/logo.png"
             alt="BuddySearch"
             className="navbar__logo-img"
-            width={437}
-            height={80}
+            width={1743}
+            height={319}
             decoding="async"
-            fetchPriority="low"
           />
         </Link>
         <ul className="navbar__links">

@@ -8,8 +8,7 @@ export const metadata: Metadata = pageMetadata('/');
 export default function HomePage() {
   return (
     <>
-      <link rel="preload" as="image" href="/hero-sm.webp" type="image/webp" media="(max-width: 768px)" />
-      <link rel="preload" as="image" href="/hero-lg.webp" type="image/webp" media="(min-width: 769px)" />
+      <link rel="preload" as="image" href="/activities-on-buddy-search.webp" type="image/webp" />
       <JsonLd data={homeJsonLd()} />
       <LandingClient />
     </>
