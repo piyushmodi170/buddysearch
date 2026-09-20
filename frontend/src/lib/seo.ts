@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { AEO_ARTICLES, aeoPath } from './aeo';
+import { BLOG_POSTS, blogPath } from './blog';
 
 export const SITE_URL = (() => {
   const raw = (process.env.NEXT_PUBLIC_SITE_URL || 'https://buddysearch.online').replace(/\/$/, '');
@@ -161,10 +162,23 @@ export const PAGE_SEO: Record<string, PageSeo> = {
     true,
     SITE.keywords,
   ),
+  '/blog': page(
+    '/blog',
+    'Buddy Search blog: hire a buddy, travel companion, and more',
+    'Detailed SEO guides on hiring a buddy in India, movie buddy hire, travel companions, safety, pricing, and becoming a Buddy.',
+    true,
+    SITE.keywords,
+  ),
   ...Object.fromEntries(
     AEO_ARTICLES.map((article) => [
       aeoPath(article.slug),
       page(aeoPath(article.slug), article.title, article.description, true, article.keywords),
+    ]),
+  ),
+  ...Object.fromEntries(
+    BLOG_POSTS.map((post) => [
+      blogPath(post.slug),
+      page(blogPath(post.slug), post.title, post.description, true, post.keywords),
     ]),
   ),
 };
@@ -326,6 +340,8 @@ It is friendship-first: people hire verified companions for shared activities, o
 - Home: ${absoluteUrl('/')}
 - About: ${absoluteUrl('/about')}
 - Answers: ${absoluteUrl('/answers')}
+- Blog: ${absoluteUrl('/blog')}
+${BLOG_POSTS.map((post) => `- ${post.title}: ${absoluteUrl(blogPath(post.slug))}`).join('\n')}
 ${AEO_ARTICLES.map((article) => `- ${article.query}: ${absoluteUrl(aeoPath(article.slug))}`).join('\n')}
 - Create account: ${absoluteUrl('/signup')}
 - Log in: ${absoluteUrl('/login')}
