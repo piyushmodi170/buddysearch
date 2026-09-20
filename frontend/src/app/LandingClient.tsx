@@ -1,27 +1,14 @@
-'use client';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import './landing.css';
-
-const IndiaMap = dynamic(() => import('@/components/IndiaMap'), {
-  ssr: false,
-  loading: () => <section className="active-buddies" aria-hidden="true" style={{ minHeight: 520 }} />,
-});
+import IndiaMapLazy from '@/components/IndiaMapLazy';
+import LandingNav from '@/components/LandingNav';
 import {
   Search, MapPin, ArrowRight, ShieldCheck, DollarSign, Star,
   MessageSquare, Users, CheckCircle2, Sparkles, Briefcase, Heart,
   FileText, UserPlus, Compass, Wallet, PartyPopper
 } from 'lucide-react';
 import { FAQS } from '@/lib/seo';
-
-const NAV_LINKS = [
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Categories', href: '#services' },
-  { label: 'Pricing', href: '#pricing' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Testimonials', href: '#about' },
-];
 
 const HERO_STATS = [
   { value: '100K+', label: 'Active Buddies' },
@@ -73,10 +60,10 @@ const FEATURES = [
 ];
 
 const PLANS = [
-  { name: 'Basic', tagline: 'Try BuddySearch at your own pace', price: '₹249', original: '₹498', off: '50% OFF', period: '₹83/month', periodNote: 'billed for 3 months', features: ['Browse buddy discovery feed', 'View buddy profiles (name, avatar, city, services)', 'Post up to 5 plan requests / month', 'Standard position in discover feed'], accent: '#5b8dee', iconBg: '#eef3fd', cta: 'Start Basic', highlighted: false },
-  { name: 'Standard', tagline: 'More plans, more visibility', price: '₹349', original: '₹998', off: '65% OFF', period: '₹58/month', periodNote: 'billed for 6 months', features: ['Everything in Basic', 'Post up to 10 plan requests / month', 'View user social profile links', 'Priority placement in discover'], accent: '#10b981', iconBg: '#ecfdf5', cta: 'Get Standard', highlighted: false },
-  { name: 'Premium', tagline: 'The plan most people choose', price: '₹449', original: '₹1600', off: '72% OFF', period: '₹37/month', periodNote: 'billed for 12 months', features: ['Everything in Standard', 'Post up to 15 plan requests / month', 'Higher priority placement in feed', '"Premium" badge on your profile'], accent: '#f96566', iconBg: '#fff1f2', cta: 'Go Premium', highlighted: true },
-  { name: 'Star Member', tagline: 'Lifetime access, pay once', price: '₹649', original: '₹2949', off: '78% OFF', period: 'one-time', periodNote: 'lifetime access', features: ['Everything in Premium', 'Unlimited plan requests', 'Pinned to top of discover', '"Star" badge on your profile', 'Lifetime access — pay once'], accent: '#8b5cf6', iconBg: '#f5f3ff', cta: 'Become a Star', highlighted: false },
+  { name: 'Basic', tagline: 'Try BuddySearch at your own pace', price: '₹249', original: '₹498', off: '50% OFF', period: '₹83/month', periodNote: 'billed for 3 months', features: ['Browse buddy discovery feed', 'View buddy profiles (name, avatar, city, services)', 'Post up to 5 plan requests / month', 'Standard position in discover feed'], accent: '#1d4ed8', iconBg: '#eef3fd', cta: 'Start Basic', highlighted: false },
+  { name: 'Standard', tagline: 'More plans, more visibility', price: '₹349', original: '₹998', off: '65% OFF', period: '₹58/month', periodNote: 'billed for 6 months', features: ['Everything in Basic', 'Post up to 10 plan requests / month', 'View user social profile links', 'Priority placement in discover'], accent: '#047857', iconBg: '#ecfdf5', cta: 'Get Standard', highlighted: false },
+  { name: 'Premium', tagline: 'The plan most people choose', price: '₹449', original: '₹1600', off: '72% OFF', period: '₹37/month', periodNote: 'billed for 12 months', features: ['Everything in Standard', 'Post up to 15 plan requests / month', 'Higher priority placement in feed', '"Premium" badge on your profile'], accent: '#b42318', iconBg: '#fff1f2', cta: 'Go Premium', highlighted: true },
+  { name: 'Star Member', tagline: 'Lifetime access, pay once', price: '₹649', original: '₹2949', off: '78% OFF', period: 'one-time', periodNote: 'lifetime access', features: ['Everything in Premium', 'Unlimited plan requests', 'Pinned to top of discover', '"Star" badge on your profile', 'Lifetime access — pay once'], accent: '#6d28d9', iconBg: '#f5f3ff', cta: 'Become a Star', highlighted: false },
 ];
 
 const TESTIMONIALS = [
@@ -174,59 +161,11 @@ function TestimonialCard({ t }: { t: (typeof TESTIMONIALS)[number] }) {
 }
 
 export default function LandingPage() {
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [menuOpen]);
-
   return (
     <div className="landing-page">
-      <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
-        <div className="container navbar__inner">
-          <Link href="/" className="navbar__logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img src="/logo.png" alt="BuddySearch" className="navbar__logo-img" />
-          </Link>
-          <ul className="navbar__links">
-            {NAV_LINKS.map((l) => (
-              <li key={l.href}><a href={l.href} className="navbar__link">{l.label}</a></li>
-            ))}
-          </ul>
-          <div className="navbar__cta">
-            <Link href="/login" className="navbar__login">Log In</Link>
-            <Link href="/signup" className="btn-primary navbar__signup">Get Started</Link>
-          </div>
-          <button
-            className={`navbar__hamburger${menuOpen ? ' open' : ''}`}
-            aria-label="Menu"
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            <span /><span /><span />
-          </button>
-        </div>
-        <div className={`navbar__mobile${menuOpen ? ' navbar__mobile--open' : ''}`}>
-          <button className="navbar__mobile-close" onClick={() => setMenuOpen(false)} aria-label="Close">✕</button>
-          <ul>
-            {NAV_LINKS.map((l) => (
-              <li key={l.href}><a href={l.href} className="navbar__mobile-link" onClick={() => setMenuOpen(false)}>{l.label}</a></li>
-            ))}
-          </ul>
-          <div className="navbar__mobile-cta">
-            <Link href="/login" className="btn-secondary" onClick={() => setMenuOpen(false)}>Log In</Link>
-            <Link href="/signup" className="btn-primary" onClick={() => setMenuOpen(false)}>Get Started</Link>
-          </div>
-        </div>
-      </nav>
+      <LandingNav />
 
+      <main>
       <section className="hero">
         <div className="hero__blob hero__blob--1" aria-hidden="true" />
         <div className="hero__blob hero__blob--2" aria-hidden="true" />
@@ -289,21 +228,26 @@ export default function LandingPage() {
             <span className="hero__sparkle hero__sparkle--1" aria-hidden="true">✦</span>
             <span className="hero__sparkle hero__sparkle--2" aria-hidden="true">✦</span>
             <div className="hero__img-wrap">
-              <img
-                src="/activities-on-buddy-search.webp"
-                alt="Friends enjoying activities together with BuddySearch"
-                className="hero__img"
-                width={1120}
-                height={840}
-                fetchPriority="high"
-                decoding="async"
-              />
+              <picture>
+                <source media="(max-width: 768px)" srcSet="/hero-sm.webp" type="image/webp" />
+                <source media="(min-width: 769px)" srcSet="/hero-lg.webp" type="image/webp" />
+                <img
+                  src="/hero-lg.webp"
+                  alt="Friends enjoying activities together with BuddySearch"
+                  className="hero__img"
+                  width={1120}
+                  height={1120}
+                  sizes="(max-width: 768px) 92vw, 520px"
+                  fetchPriority="high"
+                  decoding="sync"
+                />
+              </picture>
             </div>
           </div>
         </div>
       </section>
 
-      <IndiaMap />
+      <IndiaMapLazy />
 
       <section className="hiw" id="how-it-works">
         <div className="container">
@@ -544,19 +488,28 @@ export default function LandingPage() {
           <p className="cta-section__note">Free to join. No credit card required.</p>
         </div>
       </section>
+      </main>
 
       <footer className="footer">
         <div className="container">
           <div className="footer__top">
             <div>
               <Link href="/" className="footer__logo-link">
-                <img src="/buddy_search_white_grey.png" alt="BuddySearch" className="footer__logo" />
+                <img
+                  src="/logo-footer.webp"
+                  alt="BuddySearch"
+                  className="footer__logo"
+                  width={323}
+                  height={72}
+                  decoding="async"
+                  loading="lazy"
+                />
               </Link>
               <p className="footer__brand-desc">India&apos;s leading social companion platform to find, hire, or become a verified companion for every plan.</p>
             </div>
             <div className="footer__links">
               <div>
-                <h4 className="footer__col-title">Product</h4>
+                <h3 className="footer__col-title">Product</h3>
                 <div className="footer__col-links">
                   <a className="footer__col-link" href="#how-it-works">How It Works</a>
                   <Link className="footer__col-link" href="/answers/movie-buddy-hire">Movie buddy</Link>
@@ -567,7 +520,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div>
-                <h4 className="footer__col-title">Company</h4>
+                <h3 className="footer__col-title">Company</h3>
                 <div className="footer__col-links">
                   <Link className="footer__col-link" href="/about">About Us</Link>
                   <Link className="footer__col-link" href="/blog">Blog</Link>
@@ -578,7 +531,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div>
-                <h4 className="footer__col-title">Legal</h4>
+                <h3 className="footer__col-title">Legal</h3>
                 <div className="footer__col-links">
                   <Link className="footer__col-link" href="/privacy">Privacy Policy</Link>
                   <Link className="footer__col-link" href="/terms">Terms of Service</Link>

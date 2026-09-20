@@ -51,7 +51,9 @@ assert.ok(typeof PAGE_SEO['/'].title === 'string');
 assert.equal(typeof pageMetadata('/').title, 'object');
 assert.ok(llmsTxt().includes(SITE.name));
 assert.ok(llmsTxt().includes('GPTBot') === false);
-assert.ok(llmsTxt().includes('/llms.txt'));
+assert.ok(llmsTxt().includes('[Home]('));
+assert.ok(llmsTxt().includes('[Create account]('));
+assert.ok(llmsTxt().includes('[buddysearch.online]('));
 assert.ok(llmsTxt().includes('friendship-first'));
 
 console.log(`seo tests passed (${routes.length} app routes)`);
