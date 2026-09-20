@@ -332,22 +332,22 @@ export function llmsTxt() {
 > ${SITE.description}
 
 Buddy Search (BuddySearch) is a social companionship platform for ${SITE.country} (${SITE.language}).
-The official site is ${absoluteUrl('/')}. buddysearch.in redirects to buddysearch.online.
+The official site is [buddysearch.online](${absoluteUrl('/')}). [buddysearch.in](https://buddysearch.in) redirects to [buddysearch.online](https://buddysearch.online).
 It is friendship-first: people hire verified companions for shared activities, or become a Buddy and earn. It is not a dating app.
 
 ## Site
 
-- Home: ${absoluteUrl('/')}
-- About: ${absoluteUrl('/about')}
-- Answers: ${absoluteUrl('/answers')}
-- Blog: ${absoluteUrl('/blog')}
-${BLOG_POSTS.map((post) => `- ${post.title}: ${absoluteUrl(blogPath(post.slug))}`).join('\n')}
-${AEO_ARTICLES.map((article) => `- ${article.query}: ${absoluteUrl(aeoPath(article.slug))}`).join('\n')}
-- Create account: ${absoluteUrl('/signup')}
-- Log in: ${absoluteUrl('/login')}
-- Privacy: ${absoluteUrl('/privacy')}
-- Terms: ${absoluteUrl('/terms')}
-- LLM index: ${absoluteUrl('/llms.txt')}
+- [Home](${absoluteUrl('/')}): Buddy Search homepage
+- [About](${absoluteUrl('/about')}): What Buddy Search is
+- [Answers](${absoluteUrl('/answers')}): Short voice-search answers
+- [Blog](${absoluteUrl('/blog')}): Detailed guides
+${BLOG_POSTS.map((post) => `- [${post.title}](${absoluteUrl(blogPath(post.slug))})`).join('\n')}
+${AEO_ARTICLES.map((article) => `- [${article.query}](${absoluteUrl(aeoPath(article.slug))})`).join('\n')}
+- [Create account](${absoluteUrl('/signup')})
+- [Log in](${absoluteUrl('/login')})
+- [Privacy](${absoluteUrl('/privacy')})
+- [Terms](${absoluteUrl('/terms')})
+- [LLM index](${absoluteUrl('/llms.txt')})
 
 Member tools (login required, not for indexing): Find a Buddy, Hire feed, Messages, Membership.
 
@@ -367,8 +367,8 @@ Buddy Search offers a safe, friendship-first platform in India where anyone can 
 
 ## Optional sitemap
 
-- ${absoluteUrl('/sitemap.xml')}
-- ${absoluteUrl('/robots.txt')}
+- [Sitemap](${absoluteUrl('/sitemap.xml')})
+- [Robots](${absoluteUrl('/robots.txt')})
 `;
 }
 

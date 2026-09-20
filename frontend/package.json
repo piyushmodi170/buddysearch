@@ -30,5 +30,12 @@
     "tailwindcss": "^3.3.5",
     "typescript": "^5.2.2",
     "zustand": "^4.4.6"
-  }
+  },
+  "browserslist": [
+    "chrome >= 92",
+    "firefox >= 90",
+    "safari >= 15",
+    "not dead",
+    "not op_mini all"
+  ]
 }

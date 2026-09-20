@@ -214,7 +214,7 @@ export default function IndiaMap() {
             </div>
 
             <div className="ab-india__stats">
-              <h4 className="ab-india__stats-title">Buddies Across India</h4>
+              <h3 className="ab-india__stats-title">Buddies Across India</h3>
               <p className="ab-india__stats-desc">
                 From metropolitan hubs to emerging cities, BuddySearch connects you with verified companions wherever life takes you. Our network is growing every day.
               </p>

@@ -29,9 +29,9 @@ export const metadata: Metadata = {
   category: 'lifestyle',
   formatDetection: { email: false, address: false, telephone: false },
   icons: {
-    icon: [{ url: '/favicon.png', type: 'image/png' }],
+    icon: [{ url: '/favicon.png', type: 'image/png', sizes: '32x32' }],
     shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    apple: '/apple-touch-icon.png',
   },
   openGraph: root.openGraph,
   twitter: root.twitter,
