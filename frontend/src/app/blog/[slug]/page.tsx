@@ -1,23 +1,31 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BlogPostView } from '@/components/seo/BlogPostView';
-import { BLOG_BY_SLUG, BLOG_POSTS } from '@/lib/blog';
+import { SeoAgentPostView } from '@/components/seo/SeoAgentPostView';
+import { BLOG_BY_SLUG } from '@/lib/blog';
 import { pageMetadata } from '@/lib/seo';
+import { fetchPublishedSeoArticle } from '@/lib/seo-agent-posts';
 
-export const dynamicParams = false;
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
 
-export function generateStaticParams() {
-  return BLOG_POSTS.map((post) => ({ slug: post.slug }));
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const staticPost = BLOG_BY_SLUG[params.slug];
+  if (staticPost) return pageMetadata(`/blog/${staticPost.slug}`);
+  const agent = await fetchPublishedSeoArticle(params.slug);
+  if (!agent) return pageMetadata('/blog');
+  return {
+    ...pageMetadata('/blog'),
+    title: { absolute: `${agent.title} | Buddy Search` },
+    description: agent.description,
+    alternates: { canonical: `https://buddysearch.online/blog/${agent.slug}` },
+  };
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const post = BLOG_BY_SLUG[params.slug];
-  if (!post) return pageMetadata('/blog');
-  return pageMetadata(`/blog/${post.slug}`);
-}
-
-export default function BlogArticlePage({ params }: { params: { slug: string } }) {
-  const post = BLOG_BY_SLUG[params.slug];
-  if (!post) notFound();
-  return <BlogPostView post={post} />;
+export default async function BlogArticlePage({ params }: { params: { slug: string } }) {
+  const staticPost = BLOG_BY_SLUG[params.slug];
+  if (staticPost) return <BlogPostView post={staticPost} />;
+  const agent = await fetchPublishedSeoArticle(params.slug);
+  if (!agent) notFound();
+  return <SeoAgentPostView post={agent} />;
 }

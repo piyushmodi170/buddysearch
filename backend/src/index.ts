@@ -23,6 +23,8 @@ import notificationRoutes from './routes/notification.routes.js';
 import membershipRoutes from './routes/membership.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import seoAgentRoutes from './routes/seo-agent.routes.js';
+import blogPublicRoutes from './routes/blog-public.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -95,6 +97,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/membership', membershipRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/webhooks', seoAgentRoutes);
+app.use('/api/blog', blogPublicRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });

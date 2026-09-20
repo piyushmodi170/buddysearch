@@ -320,3 +320,34 @@ model EmailLog {
 
   @@index([createdAt])
 }
+
+// Articles published by The SEO Agent webhook. Upsert key is externalId (payload articles[].id).
+model SeoAgentArticle {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  externalId       String   @unique
+  slug             String   @unique
+  title            String
+  contentMarkdown  String
+  contentHtml      String
+  metaDescription  String
+  imageUrl         String   @default("")
+  tags             String[]
+  author           String
+  category         String
+  featured         Boolean  @default(false)
+  status           String   @default("draft")
+  readTimeMinutes  Int      @default(1)
+  sourceCreatedAt  DateTime
+  lastEventId      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status])
+}
+
+// Atomic idempotency for SEO Agent event_id (header == body.event_id).
+model SeoAgentWebhookEvent {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  eventId   String   @unique
+  createdAt DateTime @default(now())
+}

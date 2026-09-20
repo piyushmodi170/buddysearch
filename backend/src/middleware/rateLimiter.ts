@@ -5,6 +5,7 @@ export const generalLimiter = rateLimit({
   max: 200, // Limit each IP to 200 requests per window
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => String(req.originalUrl || req.url || '').startsWith('/api/webhooks/seo-agent'),
 });
 
 export const authLimiter = rateLimit({

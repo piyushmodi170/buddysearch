@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Users, LayoutDashboard, ShieldCheck, List, IndianRupee, Star, Tag,
-  Loader2, ArrowLeft, Settings, Mail, KeyRound, CreditCard
+  Loader2, ArrowLeft, Settings, Mail, KeyRound, CreditCard, FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -20,6 +20,7 @@ const NAV = [
   { href: '/admin/reviews', label: 'Reviews', icon: Star },
   { href: '/admin/razorpay', label: 'Razorpay', icon: CreditCard },
   { href: '/admin/email', label: 'Email', icon: Mail },
+  { href: '/admin/seo-articles', label: 'SEO articles', icon: FileText },
   { href: '/admin/google', label: 'Google login', icon: KeyRound },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];

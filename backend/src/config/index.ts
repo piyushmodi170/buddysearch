@@ -38,5 +38,9 @@ export const config = {
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || ''
-  }
+  },
+  seoAgent: {
+    accessToken: process.env.SEO_AGENT_ACCESS_TOKEN || '',
+    signingSecret: process.env.SEO_AGENT_SIGNING_SECRET || '',
+  },
 };

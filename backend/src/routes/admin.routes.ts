@@ -6,6 +6,7 @@ import { repairBrokenUsers } from '../config/mongo.js';
 import { getSetting, setSetting, maskSettings, settingStatus } from '../config/settings.js';
 import { sendTestEmail } from '../services/mail.service.js';
 import adminEmailRoutes from './admin-email.routes.js';
+import adminSeoArticleRoutes from './admin-seo-articles.routes.js';
 import * as paymentService from '../services/payment.service.js';
 import { isOwnerEmail } from '../config/owner.js';
 import { findPlan } from '../services/membership.service.js';
@@ -527,5 +528,6 @@ router.post('/plans', adminAuth, async (req, res) => {
 });
 
 router.use(adminEmailRoutes);
+router.use(adminSeoArticleRoutes);
 
 export default router;
