@@ -16,6 +16,52 @@ export type AeoArticle = {
 
 export const AEO_ARTICLES: AeoArticle[] = [
   {
+    slug: 'what-is-buddy-search',
+    query: 'What is Buddy Search?',
+    title: 'What is Buddy Search?',
+    description:
+      'Buddy Search is the official friendship-first platform in India to hire a verified companion for movies, travel, dining, and everyday plans — or become a Buddy and earn.',
+    keywords: ['buddy search', 'what is Buddy Search', 'buddysearch.online', 'friend for hire India'],
+    directAnswer:
+      'Buddy Search is India’s official friendship-first platform to hire a verified companion for a real activity, or to become a Buddy and earn. It is not a dating app. The official site is buddysearch.online.',
+    explanation:
+      'People use Buddy Search when they have a plan — a film, a cafe, a trip, a gym session — and want company. You post the plan, chat with a verified Buddy, agree the time and rate in the app, then meet in public. Buddies set their own fees. Membership is a separate platform charge.',
+    steps: [
+      { name: 'Open the official site', text: 'Go to buddysearch.online. buddysearch.in redirects there.' },
+      { name: 'Create an account', text: 'Sign up with email or Google and verify your email.' },
+      { name: 'Choose a side', text: 'Hire a Buddy for your plan, or list yourself as a Buddy who can earn.' },
+      { name: 'Chat, then meet', text: 'Agree hours, spot, and pay in the app. Meet in a public place.' },
+    ],
+    table: {
+      caption: 'Buddy Search at a glance',
+      headers: ['Question', 'Answer'],
+      rows: [
+        ['What it is', 'Friendship-first companion hiring in India'],
+        ['Official site', 'buddysearch.online'],
+        ['Dating?', 'No. Platonic activities only'],
+        ['Who earns', 'Buddies you hire, at the rate they set'],
+      ],
+    },
+    examples: [
+      '“What is Buddy Search?” — a platform to hire company for a movie or trip.',
+      'Search “buddy search” and open buddysearch.online, not a lookalike.',
+    ],
+    faqs: [
+      {
+        q: 'What is Buddy Search?',
+        a: 'Buddy Search is a social companionship platform in India. You hire a verified Buddy for movies, travel, dining, and everyday plans, or become a Buddy and earn. It is friendship-first, not dating.',
+      },
+      {
+        q: 'Is Buddy Search the same as buddysearch.in?',
+        a: 'The official brand is Buddy Search on buddysearch.online. buddysearch.in redirects to that site.',
+      },
+      {
+        q: 'Is Buddy Search a dating app?',
+        a: 'No. Romantic and sexual bookings are not allowed. Plans are for platonic company and shared activities.',
+      },
+    ],
+  },
+  {
     slug: 'hire-a-buddy',
     query: 'How do I hire a buddy in India?',
     title: 'How to hire a buddy in India',

@@ -4,6 +4,92 @@ const DATE = '2026-09-20';
 
 export const BLOG_POSTS_A: BlogPost[] = [
   {
+    slug: 'what-is-buddy-search',
+    title: 'What is Buddy Search? India’s official companion hiring platform',
+    description:
+      'Buddy Search is the official site (buddysearch.online) to hire a verified buddy in India for movies, travel, dining, and everyday plans — or become a Buddy and earn. Friendship-first, not dating.',
+    keywords: ['buddy search', 'what is Buddy Search', 'buddysearch.online', 'hire a buddy India'],
+    date: DATE,
+    category: 'Guides',
+    query: 'What is Buddy Search?',
+    directAnswer:
+      'Buddy Search is India’s official friendship-first platform to hire a verified companion for a real activity, or to become a Buddy and earn. It is not a dating app. The official website is buddysearch.online.',
+    sections: [
+      {
+        heading: 'Buddy Search in one paragraph',
+        paragraphs: [
+          'Buddy Search connects people in India who have a plan with verified companions who can join it. You might want company for a film in Pune, a cafe in Bandra, a weekend in Jaipur, or a gym session after work. You are booking hours of platonic company — not a relationship and not a date.',
+          'The product has two sides. Clients post a plan and hire a Buddy. Buddies list the activities they enjoy, verify their ID, set a rate, and accept nearby plans. Membership pays for platform access. The Buddy’s activity fee is separate and agreed in chat.',
+        ],
+        bullets: [
+          'Official site: buddysearch.online (buddysearch.in redirects there).',
+          'Friendship-first: movies, travel, dining, events, hobbies.',
+          'Not a dating app. Romantic and sexual bookings are banned.',
+          'ID verification and in-app chat before you meet in public.',
+        ],
+      },
+      {
+        heading: 'What Buddy Search is not',
+        paragraphs: [
+          'It is not Tinder, Bumble, or a matrimonial site. It is not an escort directory. It is not a tour operator that sells packaged holidays. If a profile asks you to date, meet in a private home on the first visit, or leave the app to pay, that is against the rules — report it.',
+        ],
+        subheadings: [
+          {
+            heading: 'Why the brand name matters in search',
+            paragraphs: [
+              'People type “buddy search” when they mean this product. The official name is Buddy Search. The official domain is buddysearch.online. Use that site so you land on the real account, membership, and support flows.',
+            ],
+          },
+        ],
+      },
+      {
+        heading: 'Who it is for',
+        paragraphs: [
+          'New-in-city professionals, students whose friends are in another town, travellers who do not want a rigid group tour, and anyone who would rather share a plan than cancel it. Buddies are people who like going out, can show up on time, and want to earn for hours they already enjoy.',
+        ],
+      },
+    ],
+    steps: [
+      { name: 'Open buddysearch.online', text: 'That is the official Buddy Search site. Sign up with email or Google.' },
+      { name: 'Verify your email', text: 'Email verification is required. Do not skip it if the product asks you to confirm.' },
+      { name: 'Hire or become a Buddy', text: 'Post a plan with city, time, and activity — or list yourself as a Buddy with rates.' },
+      { name: 'Chat in the app, then meet', text: 'Agree hours, public meeting spot, and pay before you travel.' },
+    ],
+    table: {
+      caption: 'Buddy Search vs similar-sounding products',
+      headers: ['Need', 'Buddy Search', 'Dating app'],
+      rows: [
+        ['Goal', 'Company for a named activity', 'Romance or matching'],
+        ['Payment', 'Buddy’s time, agreed in chat', 'Usually subscriptions, not hourly company'],
+        ['First meet', 'Public plan you already have', 'Open-ended hangout'],
+        ['Official site', 'buddysearch.online', 'That app’s own domain'],
+      ],
+    },
+    faqs: [
+      {
+        q: 'What is Buddy Search?',
+        a: 'Buddy Search is a friendship-first platform in India to hire a verified companion for movies, travel, dining, and everyday plans, or to become a Buddy and earn.',
+      },
+      {
+        q: 'Is Buddy Search a dating app?',
+        a: 'No. Plans are platonic. Dating and romantic bookings are not allowed.',
+      },
+      {
+        q: 'Where is the official Buddy Search website?',
+        a: 'buddysearch.online. buddysearch.in redirects to that domain.',
+      },
+      {
+        q: 'How much does Buddy Search cost?',
+        a: 'Membership for platform access starts from ₹249. The Buddy’s hourly or event fee is extra and agreed in chat, often ₹300 to ₹2,000 per hour.',
+      },
+    ],
+    related: [
+      'hire-a-buddy-in-india-complete-guide',
+      'buddy-search-vs-dating-apps',
+      'become-a-buddy-earn-india',
+    ],
+  },
+  {
     slug: 'hire-a-buddy-in-india-complete-guide',
     title: 'How to hire a buddy in India: a complete 2026 guide',
     description:
@@ -97,7 +183,12 @@ export const BLOG_POSTS_A: BlogPost[] = [
         a: 'No. Buddy Search is friendship-first. Romantic and sexual bookings are not allowed.',
       },
     ],
-    related: ['movie-buddy-hire-india', 'cost-to-hire-companion-india', 'is-hiring-a-companion-safe-india'],
+    related: [
+      'what-is-buddy-search',
+      'movie-buddy-hire-india',
+      'cost-to-hire-companion-india',
+      'is-hiring-a-companion-safe-india',
+    ],
   },
   {
     slug: 'movie-buddy-hire-india',

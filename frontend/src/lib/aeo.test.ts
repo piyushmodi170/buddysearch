@@ -24,6 +24,8 @@ for (const article of AEO_ARTICLES) {
   assert.equal((meta.robots as { index?: boolean }).index, true, path);
 }
 
+assert.ok(AEO_BY_SLUG['what-is-buddy-search']);
+assert.equal(AEO_BY_SLUG['what-is-buddy-search'].query, 'What is Buddy Search?');
 assert.ok(llmsTxt().includes('/answers/hire-a-buddy'));
 assert.ok(llmsTxt().includes('Where can I hire a movie buddy'));
 

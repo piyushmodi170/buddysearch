@@ -174,9 +174,10 @@ export default function LandingPage() {
           <div className="hero__content">
             <div className="hero__badge">
               <span className="hero__badge-dot" aria-hidden="true" />
-              India’s #1 Social Companionship hiring Platform
+              Buddy Search — India’s #1 Social Companionship hiring Platform
             </div>
             <h1 className="hero__title">
+              <span className="sr-only">Buddy Search. </span>
               Hire a Buddy<br />
               <span className="hero__title-row">
                 or <span className="hero__title-accent hero__title-accent--underline">Become One.</span>
@@ -205,7 +206,7 @@ export default function LandingPage() {
               </div>
             </div>
             <p className="hero__subtitle">
-              India’s social companion platform to find, hire, or connect with verified companions for every plan. From cafés and concerts to travel and adventures. BuddySearch makes social experiences effortless, while giving companions the opportunity to earn along the way.
+              Buddy Search is India’s social companion platform to find, hire, or connect with verified companions for every plan. From cafés and concerts to travel and adventures. Buddy Search makes social experiences effortless, while giving companions the opportunity to earn along the way.
             </p>
             <div className="hero__actions">
               <Link href="/find" className="btn-primary hero__cta-main">
@@ -248,8 +249,8 @@ export default function LandingPage() {
         <div className="container">
           <div className="hiw__header">
             <span className="section-tag">How It Works</span>
-            <h2 className="section-title">Simple to start,<br /><span>built for real connections</span></h2>
-            <p className="section-subtitle">BuddySearch works for two kinds of people those who have a plan and need a companion, and those who love making new friends.</p>
+            <h2 className="section-title">How Buddy Search works</h2>
+            <p className="section-subtitle">Buddy Search works for two kinds of people: those who have a plan and need a companion, and those who love making new friends.</p>
           </div>
           <div className="hiw__tabs-wrapper">
             <div className="hiw__flow">
@@ -517,7 +518,8 @@ export default function LandingPage() {
               <div>
                 <h3 className="footer__col-title">Company</h3>
                 <div className="footer__col-links">
-                  <Link className="footer__col-link" href="/about">About Us</Link>
+                  <Link className="footer__col-link" href="/about">About Buddy Search</Link>
+                  <Link className="footer__col-link" href="/blog/what-is-buddy-search">What is Buddy Search?</Link>
                   <Link className="footer__col-link" href="/blog">Blog</Link>
                   <Link className="footer__col-link" href="/answers">Answers</Link>
                   <Link className="footer__col-link" href="/answers/hire-a-buddy">How to hire</Link>
