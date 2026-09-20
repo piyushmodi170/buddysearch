@@ -3,6 +3,7 @@ import React from 'react';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '../components/ui/Toast';
+import { GoogleTag } from '@/components/seo/GoogleTag';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { PAGE_SEO, SITE, organizationJsonLd, pageMetadata, websiteJsonLd } from '@/lib/seo';
 
@@ -60,6 +61,7 @@ export default function RootLayout({
   return (
     <html lang={SITE.language} className={inter.variable}>
       <body className={`${inter.className} font-sans antialiased`}>
+        <GoogleTag />
         <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
         {children}
         <Toaster />
