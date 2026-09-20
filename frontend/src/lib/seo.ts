@@ -29,6 +29,9 @@ export const SITE = {
   description:
     'Buddy Search is a friendship-first platform in India to hire a verified companion for movies, travel, dining, events, and everyday plans — or become a Buddy and earn.',
   keywords: [
+    'buddy search',
+    'Buddy Search',
+    'buddysearch.online',
     'rent a friend India',
     'friend for hire',
     'find travel partners',
@@ -82,8 +85,8 @@ const page = (
 export const PAGE_SEO: Record<string, PageSeo> = {
   '/': page(
     '/',
-    "Buddy Search — India's #1 social companionship hiring platform",
-    SITE.description,
+    'Buddy Search | Hire a Buddy in India (Official Site)',
+    'Buddy Search is the official site to hire a verified buddy in India for movies, travel, dining, and everyday plans — or become a Buddy and earn. Friendship-first, not dating.',
     true,
     SITE.keywords,
   ),
@@ -270,11 +273,11 @@ export function organizationJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: SITE.name,
-    alternateName: SITE.brand,
+    alternateName: [SITE.brand, 'buddysearch.online'],
     url: SITE.url,
     logo: absoluteUrl('/logo.png'),
     description: SITE.description,
-    sameAs: ['https://buddysearch.online', 'https://buddysearch.in'],
+    foundingDate: '2026',
     areaServed: { '@type': 'Country', name: SITE.country },
     knowsLanguage: 'en-IN',
   };
@@ -285,7 +288,7 @@ export function websiteJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE.name,
-    alternateName: [SITE.brand, 'buddysearch.online', 'buddysearch.in'],
+    alternateName: [SITE.brand, 'buddysearch.online'],
     url: SITE.url,
     inLanguage: SITE.language,
     description: SITE.description,

@@ -17,7 +17,9 @@ for (const post of BLOG_POSTS) {
   }
 }
 
+assert.ok(BLOG_BY_SLUG['what-is-buddy-search']);
 assert.ok(llmsTxt().includes('/blog'));
+assert.ok(llmsTxt().includes('what-is-buddy-search'));
 assert.ok(llmsTxt().includes('hire-a-buddy-in-india-complete-guide'));
 
 console.log(`blog tests passed (${BLOG_POSTS.length} posts)`);

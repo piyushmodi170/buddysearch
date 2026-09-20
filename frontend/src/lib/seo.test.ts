@@ -48,6 +48,8 @@ assert.deepEqual(
   Object.values(PAGE_SEO).filter((p) => p.index).map((p) => p.path).sort(),
 );
 assert.ok(typeof PAGE_SEO['/'].title === 'string');
+assert.ok(PAGE_SEO['/'].title.includes('Buddy Search |'));
+assert.ok(PAGE_SEO['/'].title.includes('Official Site'));
 assert.equal(typeof pageMetadata('/').title, 'object');
 assert.ok(llmsTxt().includes(SITE.name));
 assert.ok(llmsTxt().includes('GPTBot') === false);
