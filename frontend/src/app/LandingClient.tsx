@@ -60,10 +60,10 @@ const FEATURES = [
 ];
 
 const PLANS = [
-  { name: 'Basic', tagline: 'Try BuddySearch at your own pace', price: '₹249', original: '₹498', off: '50% OFF', period: '₹83/month', periodNote: 'billed for 3 months', features: ['Browse buddy discovery feed', 'View buddy profiles (name, avatar, city, services)', 'Post up to 5 plan requests / month', 'Standard position in discover feed'], accent: '#1d4ed8', iconBg: '#eef3fd', cta: 'Start Basic', highlighted: false },
-  { name: 'Standard', tagline: 'More plans, more visibility', price: '₹349', original: '₹998', off: '65% OFF', period: '₹58/month', periodNote: 'billed for 6 months', features: ['Everything in Basic', 'Post up to 10 plan requests / month', 'View user social profile links', 'Priority placement in discover'], accent: '#047857', iconBg: '#ecfdf5', cta: 'Get Standard', highlighted: false },
-  { name: 'Premium', tagline: 'The plan most people choose', price: '₹449', original: '₹1600', off: '72% OFF', period: '₹37/month', periodNote: 'billed for 12 months', features: ['Everything in Standard', 'Post up to 15 plan requests / month', 'Higher priority placement in feed', '"Premium" badge on your profile'], accent: '#b42318', iconBg: '#fff1f2', cta: 'Go Premium', highlighted: true },
-  { name: 'Star Member', tagline: 'Lifetime access, pay once', price: '₹649', original: '₹2949', off: '78% OFF', period: 'one-time', periodNote: 'lifetime access', features: ['Everything in Premium', 'Unlimited plan requests', 'Pinned to top of discover', '"Star" badge on your profile', 'Lifetime access — pay once'], accent: '#6d28d9', iconBg: '#f5f3ff', cta: 'Become a Star', highlighted: false },
+  { name: 'Basic', tagline: 'Try BuddySearch at your own pace', price: '₹249', original: '₹498', off: '50% OFF', period: '₹83/month', periodNote: 'billed for 3 months', features: ['Browse buddy discovery feed', 'View buddy profiles (name, avatar, city, services)', 'Post up to 5 plan requests / month', 'Standard position in discover feed'], accent: '#5b8dee', iconBg: '#eef3fd', cta: 'Start Basic', highlighted: false },
+  { name: 'Standard', tagline: 'More plans, more visibility', price: '₹349', original: '₹998', off: '65% OFF', period: '₹58/month', periodNote: 'billed for 6 months', features: ['Everything in Basic', 'Post up to 10 plan requests / month', 'View user social profile links', 'Priority placement in discover'], accent: '#10b981', iconBg: '#ecfdf5', cta: 'Get Standard', highlighted: false },
+  { name: 'Premium', tagline: 'The plan most people choose', price: '₹449', original: '₹1600', off: '72% OFF', period: '₹37/month', periodNote: 'billed for 12 months', features: ['Everything in Standard', 'Post up to 15 plan requests / month', 'Higher priority placement in feed', '"Premium" badge on your profile'], accent: '#f96566', iconBg: '#fff1f2', cta: 'Go Premium', highlighted: true },
+  { name: 'Star Member', tagline: 'Lifetime access, pay once', price: '₹649', original: '₹2949', off: '78% OFF', period: 'one-time', periodNote: 'lifetime access', features: ['Everything in Premium', 'Unlimited plan requests', 'Pinned to top of discover', '"Star" badge on your profile', 'Lifetime access — pay once'], accent: '#8b5cf6', iconBg: '#f5f3ff', cta: 'Become a Star', highlighted: false },
 ];
 
 const TESTIMONIALS = [
@@ -228,20 +228,15 @@ export default function LandingPage() {
             <span className="hero__sparkle hero__sparkle--1" aria-hidden="true">✦</span>
             <span className="hero__sparkle hero__sparkle--2" aria-hidden="true">✦</span>
             <div className="hero__img-wrap">
-              <picture>
-                <source media="(max-width: 768px)" srcSet="/hero-sm.webp" type="image/webp" />
-                <source media="(min-width: 769px)" srcSet="/hero-lg.webp" type="image/webp" />
-                <img
-                  src="/hero-lg.webp"
-                  alt="Friends enjoying activities together with BuddySearch"
-                  className="hero__img"
-                  width={1120}
-                  height={1120}
-                  sizes="(max-width: 768px) 92vw, 520px"
-                  fetchPriority="high"
-                  decoding="sync"
-                />
-              </picture>
+              <img
+                src="/activities-on-buddy-search.webp"
+                alt="Friends enjoying activities together with BuddySearch"
+                className="hero__img"
+                width={2430}
+                height={2430}
+                fetchPriority="high"
+                decoding="async"
+              />
             </div>
           </div>
         </div>
@@ -496,11 +491,11 @@ export default function LandingPage() {
             <div>
               <Link href="/" className="footer__logo-link">
                 <img
-                  src="/logo-footer.webp"
+                  src="/buddy_search_white_grey.png"
                   alt="BuddySearch"
                   className="footer__logo"
-                  width={323}
-                  height={72}
+                  width={1166}
+                  height={260}
                   decoding="async"
                   loading="lazy"
                 />
