@@ -93,6 +93,12 @@ export const PAGE_SEO: Record<string, PageSeo> = {
     'Buddy Search connects people in India with verified companions for activities, adventures, and everyday moments — friendship-first, always.',
     true,
   ),
+  '/download': page(
+    '/download',
+    'Download Buddy Search logo',
+    'Download the official Buddy Search 1:1 square logo and wide wordmark as PNG files.',
+    false,
+  ),
   '/privacy': page(
     '/privacy',
     'Privacy Policy',
