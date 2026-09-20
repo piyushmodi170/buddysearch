@@ -15,6 +15,7 @@ export function PublicDoc({
           <Link href="/" className="font-bold text-[#F96566] text-lg">Buddy Search</Link>
           <nav className="flex gap-4 text-sm font-medium">
             <Link href="/about" className="hover:text-[#F96566]">About</Link>
+            <Link href="/blog" className="hover:text-[#F96566]">Blog</Link>
             <Link href="/answers" className="hover:text-[#F96566]">Answers</Link>
             <Link href="/signup" className="hover:text-[#F96566]">Join</Link>
             <Link href="/login" className="hover:text-[#F96566]">Log in</Link>

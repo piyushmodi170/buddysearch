@@ -19,6 +19,7 @@ const NAV_LINKS = [
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Categories', href: '#services' },
   { label: 'Pricing', href: '#pricing' },
+  { label: 'Blog', href: '/blog' },
   { label: 'Testimonials', href: '#about' },
 ];
 
@@ -569,6 +570,7 @@ export default function LandingPage() {
                 <h4 className="footer__col-title">Company</h4>
                 <div className="footer__col-links">
                   <Link className="footer__col-link" href="/about">About Us</Link>
+                  <Link className="footer__col-link" href="/blog">Blog</Link>
                   <Link className="footer__col-link" href="/answers">Answers</Link>
                   <Link className="footer__col-link" href="/answers/hire-a-buddy">How to hire</Link>
                   <Link className="footer__col-link" href="/signup">Become a Buddy</Link>
