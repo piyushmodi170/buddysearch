@@ -8,6 +8,7 @@ import { sendTestEmail } from '../services/mail.service.js';
 import adminEmailRoutes from './admin-email.routes.js';
 import * as paymentService from '../services/payment.service.js';
 import { isOwnerEmail } from '../config/owner.js';
+import { findPlan } from '../services/membership.service.js';
 
 const router = Router();
 
@@ -108,7 +109,23 @@ router.get('/users', adminAuth, async (req, res) => {
       ];
     }
     if (role) where.role = role;
-    if (plan) where.membershipPlan = plan;
+    if (plan === 'NONE' || plan === 'FREE' || plan === 'unpaid') {
+      where.AND = [
+        ...(where.AND || []),
+        { membershipPlan: { not: 'STAR' } },
+        {
+          OR: [
+            { membershipExpiry: null },
+            { membershipExpiry: { lte: new Date() } },
+          ],
+        },
+      ];
+    } else if (plan) {
+      where.membershipPlan = plan;
+      if (plan !== 'STAR') {
+        where.membershipExpiry = { gt: new Date() };
+      }
+    }
     if (verified === 'true' || verified === 'false') where.verified = verified === 'true';
     if (banned === 'true' || banned === 'false') where.banned = banned === 'true';
 
@@ -446,10 +463,23 @@ router.put('/users/:id', adminAuth, async (req, res) => {
       patch.role = role;
     }
     if (membershipPlan !== undefined) {
-      if (!['BASIC', 'STANDARD', 'PREMIUM', 'STAR'].includes(membershipPlan)) {
+      const next = String(membershipPlan).toUpperCase();
+      if (next === 'NONE' || next === 'FREE' || next === '') {
+        patch.membershipPlan = 'BASIC';
+        patch.membershipExpiry = null;
+      } else if (['BASIC', 'STANDARD', 'PREMIUM', 'STAR'].includes(next)) {
+        const catalog = await findPlan(next).catch(() => null);
+        patch.membershipPlan = next;
+        if (next === 'STAR' || !catalog || catalog.durationMonths <= 0) {
+          patch.membershipExpiry = null;
+        } else {
+          const expiry = new Date();
+          expiry.setMonth(expiry.getMonth() + catalog.durationMonths);
+          patch.membershipExpiry = expiry;
+        }
+      } else {
         return res.status(400).json({ success: false, message: 'Invalid membership plan' });
       }
-      patch.membershipPlan = membershipPlan;
     }
 
     const data = await prisma.user.update({

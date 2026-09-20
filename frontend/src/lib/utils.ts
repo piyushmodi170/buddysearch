@@ -53,6 +53,19 @@ export function planDisplayLabel(user?: {
   return (user?.membershipPlan || user?.membership || 'Paid').toString();
 }
 
+export function purchasedPlanName(user?: {
+  membershipPlan?: string | null;
+  membershipExpiry?: string | Date | null;
+  membership?: string | null;
+} | null) {
+  if (!isPaidMembership({
+    membershipPlan: user?.membershipPlan,
+    membershipExpiry: user?.membershipExpiry,
+    membership: user?.membership,
+  })) return 'None';
+  return (user?.membershipPlan || user?.membership || 'Paid').toString();
+}
+
 export function needsEmailVerification(user?: {
   email?: string | null;
   emailVerified?: boolean;

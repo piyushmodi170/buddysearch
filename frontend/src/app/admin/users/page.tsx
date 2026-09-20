@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Search, Loader2, Ban, CheckCircle, Trash2, ShieldCheck, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
-import { formatDate, getInitials } from '../../../lib/utils';
+import { formatDate, getInitials, purchasedPlanName } from '../../../lib/utils';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { Filter, Pagination, ErrorCard } from '../../../components/admin/AdminControls';
 import { Modal } from '../../../components/ui/Modal';
@@ -15,7 +15,7 @@ import { Modal } from '../../../components/ui/Modal';
 interface AdminUser {
   id: string; name: string; email: string; phone?: string; role: string; city?: string;
   avatar?: string; verified: boolean; banned: boolean; isAdmin: boolean;
-  membershipPlan: string; createdAt: string;
+  membershipPlan: string; membershipExpiry?: string | Date | null; createdAt: string;
 }
 
 export default function AdminUsersPage() {
@@ -26,11 +26,12 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
   const [status, setStatus] = useState('');
+  const [plan, setPlan] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editing, setEditing] = useState<AdminUser | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', email: '', membershipPlan: 'BASIC', role: 'CLIENT', city: '' });
+  const [editForm, setEditForm] = useState({ name: '', email: '', membershipPlan: 'NONE', role: 'CLIENT', city: '' });
 
   const debouncedSearch = useDebounce(search, 400);
 
@@ -44,6 +45,7 @@ export default function AdminUsersPage() {
       if (status === 'verified') params.verified = 'true';
       if (status === 'unverified') params.verified = 'false';
       if (status === 'banned') params.banned = 'true';
+      if (plan) params.plan = plan;
 
       const res = await api.get('/api/admin/users', { params });
       setUsers(res.data.data.data);
@@ -54,10 +56,10 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, role, status]);
+  }, [page, debouncedSearch, role, status, plan]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [debouncedSearch, role, status]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, role, status, plan]);
 
   const act = async (id: string, fn: () => Promise<any>, okMsg: string) => {
     setBusyId(id);
@@ -97,7 +99,8 @@ export default function AdminUsersPage() {
 
       <div className="flex flex-wrap gap-2 mb-6">
         <Filter options={[['', 'All roles'], ['CLIENT', 'Clients'], ['BUDDY', 'Buddies'], ['BOTH', 'Both']]} value={role} onChange={setRole} />
-        <Filter options={[['', 'All statuses'], ['verified', 'Verified'], ['unverified', 'Unverified'], ['banned', 'Banned']]} value={status} onChange={setStatus} />
+        <Filter options={[['', 'All ID status'], ['verified', 'ID verified'], ['unverified', 'Unverified'], ['banned', 'Banned']]} value={status} onChange={setStatus} />
+        <Filter options={[['', 'All plans'], ['NONE', 'None (not purchased)'], ['BASIC', 'BASIC'], ['STANDARD', 'STANDARD'], ['PREMIUM', 'PREMIUM'], ['STAR', 'STAR']]} value={plan} onChange={setPlan} />
       </div>
 
       <ErrorCard message={error} />
@@ -143,10 +146,10 @@ export default function AdminUsersPage() {
                     {u.banned
                       ? <Badge variant="danger">Banned</Badge>
                       : u.verified
-                        ? <Badge variant="success">Verified</Badge>
-                        : <Badge variant="warning">Pending</Badge>}
+                        ? <Badge variant="success">ID verified</Badge>
+                        : <Badge variant="warning">Unverified</Badge>}
                   </td>
-                  <td className="px-6 py-4 text-gray-500">{u.membershipPlan}</td>
+                  <td className="px-6 py-4 text-gray-500">{purchasedPlanName(u)}</td>
                   <td className="px-6 py-4 text-gray-500">{formatDate(u.createdAt)}</td>
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
@@ -155,7 +158,7 @@ export default function AdminUsersPage() {
                         setEditForm({
                           name: u.name,
                           email: u.email,
-                          membershipPlan: u.membershipPlan,
+                          membershipPlan: purchasedPlanName(u) === 'None' ? 'NONE' : u.membershipPlan,
                           role: u.role,
                           city: u.city || '',
                         });
@@ -210,8 +213,9 @@ export default function AdminUsersPage() {
               <option value="BUDDY">BUDDY</option>
               <option value="BOTH">BOTH</option>
             </select>
-            <label className="block text-sm font-medium text-gray-700">Membership</label>
+            <label className="block text-sm font-medium text-gray-700">Membership (only after purchase)</label>
             <select className="w-full h-10 rounded-md border border-gray-300 px-3 text-sm" value={editForm.membershipPlan} onChange={e => setEditForm({ ...editForm, membershipPlan: e.target.value })}>
+              <option value="NONE">None — not purchased</option>
               <option value="BASIC">BASIC</option>
               <option value="STANDARD">STANDARD</option>
               <option value="PREMIUM">PREMIUM</option>

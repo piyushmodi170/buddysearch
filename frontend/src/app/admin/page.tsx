@@ -136,8 +136,8 @@ export default function AdminDashboard() {
                     {u.banned
                       ? <Badge variant="danger"><Ban size={11} className="mr-1" />Banned</Badge>
                       : u.verified
-                        ? <Badge variant="success">Verified</Badge>
-                        : <Badge variant="warning">Pending</Badge>}
+                        ? <Badge variant="success">ID verified</Badge>
+                        : <Badge variant="warning">Unverified</Badge>}
                   </td>
                   <td className="px-6 py-3 text-gray-500">{formatDate(u.createdAt, true)}</td>
                 </tr>
