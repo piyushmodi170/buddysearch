@@ -19,9 +19,9 @@ export default function AboutPage() {
         }}
       />
       <PublicDoc title="About Buddy Search">
-        <p>
-          Buddy Search is India&apos;s #1 social companionship hiring platform. It connects people with real
-          companions for activities, adventures, and everyday moments.
+        <p className="aeo-direct text-lg font-medium">
+          Buddy Search is India&apos;s friendship-first platform to hire a verified companion for movies, travel,
+          dining, and everyday plans. You can also become a Buddy and earn — it is not a dating app.
         </p>
         <p>
           The platform operates on a friendship-first philosophy: find buddies for movies, exploring new places,

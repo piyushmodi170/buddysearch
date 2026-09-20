@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { AEO_ARTICLES, aeoPath } from './aeo';
+
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://buddysearch.online').replace(/\/$/, '');
 
 export const SITE = {
@@ -134,6 +136,19 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   '/membership': page('/membership', 'Membership', 'Choose a Buddy Search membership plan.', false),
   '/help': page('/help', 'Help', 'Buddy Search frequently asked questions.', false),
   '/admin': page('/admin', 'Admin', 'Buddy Search owner admin.', false),
+  '/answers': page(
+    '/answers',
+    'Answers about hiring a buddy in India',
+    'Short, voice-search answers: how to hire a movie buddy, find a travel companion, or rent a friend in India on Buddy Search.',
+    true,
+    SITE.keywords,
+  ),
+  ...Object.fromEntries(
+    AEO_ARTICLES.map((article) => [
+      aeoPath(article.slug),
+      page(aeoPath(article.slug), article.title, article.description, true, article.keywords),
+    ]),
+  ),
 };
 
 export const PUBLIC_SITEMAP_PATHS = Object.values(PAGE_SEO)
@@ -289,6 +304,8 @@ It is friendship-first: people hire verified companions for shared activities, o
 
 - Home: ${absoluteUrl('/')}
 - About: ${absoluteUrl('/about')}
+- Answers: ${absoluteUrl('/answers')}
+${AEO_ARTICLES.map((article) => `- ${article.query}: ${absoluteUrl(aeoPath(article.slug))}`).join('\n')}
 - Create account: ${absoluteUrl('/signup')}
 - Log in: ${absoluteUrl('/login')}
 - Privacy: ${absoluteUrl('/privacy')}

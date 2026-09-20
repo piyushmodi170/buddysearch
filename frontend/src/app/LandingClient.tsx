@@ -558,6 +558,8 @@ export default function LandingPage() {
                 <h4 className="footer__col-title">Product</h4>
                 <div className="footer__col-links">
                   <a className="footer__col-link" href="#how-it-works">How It Works</a>
+                  <Link className="footer__col-link" href="/answers/movie-buddy-hire">Movie buddy</Link>
+                  <Link className="footer__col-link" href="/answers/travel-companion">Travel companion</Link>
                   <a className="footer__col-link" href="#services">Categories</a>
                   <a className="footer__col-link" href="#pricing">Pricing</a>
                   <Link className="footer__col-link" href="/find">Find a Buddy</Link>
@@ -567,6 +569,8 @@ export default function LandingPage() {
                 <h4 className="footer__col-title">Company</h4>
                 <div className="footer__col-links">
                   <Link className="footer__col-link" href="/about">About Us</Link>
+                  <Link className="footer__col-link" href="/answers">Answers</Link>
+                  <Link className="footer__col-link" href="/answers/hire-a-buddy">How to hire</Link>
                   <Link className="footer__col-link" href="/signup">Become a Buddy</Link>
                   <Link className="footer__col-link" href="/login">Log In</Link>
                 </div>
