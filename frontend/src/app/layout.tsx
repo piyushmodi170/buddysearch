@@ -36,6 +36,9 @@ export const metadata: Metadata = {
   openGraph: root.openGraph,
   twitter: root.twitter,
   alternates: { canonical: SITE.url },
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+    : {}),
   robots: {
     index: true,
     follow: true,

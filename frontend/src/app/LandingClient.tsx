@@ -580,7 +580,7 @@ export default function LandingPage() {
                 <div className="footer__col-links">
                   <Link className="footer__col-link" href="/privacy">Privacy Policy</Link>
                   <Link className="footer__col-link" href="/terms">Terms of Service</Link>
-                  <Link className="footer__col-link" href="/privacy">Cookie Policy</Link>
+                  <Link className="footer__col-link" href="/disclaimer">Disclaimer</Link>
                 </div>
               </div>
             </div>
