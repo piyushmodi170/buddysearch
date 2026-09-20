@@ -33,7 +33,7 @@ for (const route of routes) {
   assert.ok(meta.description, route);
   assert.ok(meta.openGraph, route);
   assert.ok(meta.twitter, route);
-  if (['/', '/about', '/login', '/signup', '/privacy', '/terms'].includes(route)) {
+  if (['/', '/about', '/login', '/signup', '/privacy', '/terms', '/disclaimer'].includes(route)) {
     assert.equal(isIndexablePath(route), true, route);
     assert.equal((meta.robots as { index?: boolean }).index, true, route);
   }

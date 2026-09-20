@@ -2,7 +2,19 @@ import type { Metadata } from 'next';
 
 import { AEO_ARTICLES, aeoPath } from './aeo';
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://buddysearch.online').replace(/\/$/, '');
+export const SITE_URL = (() => {
+  const raw = (process.env.NEXT_PUBLIC_SITE_URL || 'https://buddysearch.online').replace(/\/$/, '');
+  try {
+    const url = new URL(raw.includes('://') ? raw : `https://${raw}`);
+    const host = url.hostname.toLowerCase();
+    if (host === 'buddysearch.in' || host === 'www.buddysearch.in' || host === 'www.buddysearch.online') {
+      return 'https://buddysearch.online';
+    }
+    return `${url.protocol}//${url.host}`.replace(/\/$/, '');
+  } catch {
+    return 'https://buddysearch.online';
+  }
+})();
 
 export const SITE = {
   name: 'Buddy Search',
@@ -90,6 +102,12 @@ export const PAGE_SEO: Record<string, PageSeo> = {
     '/terms',
     'Terms of Service',
     'The terms that govern using Buddy Search to hire a companion or become a Buddy in India.',
+    true,
+  ),
+  '/disclaimer': page(
+    '/disclaimer',
+    'Disclaimer',
+    'Buddy Search is a technology platform that connects people in India for platonic, activity-based companionship.',
     true,
   ),
   '/login': page(
@@ -242,6 +260,7 @@ export function organizationJsonLd() {
     url: SITE.url,
     logo: absoluteUrl('/logo.png'),
     description: SITE.description,
+    sameAs: ['https://buddysearch.online', 'https://buddysearch.in'],
     areaServed: { '@type': 'Country', name: SITE.country },
     knowsLanguage: 'en-IN',
   };
@@ -252,6 +271,7 @@ export function websiteJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE.name,
+    alternateName: [SITE.brand, 'buddysearch.online', 'buddysearch.in'],
     url: SITE.url,
     inLanguage: SITE.language,
     description: SITE.description,
@@ -298,6 +318,7 @@ export function llmsTxt() {
 > ${SITE.description}
 
 Buddy Search (BuddySearch) is a social companionship platform for ${SITE.country} (${SITE.language}).
+The official site is ${absoluteUrl('/')}. buddysearch.in redirects to buddysearch.online.
 It is friendship-first: people hire verified companions for shared activities, or become a Buddy and earn. It is not a dating app.
 
 ## Site

@@ -14,6 +14,19 @@ const toApi = (url = '') =>
   url.startsWith('/health') ||
   url.startsWith('/uploads');
 
+function aliasRedirect(hostHeader, urlPath) {
+  const host = String(hostHeader || '').split(':')[0].trim().toLowerCase();
+  const aliases = {
+    'buddysearch.in': true,
+    'www.buddysearch.in': true,
+    'www.buddysearch.online': true,
+  };
+  if (!aliases[host]) return null;
+  if (toApi(urlPath || '')) return null;
+  const path = urlPath && urlPath.startsWith('/') ? urlPath : '/';
+  return `https://buddysearch.online${path}`;
+}
+
 function proxyHttp(req, res, port) {
   const headers = { ...req.headers, host: `127.0.0.1:${port}` };
   const upstream = http.request(
@@ -33,6 +46,12 @@ function proxyHttp(req, res, port) {
 }
 
 const server = http.createServer((req, res) => {
+  const location = aliasRedirect(req.headers.host, req.url);
+  if (location && (req.method === 'GET' || req.method === 'HEAD')) {
+    res.writeHead(301, { location, 'cache-control': 'public, max-age=3600' });
+    res.end();
+    return;
+  }
   proxyHttp(req, res, toApi(req.url) ? apiPort : webPort);
 });
 
