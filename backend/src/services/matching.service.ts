@@ -1,5 +1,6 @@
 import { prisma } from '../config/db.js';
 import { getCache, setCache } from '../config/redis.js';
+import { toPublicBuddy } from './public-buddy.js';
 
 export const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
   const R = 6371; // Earth radius in km
@@ -19,6 +20,27 @@ const MEMBERSHIP_BOOST: Record<string, number> = {
   STANDARD: 0.4,
   BASIC: 0.0,
 };
+
+/** Fields other members may see in Find/discover. Never email, phone, ID docs, or credentials. */
+export const PUBLIC_BUDDY_SELECT = {
+  id: true,
+  name: true,
+  role: true,
+  city: true,
+  state: true,
+  avatar: true,
+  bio: true,
+  lat: true,
+  lng: true,
+  isOnline: true,
+  lastSeen: true,
+  membershipPlan: true,
+  profileCompletion: true,
+  verified: true,
+  availableForRequests: true,
+  createdAt: true,
+  interests: { include: { interest: { select: { slug: true, label: true } } } },
+} as const;
 
 interface DiscoverFilters {
   search?: string;
@@ -124,25 +146,7 @@ export const discoverBuddies = async (
     const pool = await prisma.user.findMany({
       where,
       take: poolSize,
-      select: {
-        id: true,
-        name: true,
-        role: true,
-        city: true,
-        state: true,
-        avatar: true,
-        bio: true,
-        lat: true,
-        lng: true,
-        isOnline: true,
-        lastSeen: true,
-        membershipPlan: true,
-        profileCompletion: true,
-        verified: true,
-        availableForRequests: true,
-        createdAt: true,
-        interests: { include: { interest: { select: { slug: true, label: true } } } },
-      },
+      select: PUBLIC_BUDDY_SELECT,
     });
 
     const filteredPool = pool.filter((buddy) => matchesDiscoverFilters(buddy, filters));
@@ -195,27 +199,26 @@ export const discoverBuddies = async (
     scored.sort((a, b) => b._score - a._score);
 
     const total = scored.length;
-    const paginated = scored.slice(skip, skip + limit).map(({ _score, _distance, ...rest }) => rest);
+    const paginated = scored
+      .slice(skip, skip + limit)
+      .map(({ _score, _distance, ...rest }) => toPublicBuddy(rest as Record<string, unknown>));
 
     const result = { data: paginated, total, page, limit };
     await setCache(cacheKey, JSON.stringify(result), 60);
     return result;
   }
 
-  // Standard DB-sorted query for 'new' and 'trending' tabs
+  // Standard DB-sorted query for 'new', 'trending', and other tabs
   const buddies = await prisma.user.findMany({
     where,
     take: poolSize,
     orderBy: orderBy.length > 0 ? orderBy : undefined,
-    include: { interests: { include: { interest: true } } },
+    select: PUBLIC_BUDDY_SELECT,
   });
   const matched = buddies.filter((buddy) => matchesDiscoverFilters(buddy, filters));
   const total = matched.length;
   const pageRows = matched.slice(skip, skip + limit);
-  const safeBuddies = pageRows.map((buddy) => {
-    const { passwordHash, ...rest } = buddy as typeof buddy & { passwordHash?: string };
-    return rest;
-  });
+  const safeBuddies = pageRows.map((buddy) => toPublicBuddy(buddy as Record<string, unknown>));
   const result = { data: safeBuddies, total, page, limit };
   await setCache(cacheKey, JSON.stringify(result), 60);
   return result;

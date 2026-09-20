@@ -2,6 +2,7 @@ import { prisma } from '../config/db.js';
 import { uploadFile } from '../config/s3.js';
 import fs from 'fs';
 import { publicUser } from './auth.service.js';
+import { toPublicBuddy } from './public-buddy.js';
 
 export const calculateProfileCompletion = (user: any, interestsCount: number): number => {
   let score = 0;
@@ -14,7 +15,7 @@ export const calculateProfileCompletion = (user: any, interestsCount: number): n
   return score;
 };
 
-export const getProfile = async (userId: string) => {
+export const getProfile = async (userId: string, viewerId?: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
@@ -28,7 +29,11 @@ export const getProfile = async (userId: string) => {
     ? user.receivedReviews.reduce((sum, r) => sum + r.rating, 0) / user.receivedReviews.length
     : 0;
 
-  return { ...publicUser(user), avgRating, reviewCount: user.receivedReviews.length };
+  const payload = { ...publicUser(user), avgRating, reviewCount: user.receivedReviews.length };
+  if (viewerId && viewerId !== userId) {
+    return toPublicBuddy(payload as Record<string, unknown>);
+  }
+  return payload;
 };
 
 export const updateProfile = async (userId: string, data: any) => {

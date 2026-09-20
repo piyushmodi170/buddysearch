@@ -35,7 +35,7 @@ router.get('/', auth, async (req, res, next) => {
   }
 });
 
-router.get('/marketplace', auth, async (req, res, next) => {
+router.get('/marketplace', auth, requirePaid, async (req, res, next) => {
   try {
     const { category, location, search, page = 1, limit = 20 } = req.query;
     const data = await requestService.getMarketplaceRequestsService({ category, location, search }, Number(page), Number(limit));

@@ -74,7 +74,7 @@ router.post('/onboarding', auth, validate(completeOnboardingSchema), async (req,
   }
 });
 
-router.get('/discover', auth, async (req, res, next) => {
+router.get('/discover', auth, requirePaid, async (req, res, next) => {
   try {
     const { tab = 'for-you', page = 1, limit = 40, city, search, interest } = req.query;
     const filterCity = typeof city === 'string' ? city : undefined;
@@ -97,7 +97,7 @@ router.get('/discover', auth, async (req, res, next) => {
 
 router.get('/:id', auth, requirePaid, async (req, res, next) => {
   try {
-    const profile = await userService.getProfile(req.params.id);
+    const profile = await userService.getProfile(req.params.id, req.user!.id);
     res.json({ success: true, data: profile });
   } catch (error: any) {
     res.status(404).json({ success: false, message: error.message });
