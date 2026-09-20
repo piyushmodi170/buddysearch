@@ -42,6 +42,23 @@ export const paymentsCollection = async (): Promise<Collection<Document>> => {
   return db.collection(pick);
 };
 
+export const ensureSeoAgentIndexes = async () => {
+  const url = cleanUrl(process.env.DATABASE_URL);
+  const client = await getMongoClient();
+  const db = client.db(dbNameFromUrl(url));
+  const articles = db.collection('SeoAgentArticle');
+  const events = db.collection('SeoAgentWebhookEvent');
+  try {
+    await articles.createIndex({ externalId: 1 }, { unique: true, name: 'SeoAgentArticle_externalId_unique' });
+  } catch { /* exists */ }
+  try {
+    await articles.createIndex({ slug: 1 }, { unique: true, name: 'SeoAgentArticle_slug_unique' });
+  } catch { /* exists */ }
+  try {
+    await events.createIndex({ eventId: 1 }, { unique: true, name: 'SeoAgentWebhookEvent_eventId_unique' });
+  } catch { /* exists */ }
+};
+
 const dropNonSparseUnique = async (col: Collection<Document>, fields: string[]) => {
   const indexes = await col.indexes();
   for (const idx of indexes) {
