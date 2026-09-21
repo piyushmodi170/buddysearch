@@ -40,14 +40,15 @@ export default function DisclaimerPage() {
         </p>
         <h2 className="text-xl font-bold pt-4">What this product is not</h2>
         <p>
-          It is not a dating app, escort directory, tour operator, or employer. Sexual services, fake partners for
+          It is not a dating app, social network, escort directory, tour operator, or employer. Sexual services, fake partners for
           family events, and illegal work are banned. buddysearch.in redirects to the official site
           buddysearch.online.
         </p>
         <h2 className="text-xl font-bold pt-4">Rates</h2>
         <p>
           Illustrative Buddy rates on the site (about ₹300–₹2,000 per hour) are examples, not a promise. Each Buddy
-          sets their own number. Membership from ₹249 is a platform charge.
+          sets their own number. Membership from ₹249 is a platform charge collected only for software access, not
+          for the Buddy&apos;s time. See /payments.
         </p>
       </PublicDoc>
     </>

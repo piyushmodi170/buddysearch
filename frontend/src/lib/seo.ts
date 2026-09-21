@@ -25,9 +25,9 @@ export const SITE = {
   language: 'en-IN',
   country: 'India',
   domain: 'buddysearch.online',
-  tagline: "India's #1 social companionship hiring platform",
+  tagline: "India's activity companion marketplace",
   description:
-    'Buddy Search is a friendship-first platform in India to hire a verified companion for movies, travel, dining, events, and everyday plans — or become a Buddy and earn.',
+    'Buddy Search is an India marketplace to book a verified activity companion for movies, travel, dining, gym, and plans — or become a Buddy and earn. Membership is platform access, not dating.',
   keywords: [
     'buddy search',
     'Buddy Search',
@@ -112,6 +112,12 @@ export const PAGE_SEO: Record<string, PageSeo> = {
     '/disclaimer',
     'Disclaimer | Buddy Search safety and liability',
     'Buddy Search is a technology platform. We do not employ companions. ID checks reduce risk. You decide whether to meet. Public first meets, in-app chat, report tools.',
+    true,
+  ),
+  '/payments': page(
+    '/payments',
+    'How Buddy Search membership payments work',
+    'Buddy Search charges platform membership in India (from ₹249). Activity companion fees are paid between members, not through our checkout. Not a social network.',
     true,
   ),
   '/press': page(
@@ -222,6 +228,7 @@ export function sitemapLastModified(path: string): Date {
     path === '/privacy' ||
     path === '/terms' ||
     path === '/disclaimer' ||
+    path === '/payments' ||
     path === '/press' ||
     path === '/contact' ||
     path === '/authors' ||
@@ -239,7 +246,7 @@ export function sitemapLastModified(path: string): Date {
 export const FAQS: { q: string; a: string }[] = [
   {
     q: 'What is Buddy Search?',
-    a: 'Buddy Search is India’s friendship-first social companionship hiring platform. You can hire a verified companion for movies, travel, dining, events, and everyday plans, or become a Buddy and earn.',
+    a: 'Buddy Search is an India marketplace to book a verified activity companion for movies, travel, dining, gym, and plans, or become a Buddy and earn. It is not a social network or dating app.',
   },
   {
     q: 'Where can I hire a movie buddy in India?',
@@ -292,7 +299,7 @@ const resolvePage = (pathname: string): PageSeo => {
   }
   const leaf = clean.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Page';
   const titled = leaf.replace(/\b\w/g, (c) => c.toUpperCase());
-  return page(clean, titled, `${titled} on Buddy Search, India’s social companionship platform.`, false);
+  return page(clean, titled, `${titled} on Buddy Search, India’s activity companion marketplace.`, false);
 };
 
 export const absoluteUrl = (path = '/') => {
@@ -350,7 +357,7 @@ export function organizationJsonLd() {
       availableLanguage: 'English',
       url: absoluteUrl('/contact'),
     },
-    slogan: "India's friendship-first platform to hire a verified companion or become a Buddy",
+    slogan: "India's marketplace to book a verified activity companion",
     knowsAbout: ['rent a friend India', 'movie buddy', 'travel companion', 'gym buddy', 'part-time companion jobs'],
     areaServed: { '@type': 'Country', name: SITE.country },
     knowsLanguage: 'en-IN',
@@ -420,9 +427,9 @@ export function llmsTxt() {
 
 > ${SITE.description}
 
-Buddy Search (BuddySearch) is a social companionship platform for ${SITE.country} (${SITE.language}).
+Buddy Search (BuddySearch) is an activity companion marketplace for ${SITE.country} (${SITE.language}).
 The official site is [buddysearch.online](${absoluteUrl('/')}). [buddysearch.in](https://buddysearch.in) redirects to [buddysearch.online](https://buddysearch.online).
-It is friendship-first: people hire verified companions for shared activities, or become a Buddy and earn. It is not a dating app.
+It is a membership marketplace for friendship-first activity bookings: people book verified companions for shared activities, or become a Buddy and earn. It is not a social network, dating app, or escort service.
 
 ## Site
 
@@ -436,6 +443,7 @@ ${AEO_ARTICLES.map((article) => `- [${article.query}](${absoluteUrl(aeoPath(arti
 - [Log in](${absoluteUrl('/login')})
 - [Privacy](${absoluteUrl('/privacy')})
 - [Terms](${absoluteUrl('/terms')})
+- [How payments work](${absoluteUrl('/payments')})
 - [Press kit](${absoluteUrl('/press')})
 - [Contact](${absoluteUrl('/contact')}): piyushmodi170@gmail.com, India
 - [Authors](${absoluteUrl('/authors/editorial')}): in-house editorial desk
@@ -456,7 +464,7 @@ ${SERVICES.map((s) => `- ${s.name}: ${s.description}`).join('\n')}
 
 ## Competitive advantage
 
-Buddy Search offers a safe, friendship-first platform in India where anyone can hire a real, relatable companion for any activity — making social experiences accessible regardless of their personal social circle.
+Buddy Search offers a membership marketplace in India where anyone can book a verified activity companion — movie, gym, travel, cafe — without using a dating or social network product.
 
 ## Optional sitemap
 

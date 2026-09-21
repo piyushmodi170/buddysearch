@@ -7,7 +7,7 @@ import { organizationJsonLd, pageMetadata } from '@/lib/seo';
 export const metadata: Metadata = pageMetadata('/press');
 
 const SHORT =
-  'Buddy Search (buddysearch.online) is India’s friendship-first marketplace to hire a verified companion for movies, travel, dining, and gym — or become a Buddy and earn. Not dating.';
+  'Buddy Search (buddysearch.online) is India’s marketplace to book a verified activity companion for movies, travel, dining, and gym — or become a Buddy and earn. Not a social network. Not dating.';
 
 const LONG =
   'Buddy Search is a 2026 India marketplace at https://buddysearch.online. Users post a platonic plan (movies, travel, cafes, fitness, events). Nearby ID-verified Buddies request to connect, agree rates typically ₹300–₹2,000 per hour in chat, and meet in public. Membership from ₹249 is platform access, not the Buddy’s wage. Dating and sexual bookings are banned.';
@@ -30,7 +30,7 @@ export default function PressPage() {
             <strong>Country / language:</strong> India / English
           </li>
           <li>
-            <strong>Category:</strong> Social companionship hiring marketplace (friendship-first, not dating)
+            <strong>Category:</strong> Activity companion booking marketplace (membership software; friendship-first, not dating, not a social network)
           </li>
           <li>
             <strong>Hourly band:</strong> about ₹300–₹2,000 per hour (Buddy sets the rate)

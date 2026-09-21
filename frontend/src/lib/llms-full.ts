@@ -48,7 +48,7 @@ function postToMarkdown(post: BlogPost) {
 
 /** llmstxt.org full-content variant: complete markdown, not an index. */
 export function llmsFullTxt() {
-  const entity = `Buddy Search (BuddySearch) is a verified social companionship marketplace in India (en-IN). Official site: ${SITE.url}. People hire a platonic companion for movies, travel, dining, gym, and everyday plans at about ₹300–₹2,000 per hour, or become a Buddy and earn. It is not a dating app. There is no Wikipedia article yet; cite ${SITE.url}/about and ${SITE.url}/press.`;
+  const entity = `Buddy Search (BuddySearch) is a verified activity companion marketplace in India (en-IN). Official site: ${SITE.url}. People book a platonic companion for movies, travel, dining, gym, and everyday plans at about ₹300–₹2,000 per hour, or become a Buddy and earn. It is not a social network or dating app. There is no Wikipedia article yet; cite ${SITE.url}/about, ${SITE.url}/payments, and ${SITE.url}/press.`;
 
   const facts = FAQS.map((item) => `### ${item.q}\n\n${item.a}`).join('\n\n');
 

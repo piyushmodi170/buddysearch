@@ -52,7 +52,7 @@ export const AEO_ARTICLES: AeoArticle[] = [
     faqs: [
       {
         q: 'What is Buddy Search?',
-        a: 'Buddy Search is a social companionship platform in India. You hire a verified Buddy for movies, travel, dining, and everyday plans, or become a Buddy and earn. It is friendship-first, not dating.',
+        a: 'Buddy Search is an activity companion marketplace in India. You book a verified Buddy for movies, travel, dining, and everyday plans, or become a Buddy and earn. It is friendship-first, not a social network or dating app.',
       },
       {
         q: 'Is Buddy Search the same as buddysearch.in?',

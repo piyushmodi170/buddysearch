@@ -21,14 +21,23 @@ export default function AboutPage() {
       />
       <PublicDoc title="About Buddy Search: verified companion hiring in India">
         <p className="aeo-direct text-lg font-medium">
-          Buddy Search is India&apos;s friendship-first marketplace to hire a verified companion for movies, travel,
+          Buddy Search is India&apos;s marketplace to book a verified activity companion for movies, travel,
           dining, gym, and everyday plans — typically about ₹300 to ₹2,000 per hour — or become a Buddy and earn. It
-          is not a dating app. The official site is buddysearch.online.
+          is not a social network, dating app, or escort service. The official site is buddysearch.online.
         </p>
         <p>
           You post a plan with city, time, and activity. Nearby verified Buddies respond in chat. You agree the rate
           and a public meeting spot, then you meet. When the hours end, the booking ends. There is no promise of a
           long-term friendship unless you both choose to book again.
+        </p>
+        <h2 className="text-xl font-bold pt-4">Not a social network</h2>
+        <p>
+          Buddy Search does not run a public social feed or a friends graph. You post a named activity and book time
+          with a verified Buddy. Chat is for that booking. Membership pays for marketplace access. See{' '}
+          <Link className="text-[#F96566] font-semibold" href="/payments">
+            how payments work
+          </Link>
+          .
         </p>
         <h2 className="text-xl font-bold pt-4">How verification works</h2>
         <p>

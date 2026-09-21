@@ -176,7 +176,7 @@ export default function LandingPage() {
           <div className="hero__content">
             <div className="hero__badge">
               <span className="hero__badge-dot" aria-hidden="true" />
-              Buddy Search — India’s #1 Social Companionship hiring Platform
+              Buddy Search — India’s activity companion marketplace
             </div>
             <h1 className="hero__title">
               Hire a Buddy or<br />
@@ -185,7 +185,7 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="hero__subtitle">
-              The answer is yes. Buddy Search is a verified social companionship marketplace in India. Hire a platonic companion for a movie, trip, or gym — about ₹300 to ₹2,000 an hour — or become a Buddy and earn. Not a dating app.
+              The answer is yes. Buddy Search is a membership marketplace in India to book a verified activity companion for a movie, trip, or gym — about ₹300 to ₹2,000 an hour — or become a Buddy and earn. Not a social network. Not a dating app.
             </p>
             <p className="hero__subtitle" style={{ fontSize: 15, marginTop: 8 }}>
               Platonic companionship (friendship, not dating). KYC (know-your-customer ID check). UPI (India’s instant payment rail). Cities: Bangalore, Mumbai, Delhi NCR, Hyderabad, Chennai, Pune, Kolkata.
@@ -551,7 +551,7 @@ export default function LandingPage() {
                   loading="lazy"
                 />
               </Link>
-              <p className="footer__brand-desc">India&apos;s leading social companion platform to find, hire, or become a verified companion for every plan.</p>
+              <p className="footer__brand-desc">India&apos;s marketplace to book a verified activity companion for movies, travel, gym, and plans — or become a Buddy and earn. Membership is platform access, not dating.</p>
               <p className="footer__brand-desc">
                 Email:{' '}
                 <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
@@ -595,6 +595,7 @@ export default function LandingPage() {
                   <Link className="footer__col-link" href="/privacy">Privacy Policy</Link>
                   <Link className="footer__col-link" href="/terms">Terms of Service</Link>
                   <Link className="footer__col-link" href="/disclaimer">Disclaimer</Link>
+                  <Link className="footer__col-link" href="/payments">How payments work</Link>
                   <Link className="footer__col-link" href="/contact">Contact</Link>
                 </div>
               </div>

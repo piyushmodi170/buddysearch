@@ -565,7 +565,7 @@ export const BLOG_POSTS_B: BlogPost[] = [
     slug: 'friendship-companionship-platform-india',
     title: 'What a friendship companionship platform is (Buddy Search)',
     description:
-      'Buddy Search is India’s friendship-first social companionship platform: hire or become a verified companion for activities, not dates.',
+      'Buddy Search is India’s friendship-first activity companion marketplace: book or become a verified companion for activities, not dates.',
     keywords: ['friendship companionship platform', 'social companionship India', 'buddy search'],
     date: DATE,
     category: 'Guides',
