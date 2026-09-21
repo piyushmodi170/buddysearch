@@ -11,7 +11,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { Loader2 } from 'lucide-react';
 import api from '@/lib/api';
-import { cn, isPaidMembership, needsEmailVerification, postAuthPath } from '@/lib/utils';
+import { cn, hasPlatformAccess, needsEmailVerification, postAuthPath } from '@/lib/utils';
 import { isOwnerEmail } from '@/lib/owner';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -28,7 +28,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   );
   const isMessages = pathname.startsWith('/messages');
   const isFeed = pathname.startsWith('/hire') || pathname.startsWith('/find') || pathname.startsWith('/account') || pathname.startsWith('/profile');
-  const memberAccess = isPaidMembership(user) || isOwnerEmail(user?.email);
+  const memberAccess = hasPlatformAccess(user) || isOwnerEmail(user?.email);
 
   useEffect(() => {
     const finish = () => setHydrated(true);

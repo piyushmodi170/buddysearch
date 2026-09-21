@@ -75,10 +75,20 @@ export const ensureDefaultTemplates = async () => {
     const shouldUpgradeOtp =
       (tpl.slug === 'email-otp' || tpl.slug === 'password-reset') &&
       !existing.body.includes('{{code}}');
-    if (shouldUpgradeOtp) {
+    const shouldUpgradeFree =
+      tpl.slug === 'free-access-congrats' && !existing.body.includes('Congratulations');
+    const shouldRetireUnpaid =
+      tpl.slug === 'unpaid-membership' && existing.subject.includes('249');
+    if (shouldUpgradeOtp || shouldUpgradeFree || shouldRetireUnpaid) {
       await prisma.emailTemplate.update({
         where: { slug: tpl.slug },
-        data: { subject: tpl.subject, body: tpl.body },
+        data: {
+          subject: tpl.subject,
+          body: tpl.body,
+          description: tpl.description,
+          active: tpl.active,
+          name: tpl.name,
+        },
       });
     }
   }
@@ -285,6 +295,100 @@ export const sendUnpaidReminders = async () => {
     body: tpl.body,
     slug: 'unpaid-membership',
   });
+};
+
+const FREE_LAUNCH_KEY = 'free-access-launch';
+
+export const grantFreeAccessToAllUsers = async () => {
+  const result = await prisma.user.updateMany({
+    data: { membershipPlan: 'STAR', membershipExpiry: null },
+  });
+  return result.count;
+};
+
+export const sendFreeAccessCongratulations = async () => {
+  const tpl = await getTemplateBySlug('free-access-congrats');
+  if (!tpl?.active) throw new Error('Congratulations template is disabled');
+
+  let sent = 0;
+  let failed = 0;
+  let skip = 0;
+  const take = 75;
+  for (;;) {
+    const users = await prisma.user.findMany({
+      where: { banned: false },
+      select: { email: true, name: true },
+      skip,
+      take,
+      orderBy: { createdAt: 'asc' },
+    });
+    if (!users.length) break;
+    for (const user of users) {
+      if (!user.email?.includes('@')) continue;
+      try {
+        await sendRawEmail({
+          to: user.email,
+          subject: tpl.subject,
+          html: tpl.body,
+          slug: 'free-access-congrats',
+          vars: { name: user.name || 'there', email: user.email },
+        });
+        sent += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    skip += users.length;
+    if (users.length < take) break;
+  }
+  return { sent, failed, total: sent + failed };
+};
+
+export const runFreeAccessLaunch = async (opts?: { forceEmail?: boolean }) => {
+  await ensureDefaultTemplates();
+  const updated = await grantFreeAccessToAllUsers();
+  const row = await prisma.appSetting.findUnique({ where: { key: FREE_LAUNCH_KEY } }).catch(() => null);
+  const prev = row && typeof row.value === 'object' && row.value
+    ? (row.value as Record<string, unknown>)
+    : {};
+  const alreadyEmailed = Boolean(prev.emailedAt) && !opts?.forceEmail;
+
+  let mail: { sent: number; failed: number; total?: number; skipped?: boolean; reason?: string } = {
+    sent: Number(prev.sent) || 0,
+    failed: Number(prev.failed) || 0,
+    skipped: alreadyEmailed,
+  };
+
+  if (!alreadyEmailed) {
+    if (!(await smtpConfigured())) {
+      mail = { sent: 0, failed: 0, skipped: true, reason: 'smtp not configured' };
+    } else {
+      mail = await sendFreeAccessCongratulations();
+    }
+  }
+
+  const emailedAt: string | null = alreadyEmailed
+    ? (typeof prev.emailedAt === 'string' ? prev.emailedAt : null)
+    : mail.skipped
+      ? (typeof prev.emailedAt === 'string' ? prev.emailedAt : null)
+      : new Date().toISOString();
+
+  const value = {
+    grantedAt: new Date().toISOString(),
+    updated,
+    emailedAt,
+    sent: mail.sent,
+    failed: mail.failed,
+    reason: mail.reason || null,
+  };
+
+  await prisma.appSetting.upsert({
+    where: { key: FREE_LAUNCH_KEY },
+    update: { value },
+    create: { key: FREE_LAUNCH_KEY, value },
+  });
+
+  return { updated, mail, emailedAt };
 };
 
 export const createMarketingTemplate = async (data: { name: string; description?: string; subject: string; body: string }) => {

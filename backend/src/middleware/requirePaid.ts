@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/db.js';
 import { isOwnerEmail } from '../config/owner.js';
-import { isPaidPlan } from '../services/membership.service.js';
+import { isPaidPlan, PLATFORM_ACCESS_FREE } from '../services/membership.service.js';
 
 export const requirePaid = (req: Request, res: Response, next: NextFunction) => {
+  if (PLATFORM_ACCESS_FREE) return next();
   void (async () => {
     try {
       if (isOwnerEmail(req.user?.email)) return next();

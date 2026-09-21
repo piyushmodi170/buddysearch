@@ -143,27 +143,37 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
   {
     slug: 'unpaid-membership',
     name: 'No Subscription Reminder',
-    description: 'Reminder for people who created an account but have not purchased a membership.',
+    description: 'Legacy paid-plan reminder. Disabled because Buddy Search is free.',
+    kind: 'SYSTEM',
+    active: false,
+    subject: '{{name}}, BuddySearch is free — open Hire',
+    body: `<p>Hi {{name}},</p>
+<p>BuddySearch is free. You do not need to buy a membership. Open Hire and Find a Buddy.</p>
+<p><a href="{{appUrl}}/hire" style="display:inline-block;background:#F96566;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:50px;font-weight:700;">Open Hire</a></p>`,
+  },
+  {
+    slug: 'free-access-congrats',
+    name: 'Free access congratulations',
+    description: 'Sent once to every member when platform membership becomes free.',
     kind: 'SYSTEM',
     active: true,
-    subject: '{{name}}, unlock BuddySearch — membership from ₹249',
-    body: `<h2 style="margin:0 0 12px;font-size:24px;line-height:1.25;color:#3D4550;text-align:center;">Your account is ready. Your membership is not.</h2>
-<p style="margin:0 0 16px;text-align:center;color:#4b5563;">Hi {{name}} — you signed up, but you have not bought a plan yet. Membership unlocks Find a Buddy, posting plans, and chat.</p>
+    subject: 'Congratulations {{name}} — BuddySearch is free',
+    body: `<h2 style="margin:0 0 12px;font-size:24px;line-height:1.25;color:#3D4550;text-align:center;">Congratulations, {{name}}</h2>
+<p style="margin:0 0 16px;text-align:center;color:#4b5563;">BuddySearch is now completely free. Hire a Buddy, Find people, chat, and post plans with no ₹249 paywall and no card.</p>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F9EFEF;border-radius:12px;margin:0 0 20px;">
   <tr>
     <td style="padding:16px 18px;">
-      <p style="margin:0 0 8px;font-weight:700;color:#3D4550;">With a plan you can</p>
+      <p style="margin:0 0 8px;font-weight:700;color:#3D4550;">Your account is unlocked</p>
       <p style="margin:0 0 6px;">✓ Browse verified Buddies in your city</p>
       <p style="margin:0 0 6px;">✓ Post movie, travel, cafe, and gym plans</p>
-      <p style="margin:0;">✓ Chat in-app and hire with clear rates</p>
+      <p style="margin:0;">✓ Chat in-app. If you agree an hourly fee with a Buddy, you pay them directly.</p>
     </td>
   </tr>
 </table>
-<p style="text-align:center;margin:0 0 8px;font-size:13px;color:#6b7280;">Plans start from <strong style="color:#F96566;">₹249</strong></p>
 <p style="text-align:center;margin:0 0 8px;">
-  <a href="{{appUrl}}/membership" style="display:inline-block;background:#F96566;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:50px;font-weight:700;">Choose a membership</a>
+  <a href="{{appUrl}}/hire" style="display:inline-block;background:#F96566;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:50px;font-weight:700;">Open Hire</a>
 </p>
-<p style="text-align:center;margin:16px 0 0;font-size:12px;color:#9ca3af;">Takes about a minute. Pay only on buddysearch.online.</p>`,
+<p style="text-align:center;margin:16px 0 0;font-size:12px;color:#9ca3af;">Log in at buddysearch.online</p>`,
   },
   {
     slug: 'marketing-announcement',

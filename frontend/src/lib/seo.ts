@@ -27,7 +27,7 @@ export const SITE = {
   domain: 'buddysearch.online',
   tagline: "India's activity companion marketplace",
   description:
-    'Buddy Search is an India marketplace to book a verified activity companion for movies, travel, dining, gym, and plans — or become a Buddy and earn. Membership is platform access, not dating.',
+    'Buddy Search is an India marketplace to book a verified activity companion for movies, travel, dining, gym, and plans — or become a Buddy and earn. Free to join. Not dating.',
   keywords: [
     'buddy search',
     'Buddy Search',
@@ -116,8 +116,8 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   ),
   '/payments': page(
     '/payments',
-    'How Buddy Search membership payments work',
-    'Buddy Search charges platform membership in India (from ₹249). Activity companion fees are paid between members, not through our checkout. Not a social network.',
+    'Buddy Search is free — how money works',
+    'Buddy Search is free in India. Activity companion fees are paid between members, not through our checkout. Not a social network.',
     true,
   ),
   '/press': page(
@@ -258,7 +258,7 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'How do Buddies get paid?',
-    a: 'Buddies set their own rates. Payment terms are agreed in the in-app chat before you meet. Membership unlocks posting plans and discovery; activity fees are between you and your Buddy.',
+    a: 'Buddies set their own rates. Payment terms are agreed in the in-app chat before you meet. Buddy Search itself is free; activity fees are between you and your Buddy.',
   },
   {
     q: 'Is it safe to hire a companion?',
@@ -266,7 +266,7 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'How much does Buddy Search cost?',
-    a: 'Membership for platform access starts from ₹249. The Buddy’s activity fee is separate and agreed in chat, typically about ₹300 to ₹2,000 per hour. Tickets, food, and cabs are extra unless you both write otherwise.',
+    a: 'Buddy Search is free to join. The Buddy’s activity fee is separate and agreed in chat, typically about ₹300 to ₹2,000 per hour. Tickets, food, and cabs are extra unless you both write otherwise.',
   },
   {
     q: 'How does ID verification work?',
@@ -397,7 +397,7 @@ export function homeJsonLd() {
       name: SITE.name,
       applicationCategory: 'LifestyleApplication',
       operatingSystem: 'Web',
-      offers: { '@type': 'Offer', price: '249', priceCurrency: 'INR' },
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
       description: SITE.description,
       url: SITE.url,
       inLanguage: SITE.language,

@@ -13,7 +13,7 @@ import {
   User,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { getInitials, isPaidMembership } from '@/lib/utils';
+import { getInitials, hasPlatformAccess } from '@/lib/utils';
 import { isOwnerEmail } from '@/lib/owner';
 
 function roleLabel(role?: string) {
@@ -26,7 +26,7 @@ function roleLabel(role?: string) {
 export default function AccountMenuPage() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const paid = isPaidMembership(user);
+  const paid = hasPlatformAccess(user);
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');

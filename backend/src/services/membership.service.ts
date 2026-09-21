@@ -2,7 +2,11 @@ import { prisma } from '../config/db.js';
 
 export type MembershipTier = 'BASIC' | 'STANDARD' | 'PREMIUM' | 'STAR';
 
+/** Razorpay will not onboard this category. Platform access is free. Buddy hourly fees stay between members. */
+export const PLATFORM_ACCESS_FREE = true;
+
 export const isPaidPlan = (plan?: string | null, expiry?: Date | string | null) => {
+  if (PLATFORM_ACCESS_FREE) return true;
   const name = String(plan || '').toUpperCase();
   if (name === 'STAR') return true;
   if (!name || name === 'FREE') return false;

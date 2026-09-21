@@ -8,7 +8,6 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Badge } from '@/components/ui/Badge';
 import { Info } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { isPaidMembership } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -109,7 +108,7 @@ export default function PostRequestPage() {
             limit: 5,
             remaining: 5,
             planLabel: 'Free',
-            isPaid: isPaidMembership(user),
+            isPaid: true,
           });
         }
       } finally {

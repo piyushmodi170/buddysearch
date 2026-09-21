@@ -43,6 +43,7 @@ export default function AdminEmailPage() {
   const [unpaid, setUnpaid] = useState(0);
   const [reminding, setReminding] = useState(false);
   const [remindingUnpaid, setRemindingUnpaid] = useState(false);
+  const [launchingFree, setLaunchingFree] = useState(false);
   const [editing, setEditing] = useState<Template | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -158,6 +159,19 @@ export default function AdminEmailPage() {
     }
   };
 
+  const launchFreeAccess = async () => {
+    if (!window.confirm('Set every member to free access (Star) and send the congratulations email? SMTP must be saved.')) return;
+    setLaunchingFree(true);
+    try {
+      const res = await api.post('/api/admin/email/free-access-launch', { forceEmail: true }, { timeout: 300000 });
+      toast.success(res.data.message || 'Members unlocked and emails sent');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not unlock members or send mail');
+    } finally {
+      setLaunchingFree(false);
+    }
+  };
+
   const toggleTemplate = async (tpl: Template) => {
     try {
       const res = await api.put(`/api/admin/email/templates/${tpl.id}`, { active: !tpl.active });
@@ -243,6 +257,25 @@ export default function AdminEmailPage() {
         <div className="flex flex-wrap justify-end gap-2 mt-5">
           <Button variant="outline" isLoading={sendingTest} onClick={sendTest}>Send test email</Button>
           <Button isLoading={saving} onClick={saveSmtp}><Save size={16} className="mr-2" /> Save SMTP Settings</Button>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-green-50 text-green-700 flex items-center justify-center shrink-0">
+              <Sparkles size={18} />
+            </div>
+            <div>
+              <h2 className="font-bold text-gray-900">Free access congratulations</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Sets every profile to free (Star) access and emails members that BuddySearch is free. Also runs once when the server starts if SMTP is configured.
+              </p>
+            </div>
+          </div>
+          <Button className="bg-green-600 hover:bg-green-700" isLoading={launchingFree} onClick={launchFreeAccess}>
+            Unlock all + send mail
+          </Button>
         </div>
       </Card>
 
