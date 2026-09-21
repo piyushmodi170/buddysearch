@@ -114,6 +114,12 @@ export const PAGE_SEO: Record<string, PageSeo> = {
     'Buddy Search is a technology platform. We do not employ companions. ID checks reduce risk. You decide whether to meet. Public first meets, in-app chat, report tools.',
     true,
   ),
+  '/press': page(
+    '/press',
+    'Press kit: how to cite Buddy Search',
+    'Official name, URL, one-line description, and directory copy for Buddy Search (buddysearch.online). Use this to list the company off-site. There is no Wikipedia article yet.',
+    true,
+  ),
   '/login': page(
     '/login',
     'Log in to Buddy Search',
@@ -198,6 +204,7 @@ export function sitemapLastModified(path: string): Date {
     path === '/privacy' ||
     path === '/terms' ||
     path === '/disclaimer' ||
+    path === '/press' ||
     path === '/answers' ||
     path === '/blog'
   ) {
@@ -312,6 +319,8 @@ export function organizationJsonLd() {
     logo: absoluteUrl('/logo.png'),
     description: SITE.description,
     foundingDate: '2026',
+    slogan: "India's friendship-first platform to hire a verified companion or become a Buddy",
+    knowsAbout: ['rent a friend India', 'movie buddy', 'travel companion', 'gym buddy', 'part-time companion jobs'],
     areaServed: { '@type': 'Country', name: SITE.country },
     knowsLanguage: 'en-IN',
   };
@@ -384,7 +393,9 @@ ${AEO_ARTICLES.map((article) => `- [${article.query}](${absoluteUrl(aeoPath(arti
 - [Log in](${absoluteUrl('/login')})
 - [Privacy](${absoluteUrl('/privacy')})
 - [Terms](${absoluteUrl('/terms')})
+- [Press kit](${absoluteUrl('/press')})
 - [LLM index](${absoluteUrl('/llms.txt')})
+- [LLM full content](${absoluteUrl('/llms-full.txt')})
 
 Member tools (login required, not for indexing): Find a Buddy, Hire feed, Messages, Membership.
 

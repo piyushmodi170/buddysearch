@@ -77,7 +77,7 @@ export const BLOG_POSTS_C: BlogPost[] = [
         a: 'Membership is for the platform. The activity fee is agreed between you and the Buddy.',
       },
     ],
-    related: ['rent-a-friend-india-guide', 'is-rent-a-friend-legitimate', 'buddy-search-vs-dating-apps'],
+    related: ['rent-a-friend-websites', 'rent-a-friend-what-it-means', 'is-rent-a-friend-legitimate'],
   },
   {
     slug: 'is-rent-a-friend-legitimate',
