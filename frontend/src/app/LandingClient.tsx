@@ -177,10 +177,9 @@ export default function LandingPage() {
               Buddy Search — India’s #1 Social Companionship hiring Platform
             </div>
             <h1 className="hero__title">
-              <span className="sr-only">Buddy Search. </span>
-              Hire a Buddy<br />
+              Hire a Buddy or<br />
               <span className="hero__title-row">
-                or <span className="hero__title-accent hero__title-accent--underline">Become One.</span>
+                <span className="hero__title-accent hero__title-accent--underline">Become One.</span>
               </span>
             </h1>
             <div className="hero__features">
@@ -206,7 +205,7 @@ export default function LandingPage() {
               </div>
             </div>
             <p className="hero__subtitle">
-              Buddy Search is India’s social companion platform to find, hire, or connect with verified companions for every plan. From cafés and concerts to travel and adventures. Buddy Search makes social experiences effortless, while giving companions the opportunity to earn along the way.
+              Buddy Search is India’s friendship-first marketplace to hire a verified companion for movies, travel, dining, gym, and everyday plans — about ₹300 to ₹2,000 per hour — or become a Buddy and earn. It is not a dating app. ID-verified members meet in public after agreeing the plan in chat.
             </p>
             <div className="hero__actions">
               <Link href="/find" className="btn-primary hero__cta-main">
@@ -231,7 +230,7 @@ export default function LandingPage() {
             <div className="hero__img-wrap">
               <img
                 src="/activities-on-buddy-search.webp"
-                alt="Friends enjoying activities together with BuddySearch"
+                alt="Friends on cafe, movie, travel and outdoor plans with Buddy Search in India"
                 className="hero__img"
                 width={2430}
                 height={2430}
@@ -316,7 +315,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="features__header">
             <span className="section-tag">Why BuddySearch</span>
-            <h2 className="section-title">Built for real connections,<br />built for friendship</h2>
+            <h2 className="section-title">Built for real connections, built for friendship</h2>
             <p className="section-subtitle">Every feature is designed to make finding - and hiring - a Buddy as natural and safe as possible.</p>
           </div>
           <div className="features__grid">
@@ -402,7 +401,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="pricing__header">
             <span className="section-tag">Pricing</span>
-            <h2 className="section-title">Simple, transparent<br />plans for everyone</h2>
+            <h2 className="section-title">Simple, transparent plans for everyone</h2>
             <p className="section-subtitle">No hidden fees. Pick the plan that fits your pace. Limited time offer.</p>
           </div>
           <div className="pricing__grid">
@@ -425,7 +424,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="testimonials__header">
             <span className="section-tag">Testimonials</span>
-            <h2 className="section-title">Real people,<br /><span>real results</span></h2>
+            <h2 className="section-title">Real people, real results</h2>
             <p className="section-subtitle">From late-night outings to weekend adventures — real people share how BuddySearch made every moment better.</p>
           </div>
         </div>
@@ -449,7 +448,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="hiw__header">
             <span className="section-tag">FAQ</span>
-            <h2 className="section-title" id="faq-heading">Questions people ask<br /><span>before they hire a Buddy</span></h2>
+            <h2 className="section-title" id="faq-heading">Questions people ask before they hire a Buddy</h2>
             <p className="section-subtitle">Clear answers for Google, Bing, and anyone deciding whether Buddy Search is right for their next plan.</p>
           </div>
           <div className="faq__list">
@@ -471,7 +470,7 @@ export default function LandingPage() {
             <span className="cta-section__live-dot" aria-hidden="true" />
             Trusted By Lakhs across India
           </div>
-          <h2 className="cta-section__title">Your next adventure<br />needs a Buddy.</h2>
+          <h2 className="cta-section__title">Your next adventure needs a Buddy.</h2>
           <p className="cta-section__subtitle">Connect, explore, belong. Lakhs of people across India are already finding companions for every plan, every activity, every day.</p>
           <div className="cta-section__actions">
             <Link href="/find" className="btn-white">
@@ -493,7 +492,7 @@ export default function LandingPage() {
               <Link href="/" className="footer__logo-link">
                 <img
                   src="/buddy_search_white_grey.png"
-                  alt="BuddySearch"
+                  alt="Buddy Search"
                   className="footer__logo"
                   width={1166}
                   height={260}

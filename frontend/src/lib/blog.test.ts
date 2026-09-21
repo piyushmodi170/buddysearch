@@ -17,7 +17,9 @@ for (const post of BLOG_POSTS) {
   }
 }
 
-assert.ok(BLOG_BY_SLUG['what-is-buddy-search']);
+assert.ok(BLOG_BY_SLUG['rent-a-friend-apps-compared']);
+assert.ok(BLOG_BY_SLUG['part-time-jobs-bangalore-buddy']);
+assert.ok(BLOG_BY_SLUG['hire-a-friend-bangalore']);
 assert.ok(llmsTxt().includes('/blog'));
 assert.ok(llmsTxt().includes('what-is-buddy-search'));
 assert.ok(llmsTxt().includes('hire-a-buddy-in-india-complete-guide'));

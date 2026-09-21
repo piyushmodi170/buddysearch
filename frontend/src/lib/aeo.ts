@@ -12,11 +12,14 @@ export type AeoArticle = {
   table?: { caption: string; headers: string[]; rows: string[][] };
   examples?: string[];
   faqs: AeoFaq[];
+  /** When set, Google should rank the long guide instead of this short answer URL. */
+  canonicalPath?: string;
 };
 
 export const AEO_ARTICLES: AeoArticle[] = [
   {
     slug: 'what-is-buddy-search',
+    canonicalPath: '/blog/what-is-buddy-search',
     query: 'What is Buddy Search?',
     title: 'What is Buddy Search?',
     description:
@@ -63,6 +66,7 @@ export const AEO_ARTICLES: AeoArticle[] = [
   },
   {
     slug: 'hire-a-buddy',
+    canonicalPath: '/blog/hire-a-buddy-in-india-complete-guide',
     query: 'How do I hire a buddy in India?',
     title: 'How to hire a buddy in India',
     description:
@@ -110,6 +114,7 @@ export const AEO_ARTICLES: AeoArticle[] = [
   },
   {
     slug: 'movie-buddy-hire',
+    canonicalPath: '/blog/movie-buddy-hire-india',
     query: 'Where can I hire a movie buddy in India?',
     title: 'Hire a movie buddy in India',
     description:
@@ -155,6 +160,7 @@ export const AEO_ARTICLES: AeoArticle[] = [
   },
   {
     slug: 'travel-companion',
+    canonicalPath: '/blog/find-travel-buddy-india',
     query: 'Where can I find a travel buddy in India?',
     title: 'Find a travel companion in India',
     description:
@@ -206,6 +212,7 @@ export const AEO_ARTICLES: AeoArticle[] = [
   },
   {
     slug: 'rent-a-friend-india',
+    canonicalPath: '/blog/rent-a-friend-india-guide',
     query: 'Can I rent a friend in India?',
     title: 'Rent a friend in India',
     description:
@@ -305,6 +312,7 @@ export const AEO_ARTICLES: AeoArticle[] = [
   },
   {
     slug: 'become-a-buddy',
+    canonicalPath: '/blog/become-a-buddy-earn-india',
     query: 'How do I become a Buddy and earn?',
     title: 'Become a Buddy and earn in India',
     description:

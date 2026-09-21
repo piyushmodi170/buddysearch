@@ -33,9 +33,13 @@ for (const route of routes) {
   assert.ok(meta.description, route);
   assert.ok(meta.openGraph, route);
   assert.ok(meta.twitter, route);
-  if (['/', '/about', '/login', '/signup', '/privacy', '/terms', '/disclaimer'].includes(route)) {
+  if (['/', '/about', '/privacy', '/terms', '/disclaimer'].includes(route)) {
     assert.equal(isIndexablePath(route), true, route);
     assert.equal((meta.robots as { index?: boolean }).index, true, route);
+  }
+  if (route === '/login' || route === '/signup') {
+    assert.equal(isIndexablePath(route), false, route);
+    assert.equal((meta.robots as { index?: boolean }).index, false, route);
   }
   if (route.startsWith('/admin') || route === '/find' || route === '/messages') {
     assert.equal(isIndexablePath(route), false, route);
@@ -47,7 +51,9 @@ assert.deepEqual(
   [...PUBLIC_SITEMAP_PATHS].sort(),
   Object.values(PAGE_SEO).filter((p) => p.index).map((p) => p.path).sort(),
 );
-assert.ok(typeof PAGE_SEO['/'].title === 'string');
+assert.ok(PAGE_SEO['/about'].title.includes('verified companion'));
+assert.ok(PAGE_SEO['/login'].index === false);
+assert.ok(!PUBLIC_SITEMAP_PATHS.includes('/login'));
 assert.ok(PAGE_SEO['/'].title.includes('Buddy Search |'));
 assert.ok(PAGE_SEO['/'].title.includes('Official Site'));
 assert.equal(typeof pageMetadata('/').title, 'object');

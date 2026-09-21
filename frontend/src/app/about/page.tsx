@@ -13,33 +13,41 @@ export default function AboutPage() {
         data={{
           '@context': 'https://schema.org',
           '@type': 'AboutPage',
-          name: 'About Buddy Search',
+          name: 'About Buddy Search: verified companion hiring in India',
           url: `${SITE.url}/about`,
-          description: 'Buddy Search connects people in India with verified companions for activities, adventures, and everyday moments — friendship-first, always.',
+          description:
+            'Buddy Search is India’s friendship-first marketplace to hire a verified companion for movies, travel, dining, and plans — or become a Buddy and earn.',
         }}
       />
-      <PublicDoc title="About Buddy Search">
+      <PublicDoc title="About Buddy Search: verified companion hiring in India">
         <p className="aeo-direct text-lg font-medium">
-          Buddy Search is India&apos;s friendship-first platform to hire a verified companion for movies, travel,
-          dining, and everyday plans. You can also become a Buddy and earn — it is not a dating app.
+          Buddy Search is India&apos;s friendship-first marketplace to hire a verified companion for movies, travel,
+          dining, gym, and everyday plans — typically about ₹300 to ₹2,000 per hour — or become a Buddy and earn. It
+          is not a dating app. The official site is buddysearch.online.
         </p>
         <p>
-          The platform operates on a friendship-first philosophy: find buddies for movies, exploring new places,
-          or simply spending time together. It bridges loneliness and meaningful social connection with verified,
-          relatable companions — without depending on your existing social circle.
+          You post a plan with city, time, and activity. Nearby verified Buddies respond in chat. You agree the rate
+          and a public meeting spot, then you meet. When the hours end, the booking ends. There is no promise of a
+          long-term friendship unless you both choose to book again.
+        </p>
+        <h2 className="text-xl font-bold pt-4">How verification works</h2>
+        <p>
+          Members submit government ID when the app asks. A verified badge means that check ran. It cuts down on
+          stolen photos. It does not make a stranger safe by itself. First meets belong in theatres, cafes, malls, and
+          stations — not a private home.
         </p>
         <h2 className="text-xl font-bold pt-4">Key features</h2>
         <ul className="list-disc pl-5 space-y-2">
-          <li>Activity-based companion matching for movies, travel, dining, and more.</li>
-          <li>Friendship-first design that prioritizes genuine social connection over transactional dating.</li>
-          <li>On-demand companionship for one-time events or recurring activities.</li>
+          <li>Activity-based companion matching for movies, travel, dining, gym, and more.</li>
+          <li>Friendship-first rules: no dating briefs, no sexual bookings, no fake partners.</li>
+          <li>On-demand hours: one film, a cafe, or a travel day — you write the end time.</li>
         </ul>
         <h2 className="text-xl font-bold pt-4">Who it is for</h2>
         <ul className="list-disc pl-5 space-y-2">
-          <li>Introverted people in India who want company for movies, dining, or events.</li>
-          <li>Young professionals and students who have moved to a new city.</li>
-          <li>Anyone going through a life transition who wants casual social support.</li>
-          <li>Adventure seekers looking for a like-minded buddy without a formal group tour.</li>
+          <li>People in Indian cities who have a plan and no company.</li>
+          <li>Students and professionals who moved for work or college.</li>
+          <li>Travellers who want a local, platonic companion — not a tour package.</li>
+          <li>People who want to earn as a Buddy on evenings and weekends.</li>
         </ul>
         <h2 className="text-xl font-bold pt-4">What you can book</h2>
         <ul className="list-disc pl-5 space-y-2">
@@ -58,7 +66,10 @@ export default function AboutPage() {
         ))}
         <p>
           Ready to start? <Link className="text-[#F96566] font-semibold" href="/signup">Create an account</Link> or{' '}
-          <Link className="text-[#F96566] font-semibold" href="/">return home</Link>.
+          <Link className="text-[#F96566] font-semibold" href="/">return home</Link>. Policies:{' '}
+          <Link className="text-[#F96566] font-semibold" href="/privacy">Privacy</Link>,{' '}
+          <Link className="text-[#F96566] font-semibold" href="/terms">Terms</Link>,{' '}
+          <Link className="text-[#F96566] font-semibold" href="/disclaimer">Disclaimer</Link>.
         </p>
       </PublicDoc>
     </>

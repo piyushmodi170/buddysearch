@@ -91,7 +91,7 @@ export const BLOG_POSTS_A: BlogPost[] = [
   },
   {
     slug: 'hire-a-buddy-in-india-complete-guide',
-    title: 'How to hire a buddy in India: a complete 2026 guide',
+    title: 'Hire a buddy in India (2026 guide)',
     description:
       'Hire a verified buddy in India on Buddy Search. Learn steps, prices, safety, and how friendship-first companionship works for movies, travel, and everyday plans.',
     keywords: ['hire a buddy India', 'find a buddy', 'friend for hire', 'social companion booking'],
@@ -192,7 +192,7 @@ export const BLOG_POSTS_A: BlogPost[] = [
   },
   {
     slug: 'movie-buddy-hire-india',
-    title: 'Movie buddy hire in India: how to watch films with company',
+    title: 'Movie buddy hire in India',
     description:
       'Hire a movie buddy in India on Buddy Search. Compare rates, pick a verified companion, and meet at the theatre for a friendship-first film outing.',
     keywords: ['movie buddy hire', 'hire a movie buddy India', 'movie companion India'],
@@ -271,7 +271,7 @@ export const BLOG_POSTS_A: BlogPost[] = [
   },
   {
     slug: 'find-travel-buddy-india',
-    title: 'Find a travel buddy in India: trains, weekends, and city trips',
+    title: 'Find a travel buddy in India',
     description:
       'Find a travel companion in India on Buddy Search. Post dates, city, and pace. Hire a verified travel buddy for Rajasthan, Coorg, or a long-distance train.',
     keywords: ['find a travel buddy', 'india travel partner', 'travel companion services', 'indian travel buddy'],
@@ -349,10 +349,10 @@ export const BLOG_POSTS_A: BlogPost[] = [
   },
   {
     slug: 'rent-a-friend-india-guide',
-    title: 'Rent a friend in India: what it is (and what it is not)',
+    title: 'Rent a friend in India: costs, legality, and how a meet works',
     description:
-      'Yes, you can rent a friend in India on Buddy Search. It means paid, time-bound, platonic company for a real plan — not dating and not a fake social-media friend.',
-    keywords: ['rent a friend India', 'friend for hire', 'find a buddy'],
+      'Rent a friend in India on Buddy Search: platonic paid hours for a real plan. Typical Buddy rates ₹300–₹2,000/hr, public meets, ID checks — not dating.',
+    keywords: ['rent a friend india', 'rent a friend', 'friend for hire', 'rent a friend app india'],
     date: DATE,
     category: 'Guides',
     query: 'Can I rent a friend in India?',
@@ -363,7 +363,27 @@ export const BLOG_POSTS_A: BlogPost[] = [
         heading: 'Plain meaning of “rent a friend”',
         paragraphs: [
           'People type “rent a friend India” or “friend for hire” when they want company they can book. The honest version is simple: you pay for hours. The person shows up for the plan. When the hours end, the booking ends.',
-          'Buddy Search uses the word Buddy on purpose. It keeps the product in friendship and activities, not in dating marketplaces.',
+          'Buddy Search uses the word Buddy on purpose. It keeps the product in friendship and activities, not in dating marketplaces. The official site is buddysearch.online.',
+        ],
+      },
+      {
+        heading: 'What it costs',
+        paragraphs: [
+          'There are two numbers. Membership (from ₹249) pays Buddy Search for posting plans and browsing. The Buddy’s activity fee is separate — often ₹300 to ₹2,000 per hour depending on city, time of day, and the plan. Movie tickets, food, and cabs are extra unless chat says who pays.',
+          'Ask in the first messages: “Koramangala cafe, Sunday 4–6 pm, what is your rate for two hours?” If they will not write a number, do not meet.',
+        ],
+      },
+      {
+        heading: 'Is it legal in India?',
+        paragraphs: [
+          'Paying someone for lawful social company that you both agree to is treated as a service. That is not the same as buying a relationship or a sexual booking. Illegal activity, harassment, and escort work are banned on Buddy Search and can get accounts removed.',
+          'You are still responsible for how you behave at the meet. The platform does not employ the Buddy.',
+        ],
+      },
+      {
+        heading: 'What a first meet actually looks like',
+        paragraphs: [
+          'You post the plan with city and neighbourhood (Indiranagar, Bandra, Hitech City). A verified Buddy replies. You agree hours, spot, and pay in the app. You meet at a cafe counter, mall gate, or theatre queue — not at a flat. You do the activity. You end on time.',
         ],
       },
       {
@@ -406,7 +426,11 @@ export const BLOG_POSTS_A: BlogPost[] = [
         a: 'No. Fake relationship bookings are not allowed.',
       },
     ],
-    related: ['hire-a-buddy-in-india-complete-guide', 'buddy-search-vs-dating-apps', 'social-companion-events-india'],
+    related: [
+      'rent-a-friend-apps-compared',
+      'is-rent-a-friend-legitimate',
+      'hire-a-buddy-in-india-complete-guide',
+    ],
   },
   {
     slug: 'cafe-buddy-india',
@@ -642,6 +666,13 @@ export const BLOG_POSTS_A: BlogPost[] = [
           'Dating pitches, sexual offers, fake photos, and harassment. Keep the product what it is: friendship and plans.',
         ],
       },
+      {
+        heading: 'Part-time hours in Bangalore (and similar cities)',
+        paragraphs: [
+          'Most movie, cafe, gym, and night-out plans sit after work and on weekends — including the 7 pm to 11 pm window people search when they want a part-time job in Bangalore after college. You pick which plans to accept. There is no fixed shift and no shop roster.',
+          'Students in Koramangala, Marathahalli, Rajajinagar, and nearby areas often start with 1–2 cafe or movie plans a week. Write your neighbourhood and rate on the profile so local clients can find you. Activity fees are typically ₹300–₹2,000 per hour; membership for using the platform is separate.',
+        ],
+      },
     ],
     steps: [
       { name: 'Sign up', text: 'Create an account and choose Buddy activities.' },
@@ -676,7 +707,7 @@ export const BLOG_POSTS_A: BlogPost[] = [
         a: 'Yes, if your account role allows it. Keep each plan clear: who is hiring whom.',
       },
     ],
-    related: ['buddy-search-membership-plans', 'hire-a-buddy-in-india-complete-guide', 'cost-to-hire-companion-india'],
+    related: ['part-time-jobs-bangalore-buddy', 'buddy-search-membership-plans', 'cost-to-hire-companion-india'],
   },
   {
     slug: 'buddy-search-vs-dating-apps',
@@ -694,6 +725,7 @@ export const BLOG_POSTS_A: BlogPost[] = [
         heading: 'Side-by-side',
         paragraphs: [
           'If you want a relationship, use a dating product. If you want company for Saturday’s film, use Buddy Search. Mixing the two on this platform gets accounts removed.',
+          'Dating apps rank people for chemistry. Buddy Search ranks a plan: film, cafe, gym, travel day. You pay for hours at an activity, not for a maybe-text later. That is why comparison tables belong on this page instead of a one-line “we are not Tinder.”',
         ],
       },
       {
@@ -732,6 +764,6 @@ export const BLOG_POSTS_A: BlogPost[] = [
         a: 'No. That post will be removed.',
       },
     ],
-    related: ['rent-a-friend-india-guide', 'hire-a-buddy-in-india-complete-guide', 'social-companion-events-india'],
+    related: ['rent-a-friend-apps-compared', 'rent-a-friend-india-guide', 'is-rent-a-friend-legitimate'],
   },
 ];
