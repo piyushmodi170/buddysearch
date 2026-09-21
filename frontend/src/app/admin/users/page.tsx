@@ -4,18 +4,20 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Search, Loader2, Ban, CheckCircle, Trash2, ShieldCheck, Pencil } from 'lucide-react';
+import { Search, Loader2, Ban, CheckCircle, Trash2, ShieldCheck, Pencil, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
 import { formatDate, getInitials, purchasedPlanName } from '../../../lib/utils';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { Filter, Pagination, ErrorCard } from '../../../components/admin/AdminControls';
 import { Modal } from '../../../components/ui/Modal';
+import { UserDetailModal } from '../../../components/admin/UserDetailModal';
 
 interface AdminUser {
   id: string; name: string; email: string; phone?: string; role: string; city?: string;
   avatar?: string; verified: boolean; banned: boolean; isAdmin: boolean;
   membershipPlan: string; membershipExpiry?: string | Date | null; createdAt: string;
+  onboardingCompleted?: boolean;
 }
 
 export default function AdminUsersPage() {
@@ -31,6 +33,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editing, setEditing] = useState<AdminUser | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', email: '', membershipPlan: 'NONE', role: 'CLIENT', city: '' });
 
   const debouncedSearch = useDebounce(search, 400);
@@ -90,7 +93,7 @@ export default function AdminUsersPage() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Users</h1>
-          <p className="text-sm text-gray-500 mt-1">{total.toLocaleString('en-IN')} total</p>
+          <p className="text-sm text-gray-500 mt-1">{total.toLocaleString('en-IN')} total. Open View to see every signup and onboarding answer.</p>
         </div>
         <div className="w-full sm:w-72">
           <Input icon={<Search size={18} />} placeholder="Search name, email, city..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -134,10 +137,15 @@ export default function AdminUsersPage() {
                         : <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600">{getInitials(u.name)}</div>}
                       <div className="min-w-0">
                         <div className="font-medium text-gray-900 flex items-center gap-1.5">
-                          {u.name}
+                          <button type="button" className="text-left hover:text-primary" onClick={() => setDetailId(u.id)}>
+                            {u.name}
+                          </button>
                           {u.isAdmin && <ShieldCheck size={13} className="text-primary" aria-label="Admin" />}
                         </div>
                         <div className="text-gray-500 text-xs truncate">{u.email}</div>
+                        {u.onboardingCompleted === false && (
+                          <div className="text-[11px] text-amber-600">Onboarding incomplete</div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -153,6 +161,9 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-4 text-gray-500">{formatDate(u.createdAt)}</td>
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" disabled={busyId === u.id} onClick={() => setDetailId(u.id)}>
+                        <Eye size={14} className="mr-1" />View
+                      </Button>
                       <Button variant="outline" size="sm" disabled={busyId === u.id} onClick={() => {
                         setEditing(u);
                         setEditForm({
@@ -184,6 +195,8 @@ export default function AdminUsersPage() {
       </Card>
 
       <Pagination page={page} pages={pages} onChange={setPage} />
+
+      <UserDetailModal userId={detailId} onClose={() => setDetailId(null)} />
 
       <Modal isOpen={!!editing} onClose={() => setEditing(null)} title="Edit user">
         {editing && (

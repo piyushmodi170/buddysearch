@@ -15,10 +15,14 @@ const router = Router();
 
 // Shared projection: everything the admin UI needs, never the password hash.
 const adminUserSelect = {
-  id: true, name: true, email: true, phone: true, role: true, city: true, state: true,
-  avatar: true, bio: true, verified: true, banned: true, isAdmin: true, aadhaarUrl: true,
+  id: true, name: true, email: true, phone: true, role: true,
+  city: true, state: true, pincode: true, gender: true, bio: true, avatar: true,
+  instagram: true, facebook: true, linkedin: true, twitter: true,
+  lat: true, lng: true, googleId: true,
+  verified: true, emailVerified: true, banned: true, isAdmin: true, aadhaarUrl: true,
   membershipPlan: true, membershipExpiry: true, isOnline: true, lastSeen: true,
-  profileCompletion: true, availableForRequests: true, createdAt: true
+  profileCompletion: true, availableForRequests: true, onboardingCompleted: true,
+  createdAt: true, updatedAt: true,
 };
 
 const asInt = (v: unknown, fallback: number) => {
@@ -37,6 +41,11 @@ const withRepairedUsers = async <T>(run: () => Promise<T>) => {
 
 const adminFail = (res: any, error: unknown, fallback: string, status = 500) =>
   res.status(status).json({ success: false, message: publicSafeError(error, fallback) });
+
+function publicAdminUser<T extends { googleId?: string | null }>(user: T) {
+  const { googleId, ...rest } = user;
+  return { ...rest, googleLinked: Boolean(googleId) };
+}
 
 /* ------------------------------------------------------------------ stats */
 router.get('/stats', adminAuth, async (_req, res) => {
@@ -84,7 +93,7 @@ router.get('/stats', adminAuth, async (_req, res) => {
           successfulPayments,
           pendingPayments
         },
-        recentSignups
+        recentSignups: recentSignups.map(publicAdminUser)
       };
     });
     res.json({ success: true, data });
@@ -130,7 +139,7 @@ router.get('/users', adminAuth, async (req, res) => {
     if (verified === 'true' || verified === 'false') where.verified = verified === 'true';
     if (banned === 'true' || banned === 'false') where.banned = banned === 'true';
 
-    const [data, total] = await withRepairedUsers(() => Promise.all([
+    const [rows, total] = await withRepairedUsers(() => Promise.all([
       prisma.user.findMany({
         where,
         skip: (page - 1) * limit,
@@ -141,7 +150,10 @@ router.get('/users', adminAuth, async (req, res) => {
       prisma.user.count({ where })
     ]));
 
-    res.json({ success: true, data: { data, total, page, limit, pages: Math.ceil(total / limit) } });
+    res.json({
+      success: true,
+      data: { data: rows.map(publicAdminUser), total, page, limit, pages: Math.ceil(total / limit) },
+    });
   } catch (error: any) {
     adminFail(res, error, 'Could not load users');
   }
@@ -154,13 +166,54 @@ router.get('/users/:id', adminAuth, async (req, res) => {
       select: {
         ...adminUserSelect,
         interests: { include: { interest: true } },
-        requests: { take: 10, orderBy: { createdAt: 'desc' } },
-        payments: { take: 10, orderBy: { createdAt: 'desc' }, include: { plan: true } },
-        receivedReviews: { take: 10, orderBy: { createdAt: 'desc' } }
+        requests: { take: 100, orderBy: { createdAt: 'desc' } },
+        sentOffers: {
+          take: 50,
+          orderBy: { createdAt: 'desc' },
+          include: { request: { select: { id: true, title: true, category: true } } },
+        },
+        payments: {
+          take: 100,
+          orderBy: { createdAt: 'desc' },
+          include: { plan: { select: { name: true, displayName: true } } },
+        },
+        receivedReviews: {
+          take: 50,
+          orderBy: { createdAt: 'desc' },
+          include: { reviewer: { select: { id: true, name: true, email: true } } },
+        },
+        givenReviews: {
+          take: 50,
+          orderBy: { createdAt: 'desc' },
+          include: { reviewee: { select: { id: true, name: true } } },
+        },
+        _count: {
+          select: {
+            chats1: true,
+            chats2: true,
+            sentMessages: true,
+            notifications: true,
+            requests: true,
+            payments: true,
+          },
+        },
       }
     });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    res.json({ success: true, data: user });
+    const { googleId, interests, _count, ...rest } = user;
+    res.json({
+      success: true,
+      data: {
+        ...rest,
+        googleLinked: Boolean(googleId),
+        interests: interests.map((row) => row.interest),
+        chatCount: (_count.chats1 || 0) + (_count.chats2 || 0),
+        messageCount: _count.sentMessages || 0,
+        notificationCount: _count.notifications || 0,
+        requestCount: _count.requests || 0,
+        paymentCount: _count.payments || 0,
+      },
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
@@ -173,7 +226,7 @@ router.put('/users/:id/verify', adminAuth, async (req, res) => {
       data: { verified: req.body.verified !== false },
       select: adminUserSelect
     });
-    res.json({ success: true, data });
+    res.json({ success: true, data: publicAdminUser(data) });
   } catch (error: any) {
     res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
@@ -190,7 +243,7 @@ router.put('/users/:id/ban', adminAuth, async (req, res) => {
       data: { banned: req.body.banned !== false },
       select: adminUserSelect
     });
-    res.json({ success: true, data });
+    res.json({ success: true, data: publicAdminUser(data) });
   } catch (error: any) {
     res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
@@ -203,7 +256,7 @@ router.put('/users/:id/role', adminAuth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid role' });
     }
     const data = await prisma.user.update({ where: { id: req.params.id }, data: { role }, select: adminUserSelect });
-    res.json({ success: true, data });
+    res.json({ success: true, data: publicAdminUser(data) });
   } catch (error: any) {
     res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
@@ -228,11 +281,11 @@ router.get('/verifications', adminAuth, async (req, res) => {
     const limit = Math.min(asInt(req.query.limit, 20), 100);
     const where = { aadhaarUrl: { not: null }, verified: false };
 
-    const [data, total] = await Promise.all([
+    const [rows, total] = await Promise.all([
       prisma.user.findMany({ where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'asc' }, select: adminUserSelect }),
       prisma.user.count({ where })
     ]);
-    res.json({ success: true, data: { data, total, page, limit, pages: Math.ceil(total / limit) } });
+    res.json({ success: true, data: { data: rows.map(publicAdminUser), total, page, limit, pages: Math.ceil(total / limit) } });
   } catch (error: any) {
     res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }
@@ -488,7 +541,7 @@ router.put('/users/:id', adminAuth, async (req, res) => {
       data: patch,
       select: adminUserSelect
     });
-    res.json({ success: true, data });
+    res.json({ success: true, data: publicAdminUser(data) });
   } catch (error: any) {
     res.status(400).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
   }

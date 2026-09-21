@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import api from '../../../lib/api';
 import { formatDate, getInitials } from '../../../lib/utils';
 import { Pagination, ErrorCard, Spinner } from '../../../components/admin/AdminControls';
+import { UserDetailModal } from '../../../components/admin/UserDetailModal';
 
 interface PendingUser {
   id: string; name: string; email: string; phone?: string; city?: string; state?: string;
@@ -22,6 +23,7 @@ export default function AdminVerificationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -94,6 +96,9 @@ export default function AdminVerificationsPage() {
                 <Badge variant="warning" className="mb-4">Pending review</Badge>
 
                 <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1" disabled={busyId === u.id} onClick={() => setDetailId(u.id)}>
+                    View answers
+                  </Button>
                   <Button className="flex-1 bg-green-600 hover:bg-green-700" disabled={busyId === u.id} onClick={() => decide(u, true)}>
                     <Check size={16} className="mr-2" /> Approve
                   </Button>
@@ -124,6 +129,7 @@ export default function AdminVerificationsPage() {
       )}
 
       <Pagination page={page} pages={pages} onChange={setPage} />
+      <UserDetailModal userId={detailId} onClose={() => setDetailId(null)} />
     </div>
   );
 }
