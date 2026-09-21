@@ -27,6 +27,7 @@ const CHIPS: Record<string, string[]> = {
   'purchase-thanks': ['name', 'plan', 'appName'],
   'incomplete-profile': ['name', 'appName', 'appUrl'],
   'unpaid-membership': ['name', 'appName', 'appUrl', 'logoUrl'],
+  'free-access-congrats': ['name', 'appName', 'appUrl', 'logoUrl'],
 };
 
 const ALL_CHIPS = ['name', 'code', 'minutes', 'email', 'appName', 'appUrl', 'logoUrl', 'plan', 'amount'];

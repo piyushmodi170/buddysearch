@@ -100,6 +100,19 @@ router.post('/email/remind-unpaid', adminAuth, async (_req, res) => {
   }
 });
 
+router.post('/email/free-access-launch', adminAuth, async (req, res) => {
+  try {
+    const data = await mail.runFreeAccessLaunch({ forceEmail: Boolean(req.body?.forceEmail) });
+    res.json({
+      success: true,
+      data,
+      message: `Updated ${data.updated} profile${data.updated === 1 ? '' : 's'}. Emails sent: ${data.mail.sent}.`,
+    });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: publicSafeError(error, 'Could not unlock members or send mail') });
+  }
+});
+
 router.get('/email/audience-count', adminAuth, async (req, res) => {
   try {
     const audience = String(req.query.audience || 'active') as mail.CampaignAudience;
