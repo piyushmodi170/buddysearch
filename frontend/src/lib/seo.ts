@@ -116,8 +116,8 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   ),
   '/payments': page(
     '/payments',
-    'Buddy Search is free — how money works',
-    'Buddy Search is free in India. Activity companion fees are paid between members, not through our checkout. Not a social network.',
+    'How money works — UPI membership',
+    'Buddy Search collects membership with UPI. Razorpay cards are not available for companion hiring. Hourly fees stay between members.',
     true,
   ),
   '/press': page(

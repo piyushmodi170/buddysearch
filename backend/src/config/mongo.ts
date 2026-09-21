@@ -84,12 +84,18 @@ export const repairPaymentIndexes = async () => {
     { $or: [{ razorpayOrderId: null }, { razorpayOrderId: '' }] },
     { $unset: { razorpayOrderId: '' } }
   );
-  await dropNonSparseUnique(col, ['razorpayPaymentId', 'razorpayOrderId']);
+  await dropNonSparseUnique(col, ['razorpayPaymentId', 'razorpayOrderId', 'upiUtr', 'upiReference']);
   try {
     await col.createIndex({ razorpayPaymentId: 1 }, { unique: true, sparse: true, name: 'razorpayPaymentId_sparse_unique' });
   } catch { /* exists */ }
   try {
     await col.createIndex({ razorpayOrderId: 1 }, { unique: true, sparse: true, name: 'razorpayOrderId_sparse_unique' });
+  } catch { /* exists */ }
+  try {
+    await col.createIndex({ upiUtr: 1 }, { unique: true, sparse: true, name: 'upiUtr_sparse_unique' });
+  } catch { /* exists */ }
+  try {
+    await col.createIndex({ upiReference: 1 }, { unique: true, sparse: true, name: 'upiReference_sparse_unique' });
   } catch { /* exists */ }
 };
 
@@ -97,21 +103,28 @@ export const insertPendingPayment = async (data: {
   userId: string;
   planId: string;
   amount: number;
-  razorpayOrderId: string;
+  razorpayOrderId?: string;
+  method?: string;
+  upiVpa?: string;
+  upiReference?: string;
 }) => {
   await repairPaymentIndexes();
   const col = await paymentsCollection();
   const _id = new ObjectId();
   const now = new Date();
-  await col.insertOne({
+  const doc: Record<string, unknown> = {
     _id,
     userId: new ObjectId(data.userId),
     planId: new ObjectId(data.planId),
     amount: data.amount,
-    razorpayOrderId: data.razorpayOrderId,
+    method: data.method || (data.razorpayOrderId ? 'RAZORPAY' : 'UPI'),
     status: 'PENDING',
     createdAt: now,
-  });
+  };
+  if (data.razorpayOrderId) doc.razorpayOrderId = data.razorpayOrderId;
+  if (data.upiVpa) doc.upiVpa = data.upiVpa;
+  if (data.upiReference) doc.upiReference = data.upiReference;
+  await col.insertOne(doc);
   return { id: _id.toHexString() };
 };
 

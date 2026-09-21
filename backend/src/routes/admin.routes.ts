@@ -365,6 +365,24 @@ router.get('/payments', adminAuth, async (req, res) => {
   }
 });
 
+router.post('/payments/:id/confirm', adminAuth, async (req, res) => {
+  try {
+    const data = await paymentService.confirmUpiPayment(req.params.id);
+    res.json({ success: true, data, message: 'Transfer confirmed. Membership is active.' });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/payments/:id/reject', adminAuth, async (req, res) => {
+  try {
+    const data = await paymentService.rejectUpiPayment(req.params.id);
+    res.json({ success: true, data, message: 'Payment marked failed.' });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
 /* ------------------------------------------------------------------ plans */
 router.get('/plans', adminAuth, async (req, res) => {
   try {
@@ -447,8 +465,8 @@ router.get('/settings/status', adminAuth, async (_req, res) => {
 
 router.get('/settings/:key', adminAuth, async (req, res) => {
   try {
-    const key = req.params.key as 'razorpay' | 'smtp' | 'google' | 'app';
-    if (!['razorpay', 'smtp', 'google', 'app'].includes(key)) {
+    const key = req.params.key as 'razorpay' | 'smtp' | 'google' | 'app' | 'upi';
+    if (!['razorpay', 'smtp', 'google', 'app', 'upi'].includes(key)) {
       return res.status(400).json({ success: false, message: 'Unknown settings group' });
     }
     const value = await getSetting(key);
@@ -460,8 +478,8 @@ router.get('/settings/:key', adminAuth, async (req, res) => {
 
 router.put('/settings/:key', adminAuth, async (req, res) => {
   try {
-    const key = req.params.key as 'razorpay' | 'smtp' | 'google' | 'app';
-    if (!['razorpay', 'smtp', 'google', 'app'].includes(key)) {
+    const key = req.params.key as 'razorpay' | 'smtp' | 'google' | 'app' | 'upi';
+    if (!['razorpay', 'smtp', 'google', 'app', 'upi'].includes(key)) {
       return res.status(400).json({ success: false, message: 'Unknown settings group' });
     }
     const value = await setSetting(key, req.body || {});

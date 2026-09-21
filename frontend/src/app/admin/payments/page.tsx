@@ -2,14 +2,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { Loader2, IndianRupee } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../../../lib/api';
 import { formatDate, formatPrice } from '../../../lib/utils';
 import { Filter, Pagination, ErrorCard } from '../../../components/admin/AdminControls';
 
 interface AdminPayment {
-  id: string; amount: number; status: string; createdAt: string;
+  id: string; amount: number; status: string; createdAt: string; method?: string;
   razorpayOrderId?: string; razorpayPaymentId?: string;
+  upiVpa?: string; upiUtr?: string; upiReference?: string;
   user?: { id: string; name: string; email: string; phone?: string };
   plan?: { id: string; name: string; displayName: string; price: number };
 }
@@ -27,6 +30,7 @@ export default function AdminPaymentsPage() {
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [acting, setActing] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -49,12 +53,27 @@ export default function AdminPaymentsPage() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { setPage(1); }, [status]);
 
+  const act = async (id: string, action: 'confirm' | 'reject') => {
+    setActing(`${id}:${action}`);
+    try {
+      await api.post(`/api/admin/payments/${id}/${action}`);
+      toast.success(action === 'confirm' ? 'Membership activated' : 'Marked failed');
+      await load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Action failed');
+    } finally {
+      setActing('');
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
-          <p className="text-sm text-gray-500 mt-1">{total.toLocaleString('en-IN')} records</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {total.toLocaleString('en-IN')} records · Confirm UPI UTRs here after money hits your account
+          </p>
         </div>
         <Card className="flex items-center gap-3 py-3">
           <div className="p-2.5 rounded-full bg-green-50 text-green-600"><IndianRupee size={20} /></div>
@@ -84,16 +103,17 @@ export default function AdminPaymentsPage() {
                 <th className="px-6 py-4 font-medium">Plan</th>
                 <th className="px-6 py-4 font-medium">Amount</th>
                 <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium">Order ID</th>
+                <th className="px-6 py-4 font-medium">UPI / UTR</th>
                 <th className="px-6 py-4 font-medium">Date</th>
+                <th className="px-6 py-4 font-medium">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading && (
-                <tr><td colSpan={6} className="px-6 py-16 text-center"><Loader2 className="animate-spin text-gray-400 mx-auto" size={28} /></td></tr>
+                <tr><td colSpan={8} className="px-6 py-16 text-center"><Loader2 className="animate-spin text-gray-400 mx-auto" size={28} /></td></tr>
               )}
               {!loading && items.length === 0 && (
-                <tr><td colSpan={6} className="px-6 py-16 text-center text-gray-400">No payments recorded yet</td></tr>
+                <tr><td colSpan={8} className="px-6 py-16 text-center text-gray-400">No payments recorded yet</td></tr>
               )}
               {!loading && items.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50">
@@ -104,8 +124,35 @@ export default function AdminPaymentsPage() {
                   <td className="px-6 py-4 text-gray-600">{p.plan?.displayName || p.plan?.name || '—'}</td>
                   <td className="px-6 py-4 font-semibold text-gray-900">{formatPrice(p.amount)}</td>
                   <td className="px-6 py-4"><Badge variant={STATUS_VARIANT[p.status] || 'default'}>{p.status}</Badge></td>
-                  <td className="px-6 py-4 text-xs font-mono text-gray-500">{p.razorpayPaymentId || p.razorpayOrderId || '—'}</td>
+                  <td className="px-6 py-4">
+                    <div className="text-xs font-mono text-gray-700">{p.upiUtr || p.razorpayPaymentId || p.razorpayOrderId || '—'}</div>
+                    {p.upiReference ? <div className="text-xs text-gray-400">note {p.upiReference}</div> : null}
+                    {p.method ? <div className="text-xs text-gray-400">{p.method}</div> : null}
+                  </td>
                   <td className="px-6 py-4 text-gray-500">{formatDate(p.createdAt)}</td>
+                  <td className="px-6 py-4">
+                    {p.status === 'PENDING' ? (
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          size="sm"
+                          disabled={!p.upiUtr || acting.startsWith(p.id)}
+                          isLoading={acting === `${p.id}:confirm`}
+                          onClick={() => act(p.id, 'confirm')}
+                        >
+                          Confirm UTR
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={acting.startsWith(p.id)}
+                          isLoading={acting === `${p.id}:reject`}
+                          onClick={() => act(p.id, 'reject')}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    ) : '—'}
+                  </td>
                 </tr>
               ))}
             </tbody>

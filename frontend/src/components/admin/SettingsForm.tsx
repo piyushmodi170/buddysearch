@@ -23,7 +23,7 @@ export function SettingsForm({
   fields,
   extra,
 }: {
-  group: 'razorpay' | 'smtp' | 'google' | 'app';
+  group: 'razorpay' | 'smtp' | 'google' | 'app' | 'upi';
   title: string;
   description: React.ReactNode;
   fields: Field[];

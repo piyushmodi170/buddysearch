@@ -26,15 +26,13 @@ export default function AdminRazorpayPage() {
       title="Razorpay"
       description={
         <div className="space-y-2 max-w-2xl">
-          <p>
-            Checkout uses <strong>Live</strong> API keys when they are saved (Key ID starts with{' '}
-            <span className="font-mono">rzp_live_</span>). If live keys are empty, it falls back to
-            Test keys (<span className="font-mono">rzp_test_</span>) so you can still open checkout.
+          <p className="text-red-700 font-medium">
+            Razorpay KYC has already rejected Buddy Search twice (social networking, then
+            professional networking / hiring). Card checkout will not go live. Use Admin → UPI.
           </p>
           <p>
-            <strong>Webhook secret is optional.</strong> Payments are confirmed with the live key
-            secret. Leave webhook blank unless you add{' '}
-            <span className="font-mono text-xs">https://buddysearch.online/api/payment/webhook</span>.
+            Keys here are unused until a different aggregator approves this category. Do not
+            change the website into fake ecommerce to pass KYC.
           </p>
         </div>
       }

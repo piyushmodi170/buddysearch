@@ -100,6 +100,15 @@ export const createOrderSchema = z.object({
   planId: z.string().trim().min(1, 'Select a plan'),
 });
 
+export const createUpiOrderSchema = z.object({
+  planId: z.string().trim().min(1, 'Select a plan'),
+});
+
+export const submitUtrSchema = z.object({
+  paymentId: z.string().trim().min(1, 'Payment is required'),
+  utr: z.string().trim().min(8, 'Enter the UTR / UPI reference from your bank app'),
+});
+
 export const verifyPaymentSchema = z.object({
   razorpayOrderId: z.string(),
   razorpayPaymentId: z.string(),
