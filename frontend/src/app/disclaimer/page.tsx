@@ -47,8 +47,7 @@ export default function DisclaimerPage() {
         <h2 className="text-xl font-bold pt-4">Rates</h2>
         <p>
           Illustrative Buddy rates on the site (about ₹300–₹2,000 per hour) are examples, not a promise. Each Buddy
-          sets their own number. Membership from ₹249 is a platform charge collected only for software access, not
-          for the Buddy&apos;s time. See /payments.
+          sets their own number. Buddy Search itself is free. Any hourly fee is between you and the Buddy.
         </p>
       </PublicDoc>
     </>

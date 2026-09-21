@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Check, Heart, Lock, MessageCircle } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { isPaidMembership } from '@/lib/utils';
+import { hasPlatformAccess } from '@/lib/utils';
 import { isOwnerEmail } from '@/lib/owner';
 
 const OPEN_PATHS = ['/membership', '/account', '/help', '/admin'];
@@ -15,7 +15,7 @@ export function MembersOnlyGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const unlocked =
-    isPaidMembership(user) || isOwnerEmail(user?.email) || Boolean(user?.isAdmin);
+    hasPlatformAccess(user) || isOwnerEmail(user?.email) || Boolean(user?.isAdmin);
   const open = OPEN_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   if (unlocked || open) return <>{children}</>;

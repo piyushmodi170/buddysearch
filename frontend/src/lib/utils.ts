@@ -44,6 +44,14 @@ export function isPaidMembership(user?: {
   return !Number.isNaN(when.getTime()) && when.getTime() > Date.now();
 }
 
+/** Razorpay declined this category. Hire, Find, chats, and posts are free. */
+export const PLATFORM_ACCESS_FREE = true;
+
+export function hasPlatformAccess(user?: Parameters<typeof isPaidMembership>[0]) {
+  if (PLATFORM_ACCESS_FREE) return Boolean(user);
+  return isPaidMembership(user);
+}
+
 export function planDisplayLabel(user?: {
   membershipPlan?: string | null;
   membershipExpiry?: string | Date | null;

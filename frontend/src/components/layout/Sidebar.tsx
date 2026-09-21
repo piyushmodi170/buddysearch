@@ -7,7 +7,7 @@ import {
   Users, Search, MessageSquare, Bell, List, 
   FileText, User, Star, HelpCircle, LogOut, ShieldCheck
 } from 'lucide-react';
-import { cn, isPaidMembership } from '@/lib/utils';
+import { cn, hasPlatformAccess } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { useChatStore } from '@/store/useChatStore';
@@ -99,7 +99,7 @@ export function Sidebar() {
                         {unreadNotifications > 99 ? '99+' : unreadNotifications}
                       </span>
                     )}
-                    {item.badge === 'membership' && isPaidMembership(user) && (
+                    {item.badge === 'membership' && hasPlatformAccess(user) && (
                       <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded">
                         ACTIVE
                       </span>

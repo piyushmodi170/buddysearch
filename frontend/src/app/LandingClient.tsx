@@ -62,10 +62,7 @@ const FEATURES = [
 ];
 
 const PLANS = [
-  { name: 'Basic', tagline: 'Try BuddySearch at your own pace', price: '₹249', original: '₹498', off: '50% OFF', period: '₹83/month', periodNote: 'billed for 3 months', features: ['Browse buddy discovery feed', 'View buddy profiles (name, avatar, city, services)', 'Post up to 5 plan requests / month', 'Standard position in discover feed'], accent: '#5b8dee', iconBg: '#eef3fd', cta: 'Start Basic', highlighted: false },
-  { name: 'Standard', tagline: 'More plans, more visibility', price: '₹349', original: '₹998', off: '65% OFF', period: '₹58/month', periodNote: 'billed for 6 months', features: ['Everything in Basic', 'Post up to 10 plan requests / month', 'View user social profile links', 'Priority placement in discover'], accent: '#10b981', iconBg: '#ecfdf5', cta: 'Get Standard', highlighted: false },
-  { name: 'Premium', tagline: 'The plan most people choose', price: '₹449', original: '₹1600', off: '72% OFF', period: '₹37/month', periodNote: 'billed for 12 months', features: ['Everything in Standard', 'Post up to 15 plan requests / month', 'Higher priority placement in feed', '"Premium" badge on your profile'], accent: '#f96566', iconBg: '#fff1f2', cta: 'Go Premium', highlighted: true },
-  { name: 'Star Member', tagline: 'Lifetime access, pay once', price: '₹649', original: '₹2949', off: '78% OFF', period: 'one-time', periodNote: 'lifetime access', features: ['Everything in Premium', 'Unlimited plan requests', 'Pinned to top of discover', '"Star" badge on your profile', 'Lifetime access — pay once'], accent: '#8b5cf6', iconBg: '#f5f3ff', cta: 'Become a Star', highlighted: false },
+  { name: 'Free', tagline: 'Hire a Buddy or become one — no platform fee', price: '₹0', original: '', off: '', period: 'forever', periodNote: 'no card needed', features: ['Browse buddy discovery feed', 'View buddy profiles', 'Post activity plans', 'In-app chat', 'Hire or become a Buddy'], accent: '#f96566', iconBg: '#fff1f2', cta: 'Join free', highlighted: true },
 ];
 
 const TESTIMONIALS = [
@@ -109,7 +106,7 @@ function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
       className={`pricing__card${plan.highlighted ? ' pricing__card--highlighted' : ''}`}
       style={{ '--accent': plan.accent, '--icon-bg': plan.iconBg } as React.CSSProperties}
     >
-      {plan.highlighted && <div className="pricing__badge">Most Popular</div>}
+      {plan.highlighted && <div className="pricing__badge">Free</div>}
       <div className="pricing__icon"><Star size={22} /></div>
       <div className="pricing__plan-header">
         <div className="pricing__plan-name">{plan.name}</div>
@@ -133,7 +130,7 @@ function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
         ))}
       </ul>
       <Link href="/signup" className={`pricing__cta${plan.highlighted ? ' pricing__cta--solid' : ''}`}>{plan.cta}</Link>
-      <p className="pricing__taxes">Inclusive of taxes</p>
+      <p className="pricing__taxes">No platform fee. Buddy hourly rates are separate.</p>
     </div>
   );
 }
@@ -185,7 +182,7 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="hero__subtitle">
-              The answer is yes. Buddy Search is a membership marketplace in India to book a verified activity companion for a movie, trip, or gym — about ₹300 to ₹2,000 an hour — or become a Buddy and earn. Not a social network. Not a dating app.
+              The answer is yes. Buddy Search is free in India. Book a verified activity companion for a movie, trip, or gym — about ₹300 to ₹2,000 an hour if you agree a Buddy fee — or become a Buddy and earn. Not a social network. Not a dating app.
             </p>
             <p className="hero__subtitle" style={{ fontSize: 15, marginTop: 8 }}>
               Platonic companionship (friendship, not dating). KYC (know-your-customer ID check). UPI (India’s instant payment rail). Cities: Bangalore, Mumbai, Delhi NCR, Hyderabad, Chennai, Pune, Kolkata.
@@ -292,7 +289,7 @@ export default function LandingPage() {
                 </tr>
                 <tr>
                   <td className="p-3 border-t">Platform membership</td>
-                  <td className="p-3 border-t">From ₹249</td>
+                  <td className="p-3 border-t">Free (₹0)</td>
                   <td className="p-3 border-t">Not the Buddy’s wage</td>
                 </tr>
               </tbody>
@@ -395,12 +392,8 @@ export default function LandingPage() {
                 <div className="earning__stat-label">Cities Across India</div>
               </div>
               <div className="earning__stat">
-                <span className="earning__stat-badge">50% OFF</span>
-                <div className="earning__stat-value">
-                  <s className="earning__stat-original">₹498</s>
-                  ₹249
-                </div>
-                <div className="earning__stat-label">Join From</div>
+                <div className="earning__stat-value">₹0</div>
+                <div className="earning__stat-label">Join — free</div>
               </div>
             </div>
             <div className="earning__cta-wrap">
@@ -448,8 +441,8 @@ export default function LandingPage() {
         <div className="container">
           <div className="pricing__header">
             <span className="section-tag">Pricing</span>
-            <h2 className="section-title">Simple, transparent plans for everyone</h2>
-            <p className="section-subtitle">No hidden fees. Pick the plan that fits your pace. Limited time offer.</p>
+            <h2 className="section-title">Buddy Search is free to use</h2>
+            <p className="section-subtitle">No platform fee and no card. Buddy hourly fees, if you agree them, stay between you and the Buddy.</p>
           </div>
           <div className="pricing__grid">
             {PLANS.map((p) => <PlanCard key={p.name} plan={p} />)}
@@ -463,7 +456,7 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-          <p className="pricing__note">Prices shown for a limited time. Taxes extra where applicable.</p>
+          <p className="pricing__note">Create a free account. Razorpay is not required to use Hire or Find.</p>
         </div>
       </section>
 
@@ -551,7 +544,7 @@ export default function LandingPage() {
                   loading="lazy"
                 />
               </Link>
-              <p className="footer__brand-desc">India&apos;s marketplace to book a verified activity companion for movies, travel, gym, and plans — or become a Buddy and earn. Membership is platform access, not dating.</p>
+              <p className="footer__brand-desc">India&apos;s marketplace to book a verified activity companion for movies, travel, gym, and plans — or become a Buddy and earn. Free to join. Not dating.</p>
               <p className="footer__brand-desc">
                 Email:{' '}
                 <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>

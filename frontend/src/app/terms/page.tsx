@@ -19,9 +19,9 @@ export default function TermsPage() {
       <PublicDoc title="Terms of Service">
         <p>Last updated: 21 September 2026. These terms govern buddysearch.online in India.</p>
         <p className="aeo-direct text-lg font-medium">
-          Buddy Search is a membership marketplace for platonic, activity-based companion bookings. You hire a Buddy
+          Buddy Search is a marketplace for platonic, activity-based companion bookings. You hire a Buddy
           for a named plan, or you offer time as a Buddy. Dating, sexual services, fake relationships, harassment, and
-          illegal work are banned. Membership pays for platform access. Activity fees are agreed between you and the
+          illegal work are banned. The platform is free. Activity fees are agreed between you and the
           other member in chat. Buddy Search is not a social network.
         </p>
         <h2 className="text-xl font-bold pt-4">Accounts and verification</h2>
@@ -32,10 +32,9 @@ export default function TermsPage() {
         </p>
         <h2 className="text-xl font-bold pt-4">Money</h2>
         <p>
-          Membership (Basic, Standard, Premium, Star) is charged by Buddy Search for discovery, posting, and related
-          tools. It is not the Buddy&apos;s hourly wage. Activity fees, tickets, food, and travel are between Client and
-          Buddy. Write the rate, hours, and extras in chat before you travel. We can refuse refunds where the platform
-          access was delivered. Payment-provider checkout, when enabled, is only for membership. Details:{' '}
+          Buddy Search does not charge a platform membership fee. Hire, Find, chats, and posts are free. Activity fees,
+          tickets, food, and travel are between Client and Buddy. Write the rate, hours, and extras in chat before you
+          travel. Details:{' '}
           <a className="text-[#F96566] font-semibold" href="/payments">
             /payments
           </a>

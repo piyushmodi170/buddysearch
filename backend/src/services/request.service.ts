@@ -1,5 +1,5 @@
 import { prisma } from '../config/db.js';
-import { isPaidPlan } from './membership.service.js';
+import { isPaidPlan, PLATFORM_ACCESS_FREE } from './membership.service.js';
 
 const withTimeout = <T>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> => {
   return Promise.race([
@@ -54,7 +54,7 @@ export const getPostUsage = async (userId: string) => {
 
   const count = await getMonthlyPostCount(userId);
   const limit = getPostLimit(plan);
-  const paid = isPaidPlan(plan, membershipExpiry);
+  const paid = PLATFORM_ACCESS_FREE || isPaidPlan(plan, membershipExpiry);
   const remaining = limit === -1 ? null : Math.max(0, limit - count);
 
   return {
@@ -62,7 +62,7 @@ export const getPostUsage = async (userId: string) => {
     limit,
     remaining,
     plan,
-    planLabel: paid ? plan : 'FREE',
+    planLabel: PLATFORM_ACCESS_FREE ? 'FREE' : paid ? plan : 'FREE',
     isPaid: paid,
     membershipExpiry,
   };
@@ -71,7 +71,7 @@ export const getPostUsage = async (userId: string) => {
 export const createRequestService = async (userId: string, data: any) => {
   try {
     const user = await withTimeout(prisma.user.findUnique({ where: { id: userId } }));
-    if (!isPaidPlan(user?.membershipPlan, user?.membershipExpiry)) {
+    if (!PLATFORM_ACCESS_FREE && !isPaidPlan(user?.membershipPlan, user?.membershipExpiry)) {
       throw new Error('A paid membership is required to post requests.');
     }
     const plan = user?.membershipPlan || 'BASIC';
