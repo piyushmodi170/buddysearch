@@ -24,11 +24,14 @@ export const metadata: Metadata = {
   description: root.description,
   keywords: SITE.keywords,
   applicationName: SITE.name,
-  authors: [{ name: SITE.name, url: SITE.url }],
+  authors: [
+    { name: SITE.name, url: SITE.url },
+    { name: 'Buddy Search Editorial', url: `${SITE.url}/authors/editorial` },
+  ],
   creator: SITE.name,
   publisher: SITE.name,
   category: 'lifestyle',
-  formatDetection: { email: false, address: false, telephone: false },
+  formatDetection: { email: true, address: true, telephone: true },
   icons: {
     icon: [{ url: '/favicon.png', type: 'image/png', sizes: '32x32' }],
     shortcut: '/favicon.png',

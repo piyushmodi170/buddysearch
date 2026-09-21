@@ -9,6 +9,8 @@ import {
   FileText, UserPlus, Compass, Wallet, PartyPopper
 } from 'lucide-react';
 import { FAQS } from '@/lib/seo';
+import { CONTACT } from '@/lib/eeat';
+import { CitationLinks } from '@/components/seo/EeatBits';
 
 const HERO_STATS = [
   { value: '100K+', label: 'Active Buddies' },
@@ -183,7 +185,16 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="hero__subtitle">
-              Buddy Search is a verified social companionship marketplace in India: hire a platonic companion for movies, travel, dining, or gym — typically ₹300 to ₹2,000 per hour — or become a Buddy and earn. Not a dating app.
+              The answer is yes. Buddy Search is a verified social companionship marketplace in India. Hire a platonic companion for a movie, trip, or gym — about ₹300 to ₹2,000 an hour — or become a Buddy and earn. Not a dating app.
+            </p>
+            <p className="hero__subtitle" style={{ fontSize: 15, marginTop: 8 }}>
+              Platonic companionship (friendship, not dating). KYC (know-your-customer ID check). UPI (India’s instant payment rail). Cities: Bangalore, Mumbai, Delhi NCR, Hyderabad, Chennai, Pune, Kolkata.
+            </p>
+            <p className="hero__subtitle" style={{ fontSize: 14 }}>
+              By{' '}
+              <Link href="/authors/editorial">Buddy Search Editorial</Link>
+              {' · '}
+              <time dateTime="2026-09-21">Updated 21 Sep 2026</time>
             </p>
             <div className="hero__features">
               <div className="hero__feature">
@@ -250,6 +261,42 @@ export default function LandingPage() {
             <span className="section-tag">How It Works</span>
             <h2 className="section-title">How Buddy Search works</h2>
             <p className="section-subtitle">Buddy Search works for two kinds of people: those who have a plan and need a companion, and those who love making new friends.</p>
+          </div>
+          <p className="section-subtitle" style={{ marginBottom: 16 }}>
+            Named outcome: Priya Sharma (Cafe Buddy, Mumbai) found a cafe buddy in 5 minutes. Divya Nair (Shopping Buddy, Delhi) matched in 10 minutes. Arjun Mehta (Gym Buddy, Pune) went from thin freelance weekends to fully booked weekends after joining.
+          </p>
+          <div className="overflow-x-auto mb-10">
+            <table className="w-full text-sm border border-[#f0e0e0] bg-white">
+              <thead>
+                <tr>
+                  <th className="text-left p-3 border-b">Plan</th>
+                  <th className="text-left p-3 border-b">Typical Buddy rate</th>
+                  <th className="text-left p-3 border-b">First meet</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="p-3 border-t">Cafe / hangout</td>
+                  <td className="p-3 border-t">₹300–₹1,500/hr</td>
+                  <td className="p-3 border-t">Public cafe</td>
+                </tr>
+                <tr>
+                  <td className="p-3 border-t">Movie buddy</td>
+                  <td className="p-3 border-t">₹1,000–₹2,000/hr</td>
+                  <td className="p-3 border-t">Theatre counter</td>
+                </tr>
+                <tr>
+                  <td className="p-3 border-t">Travel day</td>
+                  <td className="p-3 border-t">₹1,500–₹2,000/hr</td>
+                  <td className="p-3 border-t">Station or lobby</td>
+                </tr>
+                <tr>
+                  <td className="p-3 border-t">Platform membership</td>
+                  <td className="p-3 border-t">From ₹249</td>
+                  <td className="p-3 border-t">Not the Buddy’s wage</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           <div className="hiw__tabs-wrapper">
             <div className="hiw__flow">
@@ -425,6 +472,10 @@ export default function LandingPage() {
           <div className="testimonials__header">
             <span className="section-tag">Testimonials</span>
             <h2 className="section-title">Real people, real results</h2>
+            <p className="section-subtitle">Named member notes from the product. These are on-site quotes, not newspaper coverage.</p>
+            <blockquote className="max-w-2xl mx-auto mb-8 text-center text-lg italic">
+              “I used to dread going to new cafes alone. Found a Cafe Buddy in 5 minutes and we spent hours chatting.” — Priya Sharma, Client, Mumbai
+            </blockquote>
             <p className="section-subtitle">From late-night outings to weekend adventures — real people share how BuddySearch made every moment better.</p>
           </div>
         </div>
@@ -501,6 +552,15 @@ export default function LandingPage() {
                 />
               </Link>
               <p className="footer__brand-desc">India&apos;s leading social companion platform to find, hire, or become a verified companion for every plan.</p>
+              <p className="footer__brand-desc">
+                Email:{' '}
+                <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+                . Address: India (country of operation; no public street listed). KYC-style ID checks. UPI for activity fees.{' '}
+                <Link href="/contact">Contact</Link>
+                {' · '}
+                <time dateTime="2026-09-21">Updated 21 Sep 2026</time>
+              </p>
+              <CitationLinks />
             </div>
             <div className="footer__links">
               <div>
@@ -523,6 +583,8 @@ export default function LandingPage() {
                   <Link className="footer__col-link" href="/blog">Blog</Link>
                   <Link className="footer__col-link" href="/answers">Answers</Link>
                   <Link className="footer__col-link" href="/answers/hire-a-buddy">How to hire</Link>
+                  <Link className="footer__col-link" href="/contact">Contact</Link>
+                  <Link className="footer__col-link" href="/authors/editorial">Editorial</Link>
                   <Link className="footer__col-link" href="/signup">Become a Buddy</Link>
                   <Link className="footer__col-link" href="/login">Log In</Link>
                 </div>
@@ -533,6 +595,7 @@ export default function LandingPage() {
                   <Link className="footer__col-link" href="/privacy">Privacy Policy</Link>
                   <Link className="footer__col-link" href="/terms">Terms of Service</Link>
                   <Link className="footer__col-link" href="/disclaimer">Disclaimer</Link>
+                  <Link className="footer__col-link" href="/contact">Contact</Link>
                 </div>
               </div>
             </div>

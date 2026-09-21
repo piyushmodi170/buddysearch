@@ -86,7 +86,7 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   '/': page(
     '/',
     'Buddy Search | Hire a Buddy in India (Official Site)',
-    'Buddy Search is the official site to hire a verified buddy in India for movies, travel, dining, and everyday plans — or become a Buddy and earn. Friendship-first, not dating.',
+    'Buddy Search is India’s site to hire a verified buddy for movies, travel, or gym. About ₹300–₹2,000/hr. Friendship-first, not dating.',
     true,
     SITE.keywords,
   ),
@@ -117,7 +117,25 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   '/press': page(
     '/press',
     'Press kit: how to cite Buddy Search',
-    'Official name, URL, one-line description, and directory copy for Buddy Search (buddysearch.online). Use this to list the company off-site. There is no Wikipedia article yet.',
+    'Official name, URL, and directory copy for Buddy Search (buddysearch.online). No Wikipedia article yet. Contact for listings.',
+    true,
+  ),
+  '/contact': page(
+    '/contact',
+    'Contact Buddy Search',
+    'Email Buddy Search in India: piyushmodi170@gmail.com. Safety reports, press, and directory listings. Official site buddysearch.online.',
+    true,
+  ),
+  '/authors': page(
+    '/authors',
+    'Buddy Search authors',
+    'Who writes Buddy Search guides: the in-house editorial desk in India. Platonic companion hiring, KYC checks, UPI fees.',
+    true,
+  ),
+  '/authors/editorial': page(
+    '/authors/editorial',
+    'Buddy Search Editorial',
+    'Buddy Search Editorial writes India companion-hiring guides since 2026. ID checks, public meets, ₹300–₹2,000/hr. Not dating.',
     true,
   ),
   '/login': page(
@@ -205,6 +223,9 @@ export function sitemapLastModified(path: string): Date {
     path === '/terms' ||
     path === '/disclaimer' ||
     path === '/press' ||
+    path === '/contact' ||
+    path === '/authors' ||
+    path === '/authors/editorial' ||
     path === '/answers' ||
     path === '/blog'
   ) {
@@ -319,6 +340,16 @@ export function organizationJsonLd() {
     logo: absoluteUrl('/logo.png'),
     description: SITE.description,
     foundingDate: '2026',
+    email: 'piyushmodi170@gmail.com',
+    address: { '@type': 'PostalAddress', addressCountry: 'IN' },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'piyushmodi170@gmail.com',
+      contactType: 'customer support',
+      areaServed: 'IN',
+      availableLanguage: 'English',
+      url: absoluteUrl('/contact'),
+    },
     slogan: "India's friendship-first platform to hire a verified companion or become a Buddy",
     knowsAbout: ['rent a friend India', 'movie buddy', 'travel companion', 'gym buddy', 'part-time companion jobs'],
     areaServed: { '@type': 'Country', name: SITE.country },
@@ -341,6 +372,18 @@ export function websiteJsonLd() {
 
 export function homeJsonLd() {
   return [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: SITE.name,
+      url: SITE.url,
+      datePublished: '2026-09-19',
+      dateModified: '2026-09-21',
+      description: PAGE_SEO['/'].description,
+      inLanguage: SITE.language,
+      author: { '@type': 'Person', name: 'Buddy Search Editorial', url: absoluteUrl('/authors/editorial') },
+      isPartOf: { '@type': 'WebSite', name: SITE.name, url: SITE.url },
+    },
     {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -394,6 +437,8 @@ ${AEO_ARTICLES.map((article) => `- [${article.query}](${absoluteUrl(aeoPath(arti
 - [Privacy](${absoluteUrl('/privacy')})
 - [Terms](${absoluteUrl('/terms')})
 - [Press kit](${absoluteUrl('/press')})
+- [Contact](${absoluteUrl('/contact')}): piyushmodi170@gmail.com, India
+- [Authors](${absoluteUrl('/authors/editorial')}): in-house editorial desk
 - [LLM index](${absoluteUrl('/llms.txt')})
 - [LLM full content](${absoluteUrl('/llms-full.txt')})
 
