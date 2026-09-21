@@ -6,6 +6,7 @@ import { ensureOwnerAccount } from '../config/owner-account.js';
 import { insertUser } from '../config/mongo.js';
 import { googleAudienceIds } from '../config/settings.js';
 import { mailboxVerified, sendSignupEmails, sendWelcomeEmail } from './auth-email.service.js';
+import { canAttachGoogleToExistingUser, parkedUnverifiedEmail } from './google-account-link.js';
 import { verifyGoogleIdToken } from './google-id-token.js';
 
 export const publicUser = (user: any) => {
@@ -69,6 +70,29 @@ export const googleAuthService = async (idToken: string, role?: string) => {
     }
   });
 
+  const hasRealGoogleId = Boolean(user?.googleId) && !String(user?.googleId).startsWith('owner:');
+  if (user && hasRealGoogleId) {
+    if (!user.emailVerified) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: true },
+      });
+    }
+  } else if (user && !canAttachGoogleToExistingUser(user)) {
+    // Do not hand a Google login to an unverified email/password reservation.
+    // Park the squatter row so the real Google user can get a clean account.
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { email: parkedUnverifiedEmail(user.id) },
+    });
+    user = null;
+  } else if (user) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { googleId, avatar: claims.picture || user.avatar, emailVerified: true },
+    });
+  }
+
   if (!user) {
     try {
       const created = await insertUser({
@@ -98,16 +122,6 @@ export const googleAuthService = async (idToken: string, role?: string) => {
         throw err;
       }
     }
-  } else if (!user.googleId || String(user.googleId).startsWith('owner:')) {
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: { googleId, avatar: claims.picture || user.avatar, emailVerified: true }
-    });
-  } else if (!user.emailVerified) {
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: { emailVerified: true },
-    });
   }
 
   if (!user) throw new Error('Could not create your Google account. Try email signup.');

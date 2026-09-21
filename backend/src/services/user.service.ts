@@ -2,6 +2,7 @@ import { prisma } from '../config/db.js';
 import { uploadFile } from '../config/s3.js';
 import fs from 'fs';
 import { publicUser } from './auth.service.js';
+import { sanitizeProfilePatch } from './profile-patch.js';
 
 export const calculateProfileCompletion = (user: any, interestsCount: number): number => {
   let score = 0;
@@ -37,7 +38,7 @@ export const updateProfile = async (userId: string, data: any) => {
 
   const updated = await prisma.user.update({
     where: { id: userId },
-    data: { ...data }
+    data: sanitizeProfilePatch(data) as any
   });
 
   const completion = calculateProfileCompletion(updated, current.interests.length);
