@@ -72,7 +72,8 @@ export default function AdminPaymentsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {total.toLocaleString('en-IN')} records · Confirm UPI UTRs here after money hits your account
+            How to verify: open your UPI app → money received → match amount, note (BSxxxxxxxxxx), and UTR.
+            Then Confirm UTR. That turns on the member plan. ₹0 FREE rows need no UTR.
           </p>
         </div>
         <Card className="flex items-center gap-3 py-3">

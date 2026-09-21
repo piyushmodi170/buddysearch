@@ -67,7 +67,9 @@ export default function AdminPlansPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Membership Plans</h1>
-        <p className="text-sm text-gray-500 mt-1">Pricing shown to users on the membership page. Changes apply immediately. Plan names must be BASIC, STANDARD, PREMIUM, or STAR.</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Set a price to ₹0 and save to test activation with no UPI transfer. For a live UPI test, set ₹1, then pay from Membership and confirm the UTR on Admin → Payments.
+        </p>
       </div>
 
       <ErrorCard message={error} />
@@ -121,9 +123,25 @@ export default function AdminPlansPage() {
                 onChange={e => edit(p.id, { features: e.target.value.split('\n') })}
               />
 
-              <Button size="sm" disabled={!dirty || busyId === p.id} isLoading={busyId === p.id} onClick={() => save(p)}>
-                <Save size={14} className="mr-1.5" /> {dirty ? 'Save changes' : 'No changes'}
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" disabled={!dirty || busyId === p.id} isLoading={busyId === p.id} onClick={() => save(p)}>
+                  <Save size={14} className="mr-1.5" /> {dirty ? 'Save changes' : 'No changes'}
+                </Button>
+                {Number(val(p, 'price')) > 0 ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busyId === p.id}
+                    onClick={() => {
+                      edit(p.id, { price: 0, originalPrice: 0, discount: 0 });
+                    }}
+                  >
+                    Set ₹0 for test
+                  </Button>
+                ) : (
+                  <span className="text-xs text-green-700 self-center">₹0 test plan — save if this is a draft</span>
+                )}
+              </div>
             </Card>
           );
         })}

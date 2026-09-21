@@ -7,7 +7,7 @@ import { getSetting } from '../config/settings.js';
 import { config } from '../config/index.js';
 import { insertPendingPayment } from '../config/mongo.js';
 import { sendTransactional } from './mail.service.js';
-import { buildUpiIntent, isValidUtr, makeUpiReference, normalizeUtr, normalizeVpa } from './upi.js';
+import { buildUpiAppLinks, isValidUtr, makeUpiReference, normalizeUtr, normalizeVpa } from './upi.js';
 
 const razorpayClient = async () => {
   const razorpay = await getSetting('razorpay');
@@ -63,6 +63,29 @@ export const getPublicUpiConfig = async () => {
 
 export const createUpiOrder = async (userId: string, planId: string) => {
   const plan = await findPlan(planId);
+
+  if (Number(plan.price) <= 0) {
+    const inserted = await insertPendingPayment({
+      userId,
+      planId: plan.id,
+      amount: 0,
+      method: 'FREE',
+      upiReference: `FREE${makeUpiReference().slice(2)}`,
+    });
+    const payment = await prisma.payment.findUnique({ where: { id: inserted.id } });
+    if (!payment) throw new Error('Could not save the free plan');
+    const result = await markSuccessAndActivate(payment, {});
+    return {
+      paymentId: inserted.id,
+      method: 'FREE' as const,
+      amount: 0,
+      currency: 'INR',
+      activated: true,
+      user: result.user,
+      plan: { id: plan.id, name: plan.name, displayName: plan.displayName, price: 0 },
+    };
+  }
+
   const upi = await getSetting('upi');
   const vpa = normalizeVpa(upi.vpa);
   if (!vpa) {
@@ -79,9 +102,10 @@ export const createUpiOrder = async (userId: string, planId: string) => {
     upiReference: reference,
   });
 
-  const intentUrl = buildUpiIntent({
+  const payeeName = upi.payeeName || 'Buddy Search';
+  const apps = buildUpiAppLinks({
     vpa,
-    payeeName: upi.payeeName || 'Buddy Search',
+    payeeName,
     amount: plan.price,
     note: reference,
   });
@@ -91,10 +115,12 @@ export const createUpiOrder = async (userId: string, planId: string) => {
     method: 'UPI' as const,
     amount: plan.price,
     currency: 'INR',
+    activated: false,
     vpa,
-    payeeName: upi.payeeName || 'Buddy Search',
+    payeeName,
     reference,
-    intentUrl,
+    intentUrl: apps.upi,
+    apps,
     plan: { id: plan.id, name: plan.name, displayName: plan.displayName, price: plan.price },
   };
 };
