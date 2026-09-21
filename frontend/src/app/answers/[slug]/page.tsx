@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { AeoArticleView } from '@/components/seo/AeoArticleView';
 import { AEO_ARTICLES, AEO_BY_SLUG } from '@/lib/aeo';
-import { pageMetadata } from '@/lib/seo';
+import { absoluteUrl, pageMetadata } from '@/lib/seo';
 
 export const dynamicParams = false;
 
@@ -13,7 +13,11 @@ export function generateStaticParams() {
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const article = AEO_BY_SLUG[params.slug];
   if (!article) return pageMetadata('/answers');
-  return pageMetadata(`/answers/${article.slug}`);
+  const meta = pageMetadata(`/answers/${article.slug}`);
+  if (article.canonicalPath) {
+    return { ...meta, alternates: { canonical: absoluteUrl(article.canonicalPath) } };
+  }
+  return meta;
 }
 
 export default function AeoAnswerPage({ params }: { params: { slug: string } }) {

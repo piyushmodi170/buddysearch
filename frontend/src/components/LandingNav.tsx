@@ -32,7 +32,7 @@ export default function LandingNav() {
         <Link href="/" className="navbar__logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <img
             src="/logo.png"
-            alt="BuddySearch"
+            alt="Buddy Search"
             className="navbar__logo-img"
             width={1743}
             height={319}

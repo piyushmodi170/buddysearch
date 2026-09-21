@@ -92,39 +92,39 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   ),
   '/about': page(
     '/about',
-    'About Buddy Search',
-    'Buddy Search connects people in India with verified companions for activities, adventures, and everyday moments — friendship-first, always.',
+    'About Buddy Search: verified companion hiring in India',
+    'Buddy Search is India’s friendship-first marketplace to hire a verified companion for movies, travel, dining, and plans — or become a Buddy and earn. Not dating.',
     true,
   ),
   '/privacy': page(
     '/privacy',
-    'Privacy Policy',
-    'How Buddy Search collects, uses, and protects personal information for members in India.',
+    'Privacy Policy | Buddy Search India',
+    'How Buddy Search collects account, chat, verification, and payment data for members in India, who we share it with, and how to request deletion.',
     true,
   ),
   '/terms': page(
     '/terms',
-    'Terms of Service',
-    'The terms that govern using Buddy Search to hire a companion or become a Buddy in India.',
+    'Terms of Service | Buddy Search India',
+    'Rules for hiring a buddy or becoming a Buddy in India: platonic activity plans only, membership vs activity fees, verification, bans, and Indian law.',
     true,
   ),
   '/disclaimer': page(
     '/disclaimer',
-    'Disclaimer',
-    'Buddy Search is a technology platform that connects people in India for platonic, activity-based companionship.',
+    'Disclaimer | Buddy Search safety and liability',
+    'Buddy Search is a technology platform. We do not employ companions. ID checks reduce risk. You decide whether to meet. Public first meets, in-app chat, report tools.',
     true,
   ),
   '/login': page(
     '/login',
-    'Log in',
+    'Log in to Buddy Search',
     'Log in to Buddy Search to hire a movie buddy, travel companion, or activity partner in India.',
-    true,
+    false,
   ),
   '/signup': page(
     '/signup',
     'Create your Buddy Search account',
     'Join Buddy Search to find a buddy in India or become a verified companion and earn on your terms.',
-    true,
+    false,
   ),
   '/forgot-password': page(
     '/forgot-password',
@@ -190,6 +190,24 @@ export const PUBLIC_SITEMAP_PATHS = Object.values(PAGE_SEO)
   .filter((entry) => entry.index)
   .map((entry) => entry.path);
 
+/** Stable lastmod so utility URLs are not stamped "today" on every crawl. */
+export function sitemapLastModified(path: string): Date {
+  if (
+    path === '/' ||
+    path === '/about' ||
+    path === '/privacy' ||
+    path === '/terms' ||
+    path === '/disclaimer' ||
+    path === '/answers' ||
+    path === '/blog'
+  ) {
+    return new Date('2026-09-21T00:00:00.000Z');
+  }
+  const post = BLOG_POSTS.find((item) => blogPath(item.slug) === path);
+  if (post) return new Date(`${post.date}T00:00:00.000Z`);
+  return new Date('2026-09-20T00:00:00.000Z');
+}
+
 export const FAQS: { q: string; a: string }[] = [
   {
     q: 'What is Buddy Search?',
@@ -210,6 +228,22 @@ export const FAQS: { q: string; a: string }[] = [
   {
     q: 'Is it safe to hire a companion?',
     a: 'Buddies go through ID verification. Chat stays in-app until you choose to meet, and you can report profiles that break the rules.',
+  },
+  {
+    q: 'How much does Buddy Search cost?',
+    a: 'Membership for platform access starts from ₹249. The Buddy’s activity fee is separate and agreed in chat, typically about ₹300 to ₹2,000 per hour. Tickets, food, and cabs are extra unless you both write otherwise.',
+  },
+  {
+    q: 'How does ID verification work?',
+    a: 'Members submit government ID as asked in the app. A verification badge means that check was completed. It lowers impersonation risk. It does not guarantee behaviour. First meets should still be in public.',
+  },
+  {
+    q: 'Which cities does Buddy Search cover?',
+    a: 'Buddy Search is built for India. Plans are posted by city and neighbourhood — Bangalore, Mumbai, Delhi NCR, Hyderabad, Chennai, Pune, Kolkata, and other towns where members are active. Supply is whoever is verified and nearby, not a guaranteed roster in every pin code.',
+  },
+  {
+    q: 'What if a meet goes wrong?',
+    a: 'Leave the venue, tell a trusted person, and report the profile in the app. Buddy Search can suspend accounts. We do not send staff to the meet. For a crime, contact local police. Activity fees are between you and the Buddy.',
   },
 ];
 
