@@ -22,6 +22,7 @@ export default function AdminPlansPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [setupBusy, setSetupBusy] = useState('');
   const [drafts, setDrafts] = useState<Record<string, Partial<Plan>>>({});
 
   const load = useCallback(async () => {
@@ -58,6 +59,41 @@ export default function AdminPlansPage() {
     }
   };
 
+  const runSetup = async (action: 'free' | 'rupee' | 'restore') => {
+    setSetupBusy(action);
+    try {
+      if (action === 'restore') {
+        const res = await api.post('/api/admin/plans/restore-catalog');
+        toast.success(res.data.message || 'Catalog prices restored');
+      } else {
+        const res = await api.post('/api/admin/plans/setup-test', { mode: action });
+        toast.success(res.data.message || 'Test plan saved');
+      }
+      await load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not update plans');
+    } finally {
+      setSetupBusy('');
+    }
+  };
+
+  const saveTestPrice = async (plan: Plan, price: number) => {
+    setBusyId(plan.id);
+    try {
+      await api.put(`/api/admin/plans/${plan.id}`, {
+        price,
+        originalPrice: plan.originalPrice || plan.price,
+        discount: price === 0 ? 100 : plan.discount,
+      });
+      toast.success(`${plan.displayName} is now ${price === 0 ? '₹0 test' : `₹${price}`}`);
+      await load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Update failed');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const val = <K extends keyof Plan>(p: Plan, key: K): Plan[K] =>
     (drafts[p.id]?.[key] ?? p[key]) as Plan[K];
 
@@ -68,9 +104,29 @@ export default function AdminPlansPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Membership Plans</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Set a price to ₹0 and save to test activation with no UPI transfer. For a live UPI test, set ₹1, then pay from Membership and confirm the UTR on Admin → Payments.
+          These prices are what members see on Membership. Use the test buttons so you do not have to type a price.
         </p>
       </div>
+
+      <Card className="mb-6 p-5 border-primary border-2">
+        <h2 className="text-lg font-bold text-gray-900">Test if membership works (one click)</h2>
+        <ol className="mt-2 text-sm text-gray-600 list-decimal pl-5 space-y-1">
+          <li>Tap <strong>Enable ₹0 free test</strong>. BASIC becomes free immediately.</li>
+          <li>Open <a className="text-primary font-semibold" href="/membership">Membership</a> and tap <strong>Activate free (test)</strong>.</li>
+          <li>If that works, tap <strong>Enable ₹1 UPI test</strong> to try QR + UTR + Confirm.</li>
+        </ol>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button isLoading={setupBusy === 'free'} disabled={Boolean(setupBusy)} onClick={() => runSetup('free')}>
+            Enable ₹0 free test
+          </Button>
+          <Button variant="outline" isLoading={setupBusy === 'rupee'} disabled={Boolean(setupBusy)} onClick={() => runSetup('rupee')}>
+            Enable ₹1 UPI test
+          </Button>
+          <Button variant="ghost" isLoading={setupBusy === 'restore'} disabled={Boolean(setupBusy)} onClick={() => runSetup('restore')}>
+            Restore ₹249+ prices
+          </Button>
+        </div>
+      </Card>
 
       <ErrorCard message={error} />
       <CreatePlanForm onCreated={load} existing={plans.map(p => p.name)} />
@@ -127,19 +183,18 @@ export default function AdminPlansPage() {
                 <Button size="sm" disabled={!dirty || busyId === p.id} isLoading={busyId === p.id} onClick={() => save(p)}>
                   <Save size={14} className="mr-1.5" /> {dirty ? 'Save changes' : 'No changes'}
                 </Button>
-                {Number(val(p, 'price')) > 0 ? (
+                {Number(p.price) > 0 ? (
                   <Button
                     size="sm"
                     variant="outline"
                     disabled={busyId === p.id}
-                    onClick={() => {
-                      edit(p.id, { price: 0, originalPrice: 0, discount: 0 });
-                    }}
+                    isLoading={busyId === p.id}
+                    onClick={() => saveTestPrice(p, 0)}
                   >
-                    Set ₹0 for test
+                    Make ₹0 now
                   </Button>
                 ) : (
-                  <span className="text-xs text-green-700 self-center">₹0 test plan — save if this is a draft</span>
+                  <span className="text-xs text-green-700 self-center">Live at ₹0 — Membership shows Activate free</span>
                 )}
               </div>
             </Card>
