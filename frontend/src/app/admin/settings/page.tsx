@@ -17,7 +17,7 @@ export default function AdminSettingsPage() {
       <SettingsForm
         group="app"
         title="App settings"
-        description="Public site URL used in emails and OAuth notes. Other product keys live in Razorpay, SMTP, and Google login."
+        description="Public site URL used in emails and OAuth notes. Collect membership money from Admin → UPI."
         fields={[{ name: 'url', label: 'App / frontend URL', placeholder: 'https://buddysearch.online' }]}
       />
       {status && (
@@ -25,9 +25,14 @@ export default function AdminSettingsPage() {
           <h2 className="font-bold text-gray-900 mb-3">Configuration status</h2>
           <ul className="text-sm space-y-2">
             <StatusRow
+              label="UPI"
+              ok={status.upi?.configured}
+              extra={status.upi?.configured ? status.upi.vpa : 'save your UPI ID to collect membership'}
+            />
+            <StatusRow
               label="Razorpay"
-              ok={status.razorpay?.configured}
-              extra={status.razorpay?.configured ? `live keys${status.razorpay.webhookConfigured ? ', webhook set' : ''}` : 'live keys required'}
+              ok={false}
+              extra="blocked for this category — use UPI"
             />
             <StatusRow label="SMTP" ok={status.smtp?.configured} />
             <StatusRow label="Google login" ok={status.google?.configured} />

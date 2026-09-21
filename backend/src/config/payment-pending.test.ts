@@ -6,10 +6,13 @@ const pending = {
   userId: '64b0c0c0c0c0c0c0c0c0c0c0',
   planId: '64b0c0c0c0c0c0c0c0c0c0c1',
   amount: 449,
-  razorpayOrderId: 'order_test_1',
+  method: 'UPI',
+  upiVpa: 'owner@okaxis',
+  upiReference: 'BS1234567890',
   status: 'PENDING',
 };
 
 assert.equal('razorpayPaymentId' in pending, false);
-assert.equal(pending.razorpayOrderId.startsWith('order_'), true);
+assert.equal('razorpayOrderId' in pending, false);
+assert.equal(pending.method, 'UPI');
 console.log('pending payment shape tests passed');

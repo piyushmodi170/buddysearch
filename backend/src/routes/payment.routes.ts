@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { createOrderSchema, verifyPaymentSchema } from '../utils/validators.js';
+import { createOrderSchema, createUpiOrderSchema, submitUtrSchema, verifyPaymentSchema } from '../utils/validators.js';
 import * as paymentService from '../services/payment.service.js';
 import crypto from 'crypto';
 import { getSetting } from '../config/settings.js';
@@ -11,6 +11,42 @@ const router = Router();
 router.post('/create-order', auth, validate(createOrderSchema), async (req, res, next) => {
   try {
     const data = await paymentService.createOrder(req.user!.id, req.body.planId);
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.get('/upi-config', async (_req, res) => {
+  try {
+    const data = await paymentService.getPublicUpiConfig();
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/create-upi-order', auth, validate(createUpiOrderSchema), async (req, res) => {
+  try {
+    const data = await paymentService.createUpiOrder(req.user!.id, req.body.planId);
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/submit-utr', auth, validate(submitUtrSchema), async (req, res) => {
+  try {
+    const data = await paymentService.submitUtr(req.user!.id, req.body.paymentId, req.body.utr);
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.get('/mine', auth, async (req, res) => {
+  try {
+    const data = await paymentService.listMyPayments(req.user!.id);
     res.json({ success: true, data });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });

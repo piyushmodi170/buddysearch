@@ -65,6 +65,7 @@ type UserDetail = {
   payments: {
     id: string; amount: number; status: string; createdAt: string;
     razorpayOrderId?: string | null; razorpayPaymentId?: string | null;
+    upiUtr?: string | null; upiReference?: string | null;
     plan?: { name: string; displayName: string } | null;
   }[];
   receivedReviews: {
@@ -253,6 +254,7 @@ export function UserDetailModal({ userId, onClose }: { userId: string | null; on
                 <li key={item.id} className="text-sm border border-gray-100 rounded-lg p-3">
                   <p className="font-medium">{item.plan?.displayName || item.plan?.name || 'Plan'} · {formatPrice(item.amount)} · {item.status}</p>
                   <p className="text-xs text-gray-500">{formatDate(item.createdAt)}</p>
+                  {item.upiUtr ? <p className="text-xs text-gray-500 mt-1">UTR {item.upiUtr}</p> : null}
                   {item.razorpayPaymentId ? <p className="text-xs text-gray-500 mt-1">Payment {item.razorpayPaymentId}</p> : null}
                 </li>
               ))}

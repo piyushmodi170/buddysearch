@@ -14,18 +14,19 @@ export default function PaymentsPage() {
         data={{
           '@context': 'https://schema.org',
           '@type': 'WebPage',
-          name: 'Buddy Search is free — how money works',
+          name: PAGE_SEO['/payments'].title,
           url: `${SITE.url}/payments`,
           datePublished: '2026-09-21',
           dateModified: '2026-09-21',
           description: PAGE_SEO['/payments'].description,
         }}
       />
-      <PublicDoc title="Buddy Search is free — how money works">
+      <PublicDoc title="How money works on Buddy Search">
         <p className="aeo-direct text-lg font-medium">
-          Buddy Search is free to join in India. Hire, Find, chats, and posts do not require a card or Razorpay.
-          Hourly companion fees, if you agree them, are paid between members (usually UPI). We do not take that
-          hourly fee. This is not a social network, dating app, or escort directory.
+          Buddy Search cannot use Razorpay cards. Aggregators reject companion hiring (friend finders,
+          match-making, hiring / professional networking). Platform membership is collected with UPI
+          to the owner VPA. Hourly companion fees stay between members. This is not a social network,
+          dating app, or escort directory.
         </p>
 
         <h2 className="text-xl font-bold pt-4">What the product is</h2>
@@ -46,8 +47,10 @@ export default function PaymentsPage() {
 
         <h2 className="text-xl font-bold pt-4">Money</h2>
         <ul className="list-disc pl-5 space-y-2">
-          <li>Platform access is ₹0. No membership checkout.</li>
+          <li>Membership: UPI to the owner ID shown on the membership page. Paste the UTR. The owner confirms it.</li>
+          <li>Hire and Find remain usable while that UTR is waiting.</li>
           <li>Activity fees, tickets, food, and cabs are between Client and Buddy.</li>
+          <li>Razorpay / card checkout is not offered. Resubmitting KYC as ecommerce will not get cards.</li>
         </ul>
 
         <h2 className="text-xl font-bold pt-4">Contact</h2>

@@ -7,6 +7,7 @@ import { getSetting } from '../config/settings.js';
 import { config } from '../config/index.js';
 import { insertPendingPayment } from '../config/mongo.js';
 import { sendTransactional } from './mail.service.js';
+import { buildUpiIntent, isValidUtr, makeUpiReference, normalizeUtr, normalizeVpa } from './upi.js';
 
 const razorpayClient = async () => {
   const razorpay = await getSetting('razorpay');
@@ -22,6 +23,145 @@ const razorpayClient = async () => {
 const razorpayErrorMessage = (err: unknown) => {
   const e = err as { error?: { description?: string; reason?: string }; message?: string };
   return e?.error?.description || e?.error?.reason || e?.message || 'Failed to create payment order';
+};
+
+const markSuccessAndActivate = async (
+  payment: { id: string; userId: string; planId: string; amount: number },
+  extra: { razorpayPaymentId?: string } = {},
+) => {
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { status: 'SUCCESS', ...extra },
+  });
+
+  const updated = await activatePlan(payment.userId, payment.planId);
+  const plan = await findPlan(payment.planId).catch(() => null);
+  void sendTransactional('payment-confirmation', updated.email, {
+    name: updated.name,
+    email: updated.email,
+    plan: plan?.displayName || updated.membershipPlan,
+    amount: String(payment.amount),
+  }).then(() => sendTransactional('purchase-thanks', updated.email, {
+    name: updated.name,
+    email: updated.email,
+    plan: plan?.displayName || updated.membershipPlan,
+    amount: String(payment.amount),
+  })).catch(() => undefined);
+
+  return { success: true, user: publicUser(updated) };
+};
+
+export const getPublicUpiConfig = async () => {
+  const upi = await getSetting('upi');
+  const vpa = normalizeVpa(upi.vpa);
+  return {
+    configured: Boolean(vpa),
+    vpa,
+    payeeName: upi.payeeName || 'Buddy Search',
+  };
+};
+
+export const createUpiOrder = async (userId: string, planId: string) => {
+  const plan = await findPlan(planId);
+  const upi = await getSetting('upi');
+  const vpa = normalizeVpa(upi.vpa);
+  if (!vpa) {
+    throw new Error('UPI is not set. Open Admin → UPI, save your UPI ID, then try again.');
+  }
+
+  const reference = makeUpiReference();
+  const inserted = await insertPendingPayment({
+    userId,
+    planId: plan.id,
+    amount: plan.price,
+    method: 'UPI',
+    upiVpa: vpa,
+    upiReference: reference,
+  });
+
+  const intentUrl = buildUpiIntent({
+    vpa,
+    payeeName: upi.payeeName || 'Buddy Search',
+    amount: plan.price,
+    note: reference,
+  });
+
+  return {
+    paymentId: inserted.id,
+    method: 'UPI' as const,
+    amount: plan.price,
+    currency: 'INR',
+    vpa,
+    payeeName: upi.payeeName || 'Buddy Search',
+    reference,
+    intentUrl,
+    plan: { id: plan.id, name: plan.name, displayName: plan.displayName, price: plan.price },
+  };
+};
+
+export const submitUtr = async (userId: string, paymentId: string, rawUtr: string) => {
+  const utr = normalizeUtr(rawUtr);
+  if (!isValidUtr(utr)) {
+    throw new Error('UTR must be 8–22 letters or digits from your bank / UPI app.');
+  }
+
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  if (!payment) throw new Error('Payment not found');
+  if (payment.userId !== userId) throw new Error('Payment does not belong to this user');
+  if (payment.status === 'SUCCESS') {
+    const existing = await prisma.user.findUnique({ where: { id: userId } });
+    return { success: true, status: 'SUCCESS', user: existing ? publicUser(existing) : undefined };
+  }
+  if (payment.status !== 'PENDING') throw new Error('This payment can no longer accept a UTR');
+
+  const clash = await prisma.payment.findFirst({
+    where: { upiUtr: utr, id: { not: paymentId } },
+  });
+  if (clash) throw new Error('This UTR is already used on another payment.');
+
+  await prisma.payment.update({
+    where: { id: paymentId },
+    data: { upiUtr: utr, method: 'UPI' },
+  });
+
+  return { success: true, status: 'PENDING', message: 'UTR saved. Membership activates after the owner confirms the transfer.' };
+};
+
+export const listMyPayments = async (userId: string) => {
+  return prisma.payment.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+    select: {
+      id: true,
+      amount: true,
+      status: true,
+      method: true,
+      upiReference: true,
+      upiUtr: true,
+      createdAt: true,
+      plan: { select: { name: true, displayName: true } },
+    },
+  });
+};
+
+export const confirmUpiPayment = async (paymentId: string) => {
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  if (!payment) throw new Error('Payment not found');
+  if (payment.status === 'SUCCESS') {
+    return { success: true, already: true };
+  }
+  if (payment.status !== 'PENDING') throw new Error('Only pending transfers can be confirmed');
+  if (!payment.upiUtr) throw new Error('Member has not submitted a UTR yet');
+  return markSuccessAndActivate(payment);
+};
+
+export const rejectUpiPayment = async (paymentId: string) => {
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  if (!payment) throw new Error('Payment not found');
+  if (payment.status === 'SUCCESS') throw new Error('Successful payments cannot be rejected');
+  await prisma.payment.update({ where: { id: paymentId }, data: { status: 'FAILED' } });
+  return { success: true };
 };
 
 export const createOrder = async (userId: string, planId: string) => {
@@ -41,7 +181,7 @@ export const createOrder = async (userId: string, planId: string) => {
       return { id: mockOrderId, amount: plan.price * 100, currency: 'INR', keyId: settings.keyId || '' };
     }
     throw new Error(
-      'Razorpay is not configured. Open Admin → Razorpay, save Live Key ID and Live Key secret, then try again.'
+      'Razorpay cannot onboard this category. Open Membership and pay with UPI.'
     );
   }
 
@@ -97,26 +237,7 @@ export const verifyPayment = async (data: any, userId: string) => {
     return { success: true, user: existing ? publicUser(existing) : undefined };
   }
 
-  await prisma.payment.update({
-    where: { razorpayOrderId },
-    data: { razorpayPaymentId, status: 'SUCCESS' }
-  });
-
-  const updated = await activatePlan(userId, payment.planId);
-  const plan = await findPlan(payment.planId).catch(() => null);
-  void sendTransactional('payment-confirmation', updated.email, {
-    name: updated.name,
-    email: updated.email,
-    plan: plan?.displayName || updated.membershipPlan,
-    amount: String(payment.amount),
-  }).then(() => sendTransactional('purchase-thanks', updated.email, {
-    name: updated.name,
-    email: updated.email,
-    plan: plan?.displayName || updated.membershipPlan,
-    amount: String(payment.amount),
-  })).catch(() => undefined);
-
-  return { success: true, user: publicUser(updated) };
+  return markSuccessAndActivate(payment, { razorpayPaymentId });
 };
 
 export const testRazorpayCredentials = async () => {

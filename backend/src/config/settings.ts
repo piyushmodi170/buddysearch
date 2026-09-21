@@ -1,8 +1,14 @@
 import { prisma } from './db.js';
 import { config } from './index.js';
 import { resolveRazorpaySettings, type RazorpaySettings } from './razorpay.js';
+import { isValidVpa, normalizeVpa } from '../services/upi.js';
 
-export type SettingKey = 'razorpay' | 'smtp' | 'google' | 'app';
+export type SettingKey = 'razorpay' | 'smtp' | 'google' | 'app' | 'upi';
+
+export type UpiSettings = {
+  vpa: string;
+  payeeName: string;
+};
 
 export type { RazorpaySettings } from './razorpay.js';
 
@@ -30,6 +36,7 @@ type SettingsMap = {
   smtp: SmtpSettings;
   google: GoogleSettings;
   app: AppSettings;
+  upi: UpiSettings;
 };
 
 const cache = new Map<SettingKey, unknown>();
@@ -56,6 +63,10 @@ const envDefaults: SettingsMap = {
   app: {
     url: process.env.FRONTEND_URL || config.frontendUrl || 'https://buddysearch.online',
   },
+  upi: {
+    vpa: process.env.UPI_VPA || '',
+    payeeName: process.env.UPI_PAYEE_NAME || 'Buddy Search',
+  },
 };
 
 const SECRET_FIELDS: Record<SettingKey, string[]> = {
@@ -63,6 +74,7 @@ const SECRET_FIELDS: Record<SettingKey, string[]> = {
   smtp: ['password'],
   google: ['clientSecret'],
   app: [],
+  upi: [],
 };
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
@@ -151,6 +163,15 @@ export const setSetting = async <K extends SettingKey>(
     Object.assign(next, resolveRazorpaySettings(next));
   }
 
+  if (key === 'upi') {
+    const vpa = normalizeVpa(String(next.vpa || ''));
+    next.vpa = vpa;
+    if (vpa && !isValidVpa(vpa)) {
+      throw new Error('UPI ID must look like name@okaxis or name@upi');
+    }
+    next.payeeName = String(next.payeeName || 'Buddy Search').trim() || 'Buddy Search';
+  }
+
   await prisma.appSetting.upsert({
     where: { key },
     update: { value: next as object },
@@ -161,11 +182,12 @@ export const setSetting = async <K extends SettingKey>(
 };
 
 export const settingStatus = async () => {
-  const [razorpay, smtp, google, app] = await Promise.all([
+  const [razorpay, smtp, google, app, upi] = await Promise.all([
     getSetting('razorpay'),
     getSetting('smtp'),
     getSetting('google'),
     getSetting('app'),
+    getSetting('upi'),
   ]);
   return {
     razorpay: {
@@ -182,6 +204,10 @@ export const settingStatus = async () => {
     },
     app: {
       url: app.url,
+    },
+    upi: {
+      configured: Boolean(upi.vpa),
+      vpa: upi.vpa || '',
     },
   };
 };

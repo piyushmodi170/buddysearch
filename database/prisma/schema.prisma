@@ -255,6 +255,10 @@ model Payment {
   planId            String        @db.ObjectId
   razorpayOrderId   String?       @unique
   razorpayPaymentId String?       @unique
+  method            String        @default("UPI")
+  upiVpa            String?
+  upiUtr            String?
+  upiReference      String?
   amount            Int
   status            PaymentStatus @default(PENDING)
   createdAt         DateTime      @default(now())
