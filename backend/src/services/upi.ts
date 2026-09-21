@@ -13,17 +13,31 @@ export const isValidUtr = (utr: string) => UTR_RE.test(normalizeUtr(utr));
 
 export const makeUpiReference = (now = Date.now()) => `BS${String(now).slice(-10)}`;
 
-export const buildUpiIntent = (opts: {
+export type UpiPayOpts = {
   vpa: string;
   payeeName: string;
   amount: number;
   note: string;
-}) => {
+};
+
+const payQuery = (opts: UpiPayOpts) => {
   const pa = normalizeVpa(opts.vpa);
   if (!isValidVpa(pa)) throw new Error('UPI ID is not valid. Use a handle like name@okaxis.');
   const amount = Number(opts.amount);
   if (!Number.isFinite(amount) || amount <= 0) throw new Error('Amount must be greater than 0');
   const pn = encodeURIComponent(opts.payeeName || 'Buddy Search');
   const tn = encodeURIComponent(opts.note || 'BuddySearch');
-  return `upi://pay?pa=${pa}&pn=${pn}&am=${amount}&cu=INR&tn=${tn}`;
+  return `pa=${pa}&pn=${pn}&am=${amount}&cu=INR&tn=${tn}`;
 };
+
+export const buildUpiAppLinks = (opts: UpiPayOpts) => {
+  const q = payQuery(opts);
+  return {
+    upi: `upi://pay?${q}`,
+    gpay: `tez://upi/pay?${q}`,
+    phonepe: `phonepe://pay?${q}`,
+    paytm: `paytmmp://pay?${q}`,
+  };
+};
+
+export const buildUpiIntent = (opts: UpiPayOpts) => buildUpiAppLinks(opts).upi;

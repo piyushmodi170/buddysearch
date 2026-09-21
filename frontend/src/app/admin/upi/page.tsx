@@ -15,8 +15,11 @@ export default function AdminUpiPage() {
           </p>
           <p>
             Checkout that actually runs: save <strong>your personal UPI ID</strong> here. Members
-            pay that VPA from PhonePe / GPay / Paytm, paste the UTR, then you confirm it on{' '}
-            <strong>Admin → Payments</strong>. Hire and Find stay usable until you confirm.
+            see a QR, and on a phone the UPI apps open. They paste the UTR. You verify it on{' '}
+            <strong>Admin → Payments</strong> against your bank app, then Confirm.
+          </p>
+          <p>
+            To test without sending money: Admin → Plans → Set ₹0 for test → Save → Membership → Activate free.
           </p>
         </div>
       }
