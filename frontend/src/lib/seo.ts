@@ -96,6 +96,12 @@ export const PAGE_SEO: Record<string, PageSeo> = {
     'Buddy Search is India’s friendship-first marketplace to hire a verified companion for movies, travel, dining, and plans — or become a Buddy and earn. Not dating.',
     true,
   ),
+  '/download': page(
+    '/download',
+    'Download Buddy Search logo',
+    'Download the official Buddy Search 1:1 square logo and wide wordmark as PNG files.',
+    false,
+  ),
   '/privacy': page(
     '/privacy',
     'Privacy Policy | Buddy Search India',
