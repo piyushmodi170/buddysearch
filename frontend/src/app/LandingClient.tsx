@@ -182,6 +182,9 @@ export default function LandingPage() {
                 <span className="hero__title-accent hero__title-accent--underline">Become One.</span>
               </span>
             </h1>
+            <p className="hero__subtitle">
+              Buddy Search is a verified social companionship marketplace in India: hire a platonic companion for movies, travel, dining, or gym — typically ₹300 to ₹2,000 per hour — or become a Buddy and earn. Not a dating app.
+            </p>
             <div className="hero__features">
               <div className="hero__feature">
                 <span className="hero__feature-icon" style={{ background: '#fee2e2' }}>
@@ -204,9 +207,6 @@ export default function LandingPage() {
                 <span className="hero__feature-text">Make it happen.</span>
               </div>
             </div>
-            <p className="hero__subtitle">
-              Buddy Search is India’s friendship-first marketplace to hire a verified companion for movies, travel, dining, gym, and everyday plans — about ₹300 to ₹2,000 per hour — or become a Buddy and earn. It is not a dating app. ID-verified members meet in public after agreeing the plan in chat.
-            </p>
             <div className="hero__actions">
               <Link href="/find" className="btn-primary hero__cta-main">
                 <Search size={18} strokeWidth={2.5} /> Hire a Buddy
@@ -519,6 +519,7 @@ export default function LandingPage() {
                 <div className="footer__col-links">
                   <Link className="footer__col-link" href="/about">About Buddy Search</Link>
                   <Link className="footer__col-link" href="/blog/what-is-buddy-search">What is Buddy Search?</Link>
+                  <Link className="footer__col-link" href="/press">Press / cite Buddy Search</Link>
                   <Link className="footer__col-link" href="/blog">Blog</Link>
                   <Link className="footer__col-link" href="/answers">Answers</Link>
                   <Link className="footer__col-link" href="/answers/hire-a-buddy">How to hire</Link>

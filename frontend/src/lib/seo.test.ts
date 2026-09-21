@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { isIndexablePath, llmsTxt, PAGE_SEO, pageMetadata, PUBLIC_SITEMAP_PATHS, SITE } from './seo.js';
+import { llmsFullTxt } from './llms-full.js';
 
 const appRoot = join(process.cwd(), 'src/app');
 
@@ -63,5 +64,9 @@ assert.ok(llmsTxt().includes('[Home]('));
 assert.ok(llmsTxt().includes('[Create account]('));
 assert.ok(llmsTxt().includes('[buddysearch.online]('));
 assert.ok(llmsTxt().includes('friendship-first'));
+assert.ok(llmsTxt().includes('llms-full.txt'));
+assert.ok(llmsFullTxt().includes('verified social companionship marketplace'));
+assert.ok(llmsFullTxt().includes('/blog/rent-a-friend-what-it-means'));
+assert.ok(PAGE_SEO['/press'].index);
 
 console.log(`seo tests passed (${routes.length} app routes)`);
