@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { buildUpiIntent, isValidUtr, isValidVpa, makeUpiReference, normalizeUtr, normalizeVpa } from './upi.js';
+import { buildUpiAppLinks, buildUpiIntent, isValidUtr, isValidVpa, makeUpiReference, normalizeUtr, normalizeVpa } from './upi.js';
 
 assert.equal(isValidVpa('piyush@okaxis'), true);
 assert.equal(isValidVpa(normalizeVpa('  Piyush@OKAxis  ')), true);
@@ -17,6 +17,16 @@ const intent = buildUpiIntent({
   note: 'BS123',
 });
 assert.equal(intent, 'upi://pay?pa=owner@okaxis&pn=Buddy%20Search&am=649&cu=INR&tn=BS123');
+
+const links = buildUpiAppLinks({
+  vpa: 'owner@okaxis',
+  payeeName: 'Buddy Search',
+  amount: 249,
+  note: 'BS1',
+});
+assert.equal(links.gpay.startsWith('tez://upi/pay?'), true);
+assert.equal(links.phonepe.startsWith('phonepe://pay?'), true);
+assert.equal(links.paytm.startsWith('paytmmp://pay?'), true);
 
 assert.match(makeUpiReference(1_700_000_000_123), /^BS/);
 
