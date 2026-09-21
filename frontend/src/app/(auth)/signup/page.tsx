@@ -103,7 +103,7 @@ export default function SignupPage() {
             Hire or Become a Buddy for Every Plan.
           </h1>
           <p className="mt-4 text-white/90 max-w-lg text-sm leading-relaxed">
-            India’s social companion platform to find, hire, or connect with verified companions for every plan. From cafés and concerts to travel and adventures, BuddySearch makes social experiences effortless, while giving companions the opportunity to earn along the way.
+            India’s marketplace to book a verified activity companion for cafés, movies, gym, and travel — or become a Buddy and earn. Membership is for platform access. Not a social network or dating app.
           </p>
           <div className="mt-8 space-y-3 max-w-xl">
             {FEATURES.map((item) => {

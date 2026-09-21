@@ -1,6 +1,6 @@
 # BuddySearch
 
-BuddySearch is a social companionship marketplace connecting people looking for buddies across various interests (e.g., travel, gym, nightout, language exchange).
+BuddySearch is an activity companion marketplace in India connecting people who want to book a buddy for travel, gym, movies, and similar plans.
 
 ## Tech Stack
 - **Database**: PostgreSQL
