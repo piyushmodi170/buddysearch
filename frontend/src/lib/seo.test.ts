@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { isIndexablePath, llmsTxt, PAGE_SEO, pageMetadata, PUBLIC_SITEMAP_PATHS, SITE } from './seo.js';
+import { homeJsonLd, isIndexablePath, llmsTxt, organizationJsonLd, PAGE_SEO, pageMetadata, PUBLIC_SITEMAP_PATHS, SITE } from './seo.js';
 import { llmsFullTxt } from './llms-full.js';
 
 const appRoot = join(process.cwd(), 'src/app');
@@ -68,5 +68,17 @@ assert.ok(llmsTxt().includes('llms-full.txt'));
 assert.ok(llmsFullTxt().includes('verified social companionship marketplace'));
 assert.ok(llmsFullTxt().includes('/blog/rent-a-friend-what-it-means'));
 assert.ok(PAGE_SEO['/press'].index);
+assert.ok(PAGE_SEO['/contact'].index);
+assert.ok(PAGE_SEO['/authors/editorial'].index);
+const homeDesc = PAGE_SEO['/'].description;
+assert.ok(homeDesc.length >= 80 && homeDesc.length <= 160, `home meta ${homeDesc.length}`);
+assert.ok(organizationJsonLd().email.includes('piyushmodi170@gmail.com'));
+assert.equal(organizationJsonLd().address.addressCountry, 'IN');
+const webPage = homeJsonLd().find((n) => n['@type'] === 'WebPage') as { datePublished?: string; dateModified?: string };
+assert.equal(webPage.datePublished, '2026-09-19');
+assert.equal(webPage.dateModified, '2026-09-21');
+assert.ok(llmsTxt().includes('/contact'));
+assert.ok(PAGE_SEO['/contact'].description.length >= 80);
+assert.ok(PAGE_SEO['/authors/editorial'].description.length >= 80);
 
 console.log(`seo tests passed (${routes.length} app routes)`);

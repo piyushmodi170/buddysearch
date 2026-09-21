@@ -64,6 +64,8 @@ export function llmsFullTxt() {
 
 Index: ${absoluteUrl('/llms.txt')}
 Press / citation facts: ${absoluteUrl('/press')}
+Contact: piyushmodi170@gmail.com · ${absoluteUrl('/contact')}
+Authors: ${absoluteUrl('/authors/editorial')}
 
 ## Entity facts
 

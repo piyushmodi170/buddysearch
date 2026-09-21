@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { PublicDoc } from '@/components/seo/PublicDoc';
 import { blogPath, relatedPosts, type BlogPost } from '@/lib/blog';
+import { AUTHOR } from '@/lib/eeat';
 import { SITE, absoluteUrl } from '@/lib/seo';
+import { CitationLinks } from '@/components/seo/EeatBits';
 
 export function blogJsonLd(post: BlogPost) {
   const url = absoluteUrl(blogPath(post.slug));
@@ -12,12 +14,17 @@ export function blogJsonLd(post: BlogPost) {
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.description,
-    datePublished: post.date,
-    dateModified: post.date,
     inLanguage: SITE.language,
     url,
     mainEntityOfPage: url,
-    author: { '@type': 'Organization', name: SITE.name, url: SITE.url },
+    datePublished: post.date,
+    dateModified: post.date,
+    author: {
+      '@type': 'Person',
+      name: AUTHOR.name,
+      url: absoluteUrl(AUTHOR.path),
+      jobTitle: AUTHOR.role,
+    },
     publisher: {
       '@type': 'Organization',
       name: SITE.name,
@@ -104,12 +111,22 @@ export function BlogPostView({ post }: { post: BlogPost }) {
       <JsonLd data={blogJsonLd(post)} />
       <PublicDoc title={post.title}>
         <p className="text-sm text-[#7a8494]">
-          {post.category} · {post.date} ·{' '}
+          <Link className="text-[#F96566] font-semibold" href={AUTHOR.path}>
+            {AUTHOR.name}
+          </Link>
+          {' · '}
+          {post.category}
+          {' · '}
+          <time dateTime={post.date}>{post.date}</time>
+          {' · '}
           <Link className="text-[#F96566] font-semibold" href="/blog">
             All guides
           </Link>
         </p>
         <p className="aeo-direct text-lg font-medium">{post.directAnswer}</p>
+        <blockquote className="border-l-4 border-[#F96566] pl-4 italic">
+          {post.directAnswer}
+        </blockquote>
 
         <h2 className="text-xl font-bold pt-6">Explanation</h2>
         {post.sections.map((section) => (
@@ -190,6 +207,7 @@ export function BlogPostView({ post }: { post: BlogPost }) {
           </Link>
           .
         </p>
+        <CitationLinks />
       </PublicDoc>
     </>
   );

@@ -5,6 +5,8 @@ import { PublicDoc } from '@/components/seo/PublicDoc';
 import type { AeoArticle } from '@/lib/aeo';
 import { aeoPath } from '@/lib/aeo';
 import { SITE, absoluteUrl } from '@/lib/seo';
+import { AUTHOR } from '@/lib/eeat';
+import { CitationLinks } from '@/components/seo/EeatBits';
 
 export function aeoJsonLd(article: AeoArticle) {
   const url = absoluteUrl(aeoPath(article.slug));
@@ -35,6 +37,8 @@ export function aeoJsonLd(article: AeoArticle) {
     '@type': 'WebPage',
     name: article.title,
     url,
+    datePublished: '2026-09-20',
+    dateModified: '2026-09-21',
     speakable: {
       '@type': 'SpeakableSpecification',
       cssSelector: ['.aeo-direct', '.aeo-steps', '.aeo-faq'],
@@ -53,7 +57,15 @@ export function AeoArticleView({ article }: { article: AeoArticle }) {
     <>
       <JsonLd data={aeoJsonLd(article)} />
       <PublicDoc title={article.query}>
+        <p className="text-sm text-[#7a8494]">
+          <Link className="text-[#F96566] font-semibold" href={AUTHOR.path}>
+            {AUTHOR.name}
+          </Link>
+          {' · '}
+          <time dateTime="2026-09-21">2026-09-21</time>
+        </p>
         <p className="aeo-direct text-lg font-medium text-[#3D4550]">{article.directAnswer}</p>
+        <blockquote className="border-l-4 border-[#F96566] pl-4 italic">{article.directAnswer}</blockquote>
 
         <h2 className="text-xl font-bold pt-6">Explanation</h2>
         <p>{article.explanation}</p>
@@ -132,6 +144,7 @@ export function AeoArticleView({ article }: { article: AeoArticle }) {
           </Link>
           .
         </p>
+        <CitationLinks />
       </PublicDoc>
     </>
   );
