@@ -19,6 +19,7 @@ for (const post of BLOG_POSTS) {
 
 assert.ok(BLOG_BY_SLUG['rent-a-friend-apps-compared']);
 assert.ok(BLOG_BY_SLUG['part-time-jobs-bangalore-buddy']);
+assert.ok(BLOG_BY_SLUG['hire-a-friend-bangalore']);
 assert.ok(BLOG_BY_SLUG['rent-a-friend-what-it-means']);
 assert.ok(BLOG_BY_SLUG['gym-buddy-apps-india']);
 assert.ok(BLOG_BY_SLUG['part-time-jobs-students-bangalore']);
