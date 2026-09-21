@@ -9,7 +9,7 @@ import adminEmailRoutes from './admin-email.routes.js';
 import adminSeoArticleRoutes from './admin-seo-articles.routes.js';
 import * as paymentService from '../services/payment.service.js';
 import { isOwnerEmail } from '../config/owner.js';
-import { findPlan } from '../services/membership.service.js';
+import { findPlan, restoreCatalogPrices, setupAdminTestPlan } from '../services/membership.service.js';
 
 const router = Router();
 
@@ -390,6 +390,31 @@ router.get('/plans', adminAuth, async (req, res) => {
     res.json({ success: true, data });
   } catch (error: any) {
     res.status(500).json({ success: false, message: publicSafeError(error, 'Something went wrong') });
+  }
+});
+
+router.post('/plans/setup-test', adminAuth, async (req, res) => {
+  try {
+    const mode = String(req.body?.mode || 'free') === 'rupee' ? 'rupee' : 'free';
+    const data = await setupAdminTestPlan(mode);
+    res.json({
+      success: true,
+      data,
+      message: mode === 'rupee'
+        ? 'BASIC is ₹1. Open Membership, pay with UPI, paste UTR, then Confirm on Payments.'
+        : 'BASIC is ₹0. Open Membership and tap Activate free (test).',
+    });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message || publicSafeError(error, 'Something went wrong') });
+  }
+});
+
+router.post('/plans/restore-catalog', adminAuth, async (req, res) => {
+  try {
+    const data = await restoreCatalogPrices();
+    res.json({ success: true, data, message: 'Catalog prices restored (₹249 / ₹349 / ₹449 / ₹649).' });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message || publicSafeError(error, 'Something went wrong') });
   }
 });
 

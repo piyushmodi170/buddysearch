@@ -168,3 +168,40 @@ export const checkPlanExpiry = async (userId: string) => {
     });
   }
 };
+
+export const setupAdminTestPlan = async (mode: 'free' | 'rupee') => {
+  await ensureDefaultPlans();
+  const basic = await prisma.membershipPlan.findUnique({ where: { name: 'BASIC' } });
+  if (!basic) throw new Error('BASIC plan is missing. Refresh and try again.');
+  const price = mode === 'rupee' ? 1 : 0;
+  const original = basic.originalPrice > 0 ? basic.originalPrice : 249;
+  return prisma.membershipPlan.update({
+    where: { id: basic.id },
+    data: {
+      price,
+      originalPrice: original,
+      discount: price === 0 ? 100 : Math.round((1 - price / original) * 100),
+      tagline: price === 0
+        ? 'Free test — open Membership and tap Activate free'
+        : '₹1 UPI test — scan QR, pay, paste UTR, then Confirm on Admin → Payments',
+    },
+  });
+};
+
+export const restoreCatalogPrices = async () => {
+  await ensureDefaultPlans();
+  const updated = [];
+  for (const plan of DEFAULT_PLANS) {
+    updated.push(await prisma.membershipPlan.update({
+      where: { name: plan.name },
+      data: {
+        displayName: plan.displayName,
+        tagline: plan.tagline,
+        price: plan.price,
+        originalPrice: plan.originalPrice,
+        discount: plan.discount,
+      },
+    }));
+  }
+  return updated;
+};
