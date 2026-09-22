@@ -78,7 +78,7 @@ assert.ok(organizationJsonLd().email.includes('piyushmodi170@gmail.com'));
 assert.equal(organizationJsonLd().address.addressCountry, 'IN');
 const webPage = homeJsonLd().find((n) => n['@type'] === 'WebPage') as { datePublished?: string; dateModified?: string };
 assert.equal(webPage.datePublished, '2026-09-19');
-assert.equal(webPage.dateModified, '2026-09-21');
+assert.equal(webPage.dateModified, '2026-09-22');
 assert.ok(llmsTxt().includes('/contact'));
 assert.ok(PAGE_SEO['/contact'].description.length >= 80);
 assert.ok(PAGE_SEO['/authors/editorial'].description.length >= 80);

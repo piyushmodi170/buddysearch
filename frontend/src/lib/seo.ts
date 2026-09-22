@@ -258,7 +258,7 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'How do Buddies get paid?',
-    a: 'Buddies set their own rates. Payment terms are agreed in the in-app chat before you meet. Buddy Search itself is free; activity fees are between you and your Buddy.',
+    a: 'Buddies set their own rates. Payment terms are agreed in the in-app chat before you meet. Platform membership is paid with UPI. Activity fees are between you and your Buddy.',
   },
   {
     q: 'Is it safe to hire a companion?',
@@ -266,7 +266,7 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'How much does Buddy Search cost?',
-    a: 'Buddy Search is free to join. The Buddy’s activity fee is separate and agreed in chat, typically about ₹300 to ₹2,000 per hour. Tickets, food, and cabs are extra unless you both write otherwise.',
+    a: 'Membership is Basic ₹249, Standard ₹349, Premium ₹449, and Star ₹649, paid with UPI (cards are not available). The Buddy’s activity fee is separate and agreed in chat, typically about ₹300 to ₹2,000 per hour. Tickets, food, and cabs are extra unless you both write otherwise.',
   },
   {
     q: 'How does ID verification work?',
@@ -385,7 +385,7 @@ export function homeJsonLd() {
       name: SITE.name,
       url: SITE.url,
       datePublished: '2026-09-19',
-      dateModified: '2026-09-21',
+      dateModified: '2026-09-22',
       description: PAGE_SEO['/'].description,
       inLanguage: SITE.language,
       author: { '@type': 'Person', name: 'Buddy Search Editorial', url: absoluteUrl('/authors/editorial') },
@@ -397,7 +397,13 @@ export function homeJsonLd() {
       name: SITE.name,
       applicationCategory: 'LifestyleApplication',
       operatingSystem: 'Web',
-      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+      offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: '249',
+        highPrice: '649',
+        priceCurrency: 'INR',
+        offerCount: '4',
+      },
       description: SITE.description,
       url: SITE.url,
       inLanguage: SITE.language,

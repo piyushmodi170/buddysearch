@@ -11,6 +11,7 @@ import {
 import { FAQS } from '@/lib/seo';
 import { CONTACT } from '@/lib/eeat';
 import { CitationLinks } from '@/components/seo/EeatBits';
+import PricingSection from '@/components/landing/PricingSection';
 
 const HERO_STATS = [
   { value: '100K+', label: 'Active Buddies' },
@@ -61,10 +62,6 @@ const FEATURES = [
   { icon: Star, title: 'Flexible Roles', desc: "Switch efforts smoothly when you're ready to group, host connections, or if you simply just want to join a plan near you." },
 ];
 
-const PLANS = [
-  { name: 'Free', tagline: 'Hire a Buddy or become one — no platform fee', price: '₹0', original: '', off: '', period: 'forever', periodNote: 'no card needed', features: ['Browse buddy discovery feed', 'View buddy profiles', 'Post activity plans', 'In-app chat', 'Hire or become a Buddy'], accent: '#f96566', iconBg: '#fff1f2', cta: 'Join free', highlighted: true },
-];
-
 const TESTIMONIALS = [
   { name: 'Meera Kapoor', role: 'Client – Movie Buddy · Mumbai', quote: 'I never had anyone to catch the latest releases with. Found a Movie Buddy on BuddySearch and we have watched six films together already. It feels like going with an old friend every single time.', img: 11 },
   { name: 'Rahul Sinha', role: 'Client – Gaming Buddy · Bangalore', quote: "Been gaming solo for years and it gets boring fast. Found a Gaming Buddy on BuddySearch and we've been grinding ranked matches every weekend since. Finally have someone to strategise with — no toxicity, just good vibes.", img: 12 },
@@ -96,41 +93,6 @@ function Step({ number, icon: Icon, title, desc, stat, label, variant, isLast, e
         <h3 className="hiw__step-title">{title}</h3>
         <p className="hiw__step-desc">{desc}</p>
       </div>
-    </div>
-  );
-}
-
-function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
-  return (
-    <div
-      className={`pricing__card${plan.highlighted ? ' pricing__card--highlighted' : ''}`}
-      style={{ '--accent': plan.accent, '--icon-bg': plan.iconBg } as React.CSSProperties}
-    >
-      {plan.highlighted && <div className="pricing__badge">Free</div>}
-      <div className="pricing__icon"><Star size={22} /></div>
-      <div className="pricing__plan-header">
-        <div className="pricing__plan-name">{plan.name}</div>
-        <div className="pricing__tagline">{plan.tagline}</div>
-      </div>
-      <div className="pricing__price-row">
-        <span className="pricing__price-amount">{plan.price}</span>
-        <span className="pricing__price-original">{plan.original}</span>
-        <span className="pricing__discount-tag">{plan.off}</span>
-      </div>
-      <div className="pricing__per-month">
-        <span className="pricing__per-month-amount">{plan.period}</span>
-        <span className="pricing__per-month-label">· {plan.periodNote}</span>
-      </div>
-      <ul className="pricing__features">
-        {plan.features.map((f) => (
-          <li key={f} className="pricing__feature">
-            <span className="pricing__feature-check"><CheckCircle2 size={12} /></span>
-            {f}
-          </li>
-        ))}
-      </ul>
-      <Link href="/signup" className={`pricing__cta${plan.highlighted ? ' pricing__cta--solid' : ''}`}>{plan.cta}</Link>
-      <p className="pricing__taxes">No platform fee. Buddy hourly rates are separate.</p>
     </div>
   );
 }
@@ -182,7 +144,7 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="hero__subtitle">
-              The answer is yes. Buddy Search is free in India. Book a verified activity companion for a movie, trip, or gym — about ₹300 to ₹2,000 an hour if you agree a Buddy fee — or become a Buddy and earn. Not a social network. Not a dating app.
+              The answer is yes. Book a verified activity companion for a movie, trip, or gym — about ₹300 to ₹2,000 an hour if you agree a Buddy fee — or become a Buddy and earn. Membership is Basic ₹249, Standard ₹349, Premium ₹449, Star ₹649, paid with UPI. Not a social network. Not a dating app.
             </p>
             <p className="hero__subtitle" style={{ fontSize: 15, marginTop: 8 }}>
               Platonic companionship (friendship, not dating). KYC (know-your-customer ID check). UPI (India’s instant payment rail). Cities: Bangalore, Mumbai, Delhi NCR, Hyderabad, Chennai, Pune, Kolkata.
@@ -289,7 +251,7 @@ export default function LandingPage() {
                 </tr>
                 <tr>
                   <td className="p-3 border-t">Platform membership</td>
-                  <td className="p-3 border-t">Free (₹0)</td>
+                  <td className="p-3 border-t">₹249 · ₹349 · ₹449 · ₹649 (UPI)</td>
                   <td className="p-3 border-t">Not the Buddy’s wage</td>
                 </tr>
               </tbody>
@@ -392,8 +354,8 @@ export default function LandingPage() {
                 <div className="earning__stat-label">Cities Across India</div>
               </div>
               <div className="earning__stat">
-                <div className="earning__stat-value">₹0</div>
-                <div className="earning__stat-label">Join — free</div>
+                <div className="earning__stat-value">₹249</div>
+                <div className="earning__stat-label">Plans from</div>
               </div>
             </div>
             <div className="earning__cta-wrap">
@@ -437,28 +399,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="pricing" id="pricing">
-        <div className="container">
-          <div className="pricing__header">
-            <span className="section-tag">Pricing</span>
-            <h2 className="section-title">Buddy Search is free to use</h2>
-            <p className="section-subtitle">No platform fee and no card. Buddy hourly fees, if you agree them, stay between you and the Buddy.</p>
-          </div>
-          <div className="pricing__grid">
-            {PLANS.map((p) => <PlanCard key={p.name} plan={p} />)}
-          </div>
-          <div className="pricing__carousel-wrap">
-            <div className="pricing__carousel-track">
-              {PLANS.map((p) => (
-                <div className="pricing__carousel-slide" key={p.name}>
-                  <PlanCard plan={p} />
-                </div>
-              ))}
-            </div>
-          </div>
-          <p className="pricing__note">Create a free account. Razorpay is not required to use Hire or Find.</p>
-        </div>
-      </section>
+      <PricingSection />
 
       <section className="testimonials" id="about">
         <div className="container">
