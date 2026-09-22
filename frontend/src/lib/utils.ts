@@ -44,8 +44,8 @@ export function isPaidMembership(user?: {
   return !Number.isNaN(when.getTime()) && when.getTime() > Date.now();
 }
 
-/** Razorpay declined this category. Hire, Find, chats, and posts are free. */
-export const PLATFORM_ACCESS_FREE = true;
+/** Paid UPI membership is required. Hire, Find, chats, and posts stay locked until a plan is active. */
+export const PLATFORM_ACCESS_FREE = false;
 
 export function hasPlatformAccess(user?: Parameters<typeof isPaidMembership>[0]) {
   if (PLATFORM_ACCESS_FREE) return Boolean(user);

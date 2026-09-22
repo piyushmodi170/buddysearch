@@ -6,8 +6,13 @@ assert.equal(purchasedPlanName({ membershipPlan: 'BASIC', membershipExpiry: null
 assert.equal(planDisplayLabel({ membershipPlan: 'BASIC' }), 'Free');
 assert.equal(isPaidMembership({ membershipPlan: 'BASIC' }), false);
 assert.equal(isPaidMembership({ membershipPlan: 'STAR' }), true);
-assert.equal(hasPlatformAccess({ membershipPlan: 'BASIC' }), true);
-assert.equal(PLATFORM_ACCESS_FREE, true);
+assert.equal(hasPlatformAccess({ membershipPlan: 'BASIC' }), false);
+assert.equal(hasPlatformAccess({ membershipPlan: 'STAR' }), true);
+assert.equal(
+  hasPlatformAccess({ membershipPlan: 'BASIC', membershipExpiry: new Date(Date.now() + 86400000) }),
+  true,
+);
+assert.equal(PLATFORM_ACCESS_FREE, false);
 assert.equal(purchasedPlanName({ membershipPlan: 'STAR' }), 'STAR');
 assert.equal(
   purchasedPlanName({ membershipPlan: 'BASIC', membershipExpiry: new Date(Date.now() + 86400000) }),

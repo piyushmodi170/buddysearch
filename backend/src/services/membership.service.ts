@@ -2,8 +2,56 @@ import { prisma } from '../config/db.js';
 
 export type MembershipTier = 'BASIC' | 'STANDARD' | 'PREMIUM' | 'STAR';
 
-/** Razorpay will not onboard this category. Platform access is free. Buddy hourly fees stay between members. */
-export const PLATFORM_ACCESS_FREE = true;
+/** Paid UPI membership is required. Hire, Find, chats, and posts stay locked until a plan is active. */
+export const PLATFORM_ACCESS_FREE = false;
+
+const FREE_LAUNCH_REVOKE_KEY = 'free-access-launch-revoked';
+
+/** True when a Star row was the free-launch grant, not a confirmed payment. */
+export const isUnpaidFreeLaunchStar = (
+  user: { membershipPlan?: string | null; isAdmin?: boolean } | null | undefined,
+  hasSuccessfulPayment: boolean,
+) => {
+  if (!user || user.isAdmin) return false;
+  if (String(user.membershipPlan || '').toUpperCase() !== 'STAR') return false;
+  return !hasSuccessfulPayment;
+};
+
+/**
+ * The free-launch boot hook set every user to lifetime Star. Paid UPI is back,
+ * so drop unpaid Star once. Confirmed payments and admin accounts stay.
+ */
+export const revokeUnpaidFreeLaunchGrant = async () => {
+  const already = await prisma.appSetting.findUnique({
+    where: { key: FREE_LAUNCH_REVOKE_KEY },
+  }).catch(() => null);
+  if (already) return { skipped: true as const, revoked: 0 };
+
+  const paid = await prisma.payment.findMany({
+    where: { status: 'SUCCESS' },
+    select: { userId: true },
+  });
+  const paidIds = [...new Set(paid.map((row) => row.userId))];
+  const where: { membershipPlan: 'STAR'; isAdmin: false; id?: { notIn: string[] } } = {
+    membershipPlan: 'STAR',
+    isAdmin: false,
+  };
+  if (paidIds.length) where.id = { notIn: paidIds };
+
+  const result = await prisma.user.updateMany({
+    where,
+    data: { membershipPlan: 'BASIC', membershipExpiry: null },
+  });
+
+  const value = { revokedAt: new Date().toISOString(), revoked: result.count };
+  await prisma.appSetting.upsert({
+    where: { key: FREE_LAUNCH_REVOKE_KEY },
+    update: { value },
+    create: { key: FREE_LAUNCH_REVOKE_KEY, value },
+  });
+
+  return { skipped: false as const, revoked: result.count };
+};
 
 export const isPaidPlan = (plan?: string | null, expiry?: Date | string | null) => {
   if (PLATFORM_ACCESS_FREE) return true;
