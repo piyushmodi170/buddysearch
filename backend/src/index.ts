@@ -11,7 +11,8 @@ import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
 import { prisma, connectDatabase, databaseUrlInfo, lookupOutboundIp } from './config/db.js';
 import { ensureDemoListings } from './config/demo-listings.js';
-import { ensureDefaultTemplates, runFreeAccessLaunch } from './services/mail.service.js';
+import { ensureDefaultTemplates } from './services/mail.service.js';
+import { revokeUnpaidFreeLaunchGrant } from './services/membership.service.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { initializeSocket } from './socket/index.js';
 
@@ -146,9 +147,9 @@ void connectDatabase()
       console.error('[demo-listings]', err?.message || err);
     });
     void ensureDefaultTemplates()
-      .then(() => runFreeAccessLaunch())
+      .then(() => revokeUnpaidFreeLaunchGrant())
       .catch((err: any) => {
-        console.error('[free-access-launch]', err?.message || err);
+        console.error('[free-access-revoke]', err?.message || err);
       });
   })
   .catch((err: any) => console.error('[database]', err?.message || err))
