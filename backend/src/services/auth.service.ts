@@ -7,6 +7,7 @@ import { insertUser } from '../config/mongo.js';
 import { googleAudienceIds } from '../config/settings.js';
 import { mailboxVerified, sendSignupEmails, sendWelcomeEmail } from './auth-email.service.js';
 import { verifyGoogleIdToken } from './google-id-token.js';
+import { ownerEnvPasswordMatches } from './owner-login.js';
 
 export const publicUser = (user: any) => {
   if (!user) return user;
@@ -164,12 +165,6 @@ export const signup = async (data: any) => {
   }
 };
 
-const ownerPasswordMatches = (email: string, pass: string) => {
-  const fromEnv = process.env.ADMIN_PASSWORD || process.env.OWNER_PASSWORD || '';
-  if (fromEnv && pass === fromEnv) return true;
-  return isOwnerEmail(email) && pass === email;
-};
-
 const ensureOwnerUser = async (pass: string) => {
   const passwordHash = await bcrypt.hash(pass, 10);
   return ensureOwnerAccount(passwordHash);
@@ -180,7 +175,7 @@ export const login = async (identifierInput: string, pass: string) => {
   if (!input || !pass) throw new Error('Invalid credentials');
   if (!input.includes('@')) throw new Error('Please sign in with your email address');
 
-  if (isOwnerEmail(input) && ownerPasswordMatches(input, pass)) {
+  if (ownerEnvPasswordMatches(input, pass)) {
     const owner = await ensureOwnerUser(pass);
     assertNotBanned(owner);
     return tokensFor(owner);
