@@ -2,6 +2,7 @@ import { prisma } from '../config/db.js';
 import { uploadFile } from '../config/s3.js';
 import fs from 'fs';
 import { publicUser } from './auth.service.js';
+import { profilePatchFrom } from './profile-patch.js';
 
 export const calculateProfileCompletion = (user: any, interestsCount: number): number => {
   let score = 0;
@@ -35,10 +36,10 @@ export const updateProfile = async (userId: string, data: any) => {
   const current = await prisma.user.findUnique({ where: { id: userId }, include: { interests: true } });
   if (!current) throw new Error('User not found');
 
-  const updated = await prisma.user.update({
-    where: { id: userId },
-    data: { ...data }
-  });
+  const patch = profilePatchFrom(data);
+  const updated = Object.keys(patch).length
+    ? await prisma.user.update({ where: { id: userId }, data: patch })
+    : current;
 
   const completion = calculateProfileCompletion(updated, current.interests.length);
   const withScore = await prisma.user.update({ where: { id: userId }, data: { profileCompletion: completion } });
