@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt.js';
 import { prisma } from '../config/db.js';
-import { isOwnerEmail } from '../config/owner.js';
+import { isCanonicalOwnerEmail } from '../config/owner.js';
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -44,14 +44,14 @@ export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
   auth(req, res, () => {
     void (async () => {
       try {
-        if (isOwnerEmail(req.user?.email)) {
-          return next();
-        }
         const user = await prisma.user.findUnique({
           where: { id: req.user!.id },
           select: { email: true },
         });
-        if (!isOwnerEmail(user?.email)) {
+        // JWT email is not enough: a member can store a case-variant of the
+        // owner address (Mongo unique is case-sensitive) and the JWT claim
+        // would then pass a case-insensitive check.
+        if (!isCanonicalOwnerEmail(user?.email)) {
           return res.status(403).json({ success: false, message: 'Admin access required' });
         }
         next();
