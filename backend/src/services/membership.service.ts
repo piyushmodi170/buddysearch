@@ -1,6 +1,8 @@
 import { prisma } from '../config/db.js';
+import { PLAN_NAMES, resolveMembershipActivation, type MembershipTier } from './membership-activation.js';
 
-export type MembershipTier = 'BASIC' | 'STANDARD' | 'PREMIUM' | 'STAR';
+export type { MembershipTier };
+export { resolveMembershipActivation };
 
 /** Razorpay will not onboard this category. Platform access is free. Buddy hourly fees stay between members. */
 export const PLATFORM_ACCESS_FREE = true;
@@ -14,8 +16,6 @@ export const isPaidPlan = (plan?: string | null, expiry?: Date | string | null) 
   const when = expiry instanceof Date ? expiry : new Date(expiry);
   return !Number.isNaN(when.getTime()) && when.getTime() > Date.now();
 };
-
-const PLAN_NAMES: MembershipTier[] = ['BASIC', 'STANDARD', 'PREMIUM', 'STAR'];
 
 const DEFAULT_PLANS = [
   {
@@ -138,17 +138,17 @@ export const getUserPlan = async (userId: string) => {
 
 export const activatePlan = async (userId: string, planId: string) => {
   const plan = await findPlan(planId);
-
-  const expiry = new Date();
-  if (plan.durationMonths > 0) {
-    expiry.setMonth(expiry.getMonth() + plan.durationMonths);
-  }
+  const current = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { membershipPlan: true, membershipExpiry: true },
+  });
+  const next = resolveMembershipActivation(current, plan);
 
   return prisma.user.update({
     where: { id: userId },
     data: {
-      membershipPlan: plan.name as any,
-      membershipExpiry: plan.durationMonths > 0 ? expiry : null
+      membershipPlan: next.membershipPlan as any,
+      membershipExpiry: next.membershipExpiry,
     }
   });
 };
