@@ -147,7 +147,11 @@ export default function ProfilePage() {
   const [aadhaarFile, setAadhaarFile] = useState<File | null>(null);
   const [isUploadingAadhaar, setIsUploadingAadhaar] = useState(false);
   const [aadhaarStatus, setAadhaarStatus] = useState(
-    user?.aadhaarVerified ? 'VERIFIED' : user?.aadhaarUrl ? 'PENDING' : 'NOT_SUBMITTED'
+    user?.verified || user?.aadhaarVerified
+      ? 'VERIFIED'
+      : user?.aadhaarUrl
+        ? 'PENDING'
+        : 'NOT_SUBMITTED'
   );
   const [bannerOpen, setBannerOpen] = useState(true);
   const [stats, setStats] = useState({ requests: 0, open: 0 });
@@ -208,7 +212,7 @@ export default function ProfilePage() {
     if (user.bio) setBio(user.bio);
     if (user.avatar) setAvatarPreview(user.avatar);
     if (user.availableForRequests !== undefined) setIsAvailable(user.availableForRequests);
-    if (user.aadhaarVerified) setAadhaarStatus('VERIFIED');
+    if (user.verified || user.aadhaarVerified) setAadhaarStatus('VERIFIED');
     else if (user.aadhaarUrl) setAadhaarStatus('PENDING');
   }, [user]);
 
@@ -318,16 +322,15 @@ export default function ProfilePage() {
     try {
       const formData = new FormData();
       formData.append('aadhaar', file);
-      await api.post('/api/users/aadhaar', formData, {
+      const res = await api.post('/api/users/aadhaar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      const uploadedUrl = res.data?.data?.aadhaarUrl || 'uploaded';
       setAadhaarStatus('PENDING');
-      updateUser({ aadhaarUrl: 'uploaded', aadhaarVerified: false });
+      updateUser({ aadhaarUrl: uploadedUrl, aadhaarVerified: false });
       toast.success('Aadhaar document submitted for verification');
-    } catch {
-      setAadhaarStatus('PENDING');
-      updateUser({ aadhaarUrl: 'uploaded', aadhaarVerified: false });
-      toast.success('Aadhaar document submitted for verification');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not upload your ID document. Try again.');
     } finally {
       setIsUploadingAadhaar(false);
     }
