@@ -2,6 +2,7 @@ import { prisma } from '../config/db.js';
 import { uploadFile } from '../config/s3.js';
 import fs from 'fs';
 import { publicUser } from './auth.service.js';
+import { aadhaarProfilePatch } from './aadhaar-upload.js';
 
 export const calculateProfileCompletion = (user: any, interestsCount: number): number => {
   let score = 0;
@@ -51,8 +52,9 @@ export const uploadAvatarService = async (userId: string, file: Express.Multer.F
 };
 
 export const uploadAadhaarService = async (userId: string, file: Express.Multer.File) => {
-  const url = await uploadFile(file.buffer, `aadhaar/${userId}-${Date.now()}.${file.originalname.split('.').pop()}`, file.mimetype);
-  return updateProfile(userId, { aadhaarUrl: url, aadhaarVerified: false });
+  const ext = file.originalname.split('.').pop() || 'jpg';
+  const url = await uploadFile(file.buffer, `aadhaar/${userId}-${Date.now()}.${ext}`, file.mimetype);
+  return updateProfile(userId, aadhaarProfilePatch(url));
 };
 
 export const resolveInterestIds = async (idsOrSlugs: string[]) => {
