@@ -2,6 +2,7 @@ import { prisma } from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import { sendTemplate, sendTransactional, smtpConfigured } from './mail.service.js';
 import { isOwnerEmail } from '../config/owner.js';
+import { verifyEmailClientUser } from './verify-email-user.js';
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RESEND_MS = 45_000;
@@ -84,12 +85,16 @@ export const resendVerification = async (emailInput: string) => {
 export const verifyEmailCode = async (emailInput: string, code: string) => {
   const email = String(emailInput || '').toLowerCase().trim();
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error('No account found for that email');
-  if (mailboxVerified(user)) {
-    return prisma.user.update({ where: { id: user.id }, data: { emailVerified: true } });
-  }
+  if (!user) throw new Error('That code is invalid. Request a new one.');
+  // Always consume the OTP. A verified / Google / owner mailbox must not
+  // short-circuit this unauthenticated route — that returned the full User
+  // document (phone, Aadhaar URL, googleId) to anyone who knew the email.
   await consumeOtp(email, 'VERIFY_EMAIL', code);
-  return prisma.user.update({ where: { id: user.id }, data: { emailVerified: true } });
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerified: true },
+  });
+  return verifyEmailClientUser(updated);
 };
 
 export const forgotPassword = async (emailInput: string) => {

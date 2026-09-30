@@ -69,7 +69,7 @@ router.post('/refresh', async (req, res, next) => {
 router.post('/verify-email', validate(verifyEmailSchema), async (req, res) => {
   try {
     const user = await authEmail.verifyEmailCode(req.body.email, req.body.code);
-    res.json({ success: true, data: { user: authService.publicUser(user) } });
+    res.json({ success: true, data: { user } });
   } catch (error: any) {
     res.status(400).json({ success: false, message: authErrorMessage(error, 'Could not verify email') });
   }
