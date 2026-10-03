@@ -2,6 +2,9 @@ import { prisma } from '../config/db.js';
 import { uploadFile } from '../config/s3.js';
 import fs from 'fs';
 import { publicUser } from './auth.service.js';
+import { stripPrivateProfileFields } from './public-profile.js';
+
+export { stripPrivateProfileFields };
 
 export const calculateProfileCompletion = (user: any, interestsCount: number): number => {
   let score = 0;
@@ -29,6 +32,11 @@ export const getProfile = async (userId: string) => {
     : 0;
 
   return { ...publicUser(user), avgRating, reviewCount: user.receivedReviews.length };
+};
+
+/** Find / hire profile card: same public fields as own profile minus PII. */
+export const getPublicProfile = async (userId: string) => {
+  return stripPrivateProfileFields(await getProfile(userId));
 };
 
 export const updateProfile = async (userId: string, data: any) => {
