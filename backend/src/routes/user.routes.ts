@@ -97,7 +97,9 @@ router.get('/discover', auth, async (req, res, next) => {
 
 router.get('/:id', auth, requirePaid, async (req, res, next) => {
   try {
-    const profile = await userService.getProfile(req.params.id);
+    const profile = req.params.id === req.user!.id
+      ? await userService.getProfile(req.params.id)
+      : await userService.getPublicProfile(req.params.id);
     res.json({ success: true, data: profile });
   } catch (error: any) {
     res.status(404).json({ success: false, message: error.message });
