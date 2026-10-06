@@ -3,6 +3,7 @@ import { verifyToken } from '../utils/jwt.js';
 import { setCache, delCache } from '../config/redis.js';
 import { prisma } from '../config/db.js';
 import { registerChatHandlers } from './chat.handler.js';
+import { loadActiveAccount } from '../middleware/load-active-account.js';
 
 export const initializeSocket = (io: Server) => {
   io.use((socket: Socket, next) => {
@@ -12,8 +13,11 @@ export const initializeSocket = (io: Server) => {
     const decoded = verifyToken(token);
     if (!decoded) return next(new Error('Authentication error'));
 
-    socket.data.userId = decoded.id;
-    next();
+    void loadActiveAccount(decoded.id).then((active) => {
+      if (!active.ok) return next(new Error('Authentication error'));
+      socket.data.userId = decoded.id;
+      next();
+    }).catch(() => next(new Error('Authentication error')));
   });
 
   io.on('connection', async (socket: Socket) => {

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt.js';
 import { prisma } from '../config/db.js';
 import { isOwnerEmail } from '../config/owner.js';
+import { loadActiveAccount } from './load-active-account.js';
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -17,8 +18,18 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
       return res.status(401).json({ success: false, message: 'Invalid or expired token' });
     }
 
-    req.user = decoded;
-    next();
+    void (async () => {
+      try {
+        const active = await loadActiveAccount(decoded.id);
+        if (!active.ok) {
+          return res.status(active.status).json({ success: false, message: active.message });
+        }
+        req.user = decoded;
+        next();
+      } catch {
+        res.status(401).json({ success: false, message: 'Authentication failed' });
+      }
+    })();
   } catch (error) {
     res.status(401).json({ success: false, message: 'Authentication failed' });
   }
