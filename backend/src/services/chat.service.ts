@@ -1,6 +1,15 @@
 import { prisma } from '../config/db.js';
+import { isChatParticipant, isObjectId } from './chat-access.js';
 
 const userSelect = { id: true, name: true, avatar: true, isOnline: true, lastSeen: true };
+
+export const findChatForUser = async (chatId: string, userId: string) => {
+  const id = String(chatId || '');
+  if (!isObjectId(id) || !userId) return null;
+  const chat = await prisma.chat.findUnique({ where: { id } });
+  if (!isChatParticipant(chat, userId)) return null;
+  return chat;
+};
 
 export const getOrCreateChat = async (user1Id: string, user2Id: string) => {
   const [idA, idB] = [user1Id, user2Id].sort();
@@ -54,13 +63,8 @@ export const getUserChats = async (userId: string) => {
 };
 
 export const getChatMessages = async (chatId: string, userId: string, page: number, limit: number) => {
-  const chat = await prisma.chat.findUnique({
-    where: { id: chatId }
-  });
-  
-  if (!chat || (chat.user1Id !== userId && chat.user2Id !== userId)) {
-    throw new Error('Unauthorized');
-  }
+  const chat = await findChatForUser(chatId, userId);
+  if (!chat) throw new Error('Unauthorized');
 
   const skip = (page - 1) * limit;
   const messages = await prisma.message.findMany({
@@ -74,10 +78,8 @@ export const getChatMessages = async (chatId: string, userId: string, page: numb
 };
 
 export const sendMessageService = async (chatId: string, senderId: string, text: string) => {
-  const chat = await prisma.chat.findUnique({
-    where: { id: chatId }
-  });
-  if (!chat || (chat.user1Id !== senderId && chat.user2Id !== senderId)) throw new Error('Unauthorized');
+  const chat = await findChatForUser(chatId, senderId);
+  if (!chat) throw new Error('Unauthorized');
 
   const msg = await prisma.message.create({
     data: {
@@ -96,8 +98,10 @@ export const sendMessageService = async (chatId: string, senderId: string, text:
 };
 
 export const markAsSeenService = async (chatId: string, userId: string) => {
+  const chat = await findChatForUser(chatId, userId);
+  if (!chat) throw new Error('Unauthorized');
   await prisma.message.updateMany({
-    where: { chatId, senderId: { not: userId }, seen: false },
+    where: { chatId: chat.id, senderId: { not: userId }, seen: false },
     data: { seen: true }
   });
 };
