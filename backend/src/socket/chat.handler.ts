@@ -1,19 +1,22 @@
 import { Server, Socket } from 'socket.io';
-import { sendMessageService, markAsSeenService } from '../services/chat.service.js';
+import { findChatForUser, sendMessageService, markAsSeenService } from '../services/chat.service.js';
 import { emitToUser } from './notification.handler.js';
-import { prisma } from '../config/db.js';
 
 export const registerChatHandlers = (io: Server, socket: Socket) => {
   const userId = socket.data.userId;
 
-  socket.on('join_chat', (chatId: string) => {
-    socket.join(chatId);
-    console.log(`User ${userId} joined chat ${chatId}`);
+  socket.on('join_chat', async (chatId: string) => {
+    try {
+      const chat = await findChatForUser(chatId, userId);
+      if (!chat) return;
+      socket.join(chat.id);
+    } catch (err) {
+      console.error('Error joining chat:', err);
+    }
   });
 
   socket.on('leave_chat', (chatId: string) => {
     socket.leave(chatId);
-    console.log(`User ${userId} left chat ${chatId}`);
   });
 
   socket.on('send_message', async (data: { chatId: string, text: string }) => {
@@ -21,12 +24,7 @@ export const registerChatHandlers = (io: Server, socket: Socket) => {
       const msg = await sendMessageService(data.chatId, userId, data.text);
       io.to(data.chatId).emit('new_message', { chatId: data.chatId, message: msg });
 
-      // Notify the other participant if they are not in the room
-      const chat = await prisma.chat.findUnique({
-        where: { id: data.chatId },
-        select: { user1Id: true, user2Id: true }
-      });
-      
+      const chat = await findChatForUser(data.chatId, userId);
       const otherUserId = chat?.user1Id === userId ? chat?.user2Id : chat?.user1Id;
       if (otherUserId) {
         emitToUser(io, otherUserId, 'notification', {
@@ -42,12 +40,16 @@ export const registerChatHandlers = (io: Server, socket: Socket) => {
     }
   });
 
-  socket.on('typing', (chatId: string) => {
-    socket.to(chatId).emit('user_typing', { userId, chatId });
+  socket.on('typing', async (chatId: string) => {
+    const chat = await findChatForUser(chatId, userId).catch(() => null);
+    if (!chat) return;
+    socket.to(chat.id).emit('user_typing', { userId, chatId: chat.id });
   });
 
-  socket.on('stop_typing', (chatId: string) => {
-    socket.to(chatId).emit('user_stop_typing', { userId, chatId });
+  socket.on('stop_typing', async (chatId: string) => {
+    const chat = await findChatForUser(chatId, userId).catch(() => null);
+    if (!chat) return;
+    socket.to(chat.id).emit('user_stop_typing', { userId, chatId: chat.id });
   });
 
   socket.on('mark_seen', async (chatId: string) => {
