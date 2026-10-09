@@ -8,6 +8,7 @@ import { config } from '../config/index.js';
 import { insertPendingPayment } from '../config/mongo.js';
 import { sendTransactional } from './mail.service.js';
 import { buildUpiAppLinks, isValidUtr, makeUpiReference, normalizeUtr, normalizeVpa } from './upi.js';
+import { utrClashWhere } from './payment-utr.js';
 
 const razorpayClient = async () => {
   const razorpay = await getSetting('razorpay');
@@ -140,8 +141,10 @@ export const submitUtr = async (userId: string, paymentId: string, rawUtr: strin
   }
   if (payment.status !== 'PENDING') throw new Error('This payment can no longer accept a UTR');
 
+  // FAILED rows keep the UTR for audit but must not burn it. After a mistaken
+  // reject the member needs to attach the same bank reference to a new order.
   const clash = await prisma.payment.findFirst({
-    where: { upiUtr: utr, id: { not: paymentId } },
+    where: utrClashWhere(utr, paymentId),
   });
   if (clash) throw new Error('This UTR is already used on another payment.');
 

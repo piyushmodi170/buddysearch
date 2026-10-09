@@ -1,4 +1,5 @@
 import { MongoClient, ObjectId, type Collection, type Document } from 'mongodb';
+import { UPI_UTR_LIVE_UNIQUE_INDEX } from '../services/payment-utr.js';
 
 const cleanUrl = (url?: string) => url?.trim().replace(/^["']|["']$/g, '') || '';
 
@@ -91,8 +92,13 @@ export const repairPaymentIndexes = async () => {
   try {
     await col.createIndex({ razorpayOrderId: 1 }, { unique: true, sparse: true, name: 'razorpayOrderId_sparse_unique' });
   } catch { /* exists */ }
+  try { await col.dropIndex('upiUtr_sparse_unique'); } catch { /* already replaced */ }
   try {
-    await col.createIndex({ upiUtr: 1 }, { unique: true, sparse: true, name: 'upiUtr_sparse_unique' });
+    await col.createIndex(UPI_UTR_LIVE_UNIQUE_INDEX.key, {
+      unique: UPI_UTR_LIVE_UNIQUE_INDEX.unique,
+      name: UPI_UTR_LIVE_UNIQUE_INDEX.name,
+      partialFilterExpression: UPI_UTR_LIVE_UNIQUE_INDEX.partialFilterExpression,
+    });
   } catch { /* exists */ }
   try {
     await col.createIndex({ upiReference: 1 }, { unique: true, sparse: true, name: 'upiReference_sparse_unique' });
