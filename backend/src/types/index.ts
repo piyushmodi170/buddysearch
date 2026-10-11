@@ -6,6 +6,7 @@ export interface UserPayload {
   phone?: string;
   role: string;
   isAdmin: boolean;
+  emailVerified?: boolean;
 }
 
 declare global {

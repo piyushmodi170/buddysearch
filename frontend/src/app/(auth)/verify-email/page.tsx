@@ -12,7 +12,7 @@ import { postAuthPath } from '@/lib/utils';
 function VerifyEmailForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const { user, updateUser } = useAuthStore();
+  const { user, login, updateUser } = useAuthStore();
   const emailFromQuery = params.get('email') || '';
   const email = useMemo(() => emailFromQuery || user?.email || '', [emailFromQuery, user?.email]);
   const [code, setCode] = useState('');
@@ -25,7 +25,9 @@ function VerifyEmailForm() {
     try {
       const res = await api.post('/api/auth/verify-email', { email, code });
       const next = res.data.data?.user;
-      if (next) updateUser(next);
+      const token = res.data.data?.token;
+      if (next && token) login(next, token);
+      else if (next) updateUser(next);
       toast.success('Email verified');
       const nextUser = next || { ...user, emailVerified: true };
       router.replace(postAuthPath(nextUser as any));

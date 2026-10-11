@@ -86,10 +86,12 @@ export const verifyEmailCode = async (emailInput: string, code: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error('No account found for that email');
   if (mailboxVerified(user)) {
-    return prisma.user.update({ where: { id: user.id }, data: { emailVerified: true } });
+    const updated = await prisma.user.update({ where: { id: user.id }, data: { emailVerified: true } });
+    return { user: updated, session: false as const };
   }
   await consumeOtp(email, 'VERIFY_EMAIL', code);
-  return prisma.user.update({ where: { id: user.id }, data: { emailVerified: true } });
+  const updated = await prisma.user.update({ where: { id: user.id }, data: { emailVerified: true } });
+  return { user: updated, session: true as const };
 };
 
 export const forgotPassword = async (emailInput: string) => {

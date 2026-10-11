@@ -68,8 +68,11 @@ router.post('/refresh', async (req, res, next) => {
 
 router.post('/verify-email', validate(verifyEmailSchema), async (req, res) => {
   try {
-    const user = await authEmail.verifyEmailCode(req.body.email, req.body.code);
-    res.json({ success: true, data: { user: authService.publicUser(user) } });
+    const { user, session } = await authEmail.verifyEmailCode(req.body.email, req.body.code);
+    // Only mint a JWT when the OTP was actually consumed. Already-verified /
+    // Google / owner mailboxes skip the OTP and must not become a login oracle.
+    const data = session ? authService.tokensFor(user) : { user: authService.publicUser(user) };
+    res.json({ success: true, data });
   } catch (error: any) {
     res.status(400).json({ success: false, message: authErrorMessage(error, 'Could not verify email') });
   }
