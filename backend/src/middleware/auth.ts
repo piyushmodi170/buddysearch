@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt.js';
 import { prisma } from '../config/db.js';
 import { isOwnerEmail } from '../config/owner.js';
+import { accessDeniedUntilEmailVerified } from './email-verified.js';
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -15,6 +16,14 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
 
     if (!decoded) {
       return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    }
+
+    if (accessDeniedUntilEmailVerified(decoded)) {
+      return res.status(403).json({
+        success: false,
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Verify your email to continue',
+      });
     }
 
     req.user = decoded;

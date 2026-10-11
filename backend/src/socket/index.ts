@@ -3,6 +3,7 @@ import { verifyToken } from '../utils/jwt.js';
 import { setCache, delCache } from '../config/redis.js';
 import { prisma } from '../config/db.js';
 import { registerChatHandlers } from './chat.handler.js';
+import { accessDeniedUntilEmailVerified } from '../middleware/email-verified.js';
 
 export const initializeSocket = (io: Server) => {
   io.use((socket: Socket, next) => {
@@ -11,6 +12,7 @@ export const initializeSocket = (io: Server) => {
 
     const decoded = verifyToken(token);
     if (!decoded) return next(new Error('Authentication error'));
+    if (accessDeniedUntilEmailVerified(decoded)) return next(new Error('Authentication error'));
 
     socket.data.userId = decoded.id;
     next();

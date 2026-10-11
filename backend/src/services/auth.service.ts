@@ -31,9 +31,10 @@ const assertNotBanned = (user: any) => {
   if (user?.banned) throw new Error('This account has been suspended');
 };
 
-const tokensFor = (user: any) => {
+export const tokensFor = (user: any) => {
   const isAdmin = isOwnerEmail(user.email);
-  const payload = { id: user.id, email: user.email, phone: user.phone || '', role: user.role, isAdmin };
+  const emailVerified = mailboxVerified(user);
+  const payload = { id: user.id, email: user.email, phone: user.phone || '', role: user.role, isAdmin, emailVerified };
   return {
     user: publicUser(user),
     token: generateToken(payload),
@@ -245,7 +246,8 @@ export const refreshTokenService = async (token: string) => {
   assertNotBanned(user);
   const synced = await syncOwnerFlag(user);
   const isAdmin = isOwnerEmail(synced.email);
-  const payload = { id: synced.id, email: synced.email, phone: synced.phone || '', role: synced.role, isAdmin };
+  const emailVerified = mailboxVerified(synced);
+  const payload = { id: synced.id, email: synced.email, phone: synced.phone || '', role: synced.role, isAdmin, emailVerified };
   return {
     token: generateToken(payload),
     refreshToken: generateRefreshToken(payload)
