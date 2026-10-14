@@ -97,20 +97,49 @@ export const maskSettings = <K extends SettingKey>(key: K, value: SettingsMap[K]
   return out;
 };
 
+/** Match the health probe. A shorter cap treated a slow Atlas read as "no admin settings". */
+export const SETTINGS_DB_TIMEOUT_MS = 8000;
+
+export type SettingLoadKind = 'hit' | 'miss' | 'timeout' | 'error';
+
+/** Process-lifetime cache is only safe for a real Mongo read (row present or confirmed absent). */
+export const shouldCacheSettingLoad = (kind: SettingLoadKind) => kind === 'hit' || kind === 'miss';
+
+type SettingRow = { value: unknown } | null;
+
+const readSettingRow = async (key: SettingKey): Promise<{ kind: SettingLoadKind; row: SettingRow }> => {
+  let timedOut = false;
+  const row = await Promise.race([
+    prisma.appSetting.findUnique({ where: { key } }),
+    new Promise<null>((resolve) =>
+      setTimeout(() => {
+        timedOut = true;
+        resolve(null);
+      }, SETTINGS_DB_TIMEOUT_MS)
+    ),
+  ]);
+  if (timedOut) return { kind: 'timeout', row: null };
+  return { kind: row ? 'hit' : 'miss', row };
+};
+
+const mergeSetting = <K extends SettingKey>(key: K, stored: unknown): SettingsMap[K] => {
+  const patch = isObject(stored) ? stored : {};
+  const merged = { ...envDefaults[key], ...patch } as SettingsMap[K];
+  return key === 'razorpay'
+    ? resolveRazorpaySettings(merged as RazorpaySettings) as SettingsMap[K]
+    : merged;
+};
+
 export const getSetting = async <K extends SettingKey>(key: K): Promise<SettingsMap[K]> => {
   if (cache.has(key)) {
     return cache.get(key) as SettingsMap[K];
   }
   try {
-    const row = await Promise.race([
-      prisma.appSetting.findUnique({ where: { key } }),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
-    ]);
-    const stored = row && isObject(row.value) ? row.value : {};
-    const merged = { ...envDefaults[key], ...stored } as SettingsMap[K];
-    const value = key === 'razorpay'
-      ? resolveRazorpaySettings(merged as RazorpaySettings) as SettingsMap[K]
-      : merged;
+    const loaded = await readSettingRow(key);
+    if (!shouldCacheSettingLoad(loaded.kind)) {
+      return envDefaults[key];
+    }
+    const value = mergeSetting(key, loaded.row?.value);
     cache.set(key, value);
     return value;
   } catch {
