@@ -1,6 +1,5 @@
 import { prisma } from '../config/db.js';
 import Razorpay from 'razorpay';
-import crypto from 'crypto';
 import { activatePlan, findPlan } from './membership.service.js';
 import { publicUser } from './auth.service.js';
 import { getSetting } from '../config/settings.js';
@@ -8,6 +7,7 @@ import { config } from '../config/index.js';
 import { insertPendingPayment } from '../config/mongo.js';
 import { sendTransactional } from './mail.service.js';
 import { buildUpiAppLinks, isValidUtr, makeUpiReference, normalizeUtr, normalizeVpa } from './upi.js';
+import { razorpayCheckoutSignatureValid } from './payment-verify.js';
 
 const razorpayClient = async () => {
   const razorpay = await getSetting('razorpay');
@@ -246,11 +246,16 @@ export const verifyPayment = async (data: any, userId: string) => {
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = data;
   const razorpay = await getSetting('razorpay');
 
-  const hmac = crypto.createHmac('sha256', razorpay.keySecret);
-  hmac.update(razorpayOrderId + '|' + razorpayPaymentId);
-  const expectedSignature = hmac.digest('hex');
-
-  if (expectedSignature !== razorpaySignature && razorpay.keyId) {
+  if (!razorpay.keyId || !razorpay.keySecret) {
+    throw new Error('Razorpay is not available. Open Membership and pay with UPI.');
+  }
+  if (!razorpayCheckoutSignatureValid(
+    razorpay.keyId,
+    razorpay.keySecret,
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+  )) {
     throw new Error('Invalid signature');
   }
 
@@ -261,6 +266,9 @@ export const verifyPayment = async (data: any, userId: string) => {
   if (payment.status === 'SUCCESS') {
     const existing = await prisma.user.findUnique({ where: { id: userId } });
     return { success: true, user: existing ? publicUser(existing) : undefined };
+  }
+  if (payment.status !== 'PENDING') {
+    throw new Error('This payment can no longer be verified');
   }
 
   return markSuccessAndActivate(payment, { razorpayPaymentId });
