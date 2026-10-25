@@ -1,7 +1,7 @@
 import { prisma } from '../config/db.js';
 import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import bcrypt from 'bcryptjs';
-import { isOwnerEmail } from '../config/owner.js';
+import { isOwnerEmail, isPublishedSeedPassword } from '../config/owner.js';
 import { ensureOwnerAccount } from '../config/owner-account.js';
 import { insertUser } from '../config/mongo.js';
 import { googleAudienceIds } from '../config/settings.js';
@@ -179,6 +179,9 @@ export const login = async (identifierInput: string, pass: string) => {
   const input = (identifierInput || '').trim().toLowerCase();
   if (!input || !pass) throw new Error('Invalid credentials');
   if (!input.includes('@')) throw new Error('Please sign in with your email address');
+  if (isPublishedSeedPassword(input, pass)) {
+    throw new Error('Invalid credentials');
+  }
 
   if (isOwnerEmail(input) && ownerPasswordMatches(input, pass)) {
     const owner = await ensureOwnerUser(pass);

@@ -1,5 +1,4 @@
 import { PrismaClient } from '../../backend/node_modules/@prisma/client/index.js';
-import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -103,12 +102,11 @@ async function main() {
   }
   console.log(`Seeded ${membershipPlans.length} membership plans.`);
 
-  // Owner account only — production admin is this Gmail. Do not seed secrets.
-  const passwordHash = await bcrypt.hash('admin123', 10);
+  // Owner row only — never write a password. Login rejects the old published
+  // seed password. Owner auth is Google or ADMIN_PASSWORD / OWNER_PASSWORD.
   const adminUser = await prisma.user.upsert({
     where: { email: 'piyushmodi170@gmail.com' },
     update: {
-      passwordHash,
       role: 'BOTH',
       isAdmin: true,
       city: 'Mumbai',
@@ -121,7 +119,6 @@ async function main() {
     create: {
       name: 'Piyush Modi',
       email: 'piyushmodi170@gmail.com',
-      passwordHash,
       role: 'BOTH',
       isAdmin: true,
       city: 'Mumbai',
