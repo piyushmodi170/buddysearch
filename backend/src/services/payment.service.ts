@@ -2,6 +2,7 @@ import { prisma } from '../config/db.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { activatePlan, findPlan } from './membership.service.js';
+import { isUnpaidMembershipRow } from './unpaid-membership.js';
 import { publicUser } from './auth.service.js';
 import { getSetting } from '../config/settings.js';
 import { config } from '../config/index.js';
@@ -25,16 +26,18 @@ const razorpayErrorMessage = (err: unknown) => {
   return e?.error?.description || e?.error?.reason || e?.message || 'Failed to create payment order';
 };
 
-const markSuccessAndActivate = async (
+const settleSuccessfulPayment = async (
   payment: { id: string; userId: string; planId: string; amount: number },
   extra: { razorpayPaymentId?: string } = {},
 ) => {
+  // Grant membership first. If this throws, the row stays PENDING and Confirm UTR
+  // can be retried. Marking SUCCESS first made a later activatePlan failure
+  // unrecoverable: the second click returned already:true and never granted.
+  const updated = await activatePlan(payment.userId, payment.planId);
   await prisma.payment.update({
     where: { id: payment.id },
     data: { status: 'SUCCESS', ...extra },
   });
-
-  const updated = await activatePlan(payment.userId, payment.planId);
   const plan = await findPlan(payment.planId).catch(() => null);
   void sendTransactional('payment-confirmation', updated.email, {
     name: updated.name,
@@ -49,6 +52,14 @@ const markSuccessAndActivate = async (
   })).catch(() => undefined);
 
   return { success: true, user: publicUser(updated) };
+};
+
+const userAfterSettledPayment = async (payment: { userId: string; planId: string }) => {
+  const existing = await prisma.user.findUnique({ where: { id: payment.userId } });
+  if (!isUnpaidMembershipRow(existing)) {
+    return existing ? publicUser(existing) : undefined;
+  }
+  return publicUser(await activatePlan(payment.userId, payment.planId));
 };
 
 export const getPublicUpiConfig = async () => {
@@ -74,7 +85,7 @@ export const createUpiOrder = async (userId: string, planId: string) => {
     });
     const payment = await prisma.payment.findUnique({ where: { id: inserted.id } });
     if (!payment) throw new Error('Could not save the free plan');
-    const result = await markSuccessAndActivate(payment, {});
+    const result = await settleSuccessfulPayment(payment, {});
     return {
       paymentId: inserted.id,
       method: 'FREE' as const,
@@ -135,8 +146,7 @@ export const submitUtr = async (userId: string, paymentId: string, rawUtr: strin
   if (!payment) throw new Error('Payment not found');
   if (payment.userId !== userId) throw new Error('Payment does not belong to this user');
   if (payment.status === 'SUCCESS') {
-    const existing = await prisma.user.findUnique({ where: { id: userId } });
-    return { success: true, status: 'SUCCESS', user: existing ? publicUser(existing) : undefined };
+    return { success: true, status: 'SUCCESS', user: await userAfterSettledPayment(payment) };
   }
   if (payment.status !== 'PENDING') throw new Error('This payment can no longer accept a UTR');
 
@@ -175,11 +185,11 @@ export const confirmUpiPayment = async (paymentId: string) => {
   const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
   if (!payment) throw new Error('Payment not found');
   if (payment.status === 'SUCCESS') {
-    return { success: true, already: true };
+    return { success: true, already: true, user: await userAfterSettledPayment(payment) };
   }
   if (payment.status !== 'PENDING') throw new Error('Only pending transfers can be confirmed');
   if (!payment.upiUtr) throw new Error('Member has not submitted a UTR yet');
-  return markSuccessAndActivate(payment);
+  return settleSuccessfulPayment(payment);
 };
 
 export const rejectUpiPayment = async (paymentId: string) => {
@@ -259,11 +269,10 @@ export const verifyPayment = async (data: any, userId: string) => {
   if (payment.userId !== userId) throw new Error('Payment does not belong to this user');
 
   if (payment.status === 'SUCCESS') {
-    const existing = await prisma.user.findUnique({ where: { id: userId } });
-    return { success: true, user: existing ? publicUser(existing) : undefined };
+    return { success: true, user: await userAfterSettledPayment(payment) };
   }
 
-  return markSuccessAndActivate(payment, { razorpayPaymentId });
+  return settleSuccessfulPayment(payment, { razorpayPaymentId });
 };
 
 export const testRazorpayCredentials = async () => {
